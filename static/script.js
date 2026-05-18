@@ -1,23 +1,22 @@
-// script.js - وظائف موقع "سماء" المُحسَّنة للجوال
-
 const messagesEl = document.getElementById("messages");
 const typingEl = document.getElementById("typing");
 const inputEl = document.getElementById("message-input");
 const sendBtn = document.getElementById("send-btn");
 const groqBtn = document.getElementById("groq-btn");
 const geminiBtn = document.getElementById("gemini-btn");
+const clearBtn = document.getElementById("clear-btn");
+const settingsBtn = document.getElementById("settings-btn");
+const settingsPanel = document.getElementById("settings-panel");
+const closeSettingsBtn = document.getElementById("close-settings");
+const defaultModelSelect = document.getElementById("default-model");
+const toneSelect = document.getElementById("tone-select");
 
 let selectedModel = "groq";
 
 function setModel(model) {
   selectedModel = model;
-  if (model === "groq") {
-    groqBtn.classList.add("active");
-    geminiBtn.classList.remove("active");
-  } else {
-    geminiBtn.classList.add("active");
-    groqBtn.classList.remove("active");
-  }
+  groqBtn.classList.toggle("active", model === "groq");
+  geminiBtn.classList.toggle("active", model === "gemini");
 }
 
 groqBtn.addEventListener("click", () => setModel("groq"));
@@ -34,7 +33,6 @@ function addMessage(text, sender) {
 async function sendMessage() {
   const text = inputEl.value.trim();
   if (!text) return;
-
   addMessage(text, "user");
   inputEl.value = "";
   typingEl.classList.remove("hidden");
@@ -42,33 +40,35 @@ async function sendMessage() {
   try {
     const res = await fetch("/ask", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        message: text,
-        ai_type: selectedModel,
-      }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text, ai_type: selectedModel })
     });
-
     const data = await res.json();
     typingEl.classList.add("hidden");
-    addMessage(data.reply || "سيدي، لم أستطع الرد. حاول مرة أخرى.", "assistant");
+    addMessage(data.reply || "لم يصل رد.", "assistant");
   } catch (e) {
     typingEl.classList.add("hidden");
-    addMessage("سيدي، حدث خلل في الاتصال. أعد المحاولة.", "assistant");
+    addMessage("حدث خطأ في الاتصال.", "assistant");
   }
 }
 
 sendBtn.addEventListener("click", sendMessage);
-
-// إرسال بالضغط على Enter (يدعم الجوال وسطح المكتب)
 inputEl.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") {
-    e.preventDefault(); // منع السطر الجديد على الجوال
-    sendMessage();
-  }
+  if (e.key === "Enter") sendMessage();
 });
 
-// تركيز تلقائي على حقل الإدخال عند تحميل الصفحة (للجوال)
-inputEl.focus();
+// مسح المحادثة
+clearBtn.addEventListener("click", async () => {
+  messagesEl.innerHTML = "";
+  try {
+    await fetch("/clear", { method: "POST" });
+  } catch (e) { /* نتجاهل */ }
+});
+
+// الإعدادات
+settingsBtn.addEventListener("click", () => settingsPanel.classList.remove("hidden"));
+closeSettingsBtn.addEventListener("click", () => settingsPanel.classList.add("hidden"));
+defaultModelSelect.addEventListener("change", (e) => setModel(e.target.value));
+toneSelect.addEventListener("change", () => {
+  // مستقبلاً سيُربط بتعديل الشخصية
+});
