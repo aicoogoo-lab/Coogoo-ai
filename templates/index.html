@@ -5,188 +5,43 @@
   <title>سماء – Sky AI</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <style>
-    /* ========== تصميم سماء المدمج ========== */
-    * {
-      box-sizing: border-box;
-      font-family: system-ui, -apple-system, sans-serif;
-    }
-
-    body {
-      margin: 0;
-      background: #f3e8ff;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-    }
-
-    .chat-app {
-      width: 100%;
-      max-width: 480px;
-      height: 100vh;
-      background: #ffffff;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      box-shadow: 0 0 20px rgba(139,92,246,0.1);
-    }
-
-    /* الشريط العلوي */
-    .top-bar {
-      height: 56px;
-      padding: 8px 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: #f5f0ff;
-      border-bottom: 1px solid #ede4ff;
-      flex-shrink: 0;
-    }
-
-    .title-block {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .avatar {
-      width: 36px; height: 36px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #7c3aed, #a78bfa);
-      display: flex;
-      align-items: center; justify-content: center;
-      color: #fff; font-weight: bold; font-size: 18px;
-    }
-
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+    body { margin: 0; background: #f3e8ff; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+    .chat-app { width: 100%; max-width: 480px; height: 100vh; background: #ffffff; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 0 20px rgba(139,92,246,0.1); }
+    .top-bar { height: 56px; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; background: #f5f0ff; border-bottom: 1px solid #ede4ff; flex-shrink: 0; }
+    .title-block { display: flex; align-items: center; gap: 8px; }
+    .avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #7c3aed, #a78bfa); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; font-size: 18px; }
     .app-name { font-size: 16px; font-weight: 600; color: #4c1d95; }
     .app-subtitle { font-size: 11px; color: #7c3aed; }
-
-    .icon-btn {
-      border: none; background: transparent;
-      font-size: 20px; cursor: pointer;
-      padding: 4px 8px; border-radius: 8px;
-    }
-
-    /* أزرار النموذج */
-    .model-switch {
-      display: flex; gap: 8px; padding: 6px 10px;
-      border-bottom: 1px solid #ede4ff; background: #faf8ff;
-      flex-shrink: 0;
-    }
-
-    .model-btn {
-      flex: 1; padding: 8px; border-radius: 20px;
-      border: 1px solid #d8ccff; background: #fff;
-      color: #4c1d95; font-size: 12px; cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .model-btn.active {
-      background: #7c3aed; border-color: #7c3aed; color: #fff;
-      font-weight: 600;
-    }
-
-    /* منطقة المحادثة */
-    .chat-container {
-      flex: 1; padding: 12px; background: #f5f0ff;
-      overflow-y: auto; display: flex; flex-direction: column; gap: 8px;
-    }
-
+    .icon-btn { border: none; background: transparent; font-size: 20px; cursor: pointer; padding: 4px 8px; border-radius: 8px; }
+    .model-switch { display: flex; gap: 8px; padding: 6px 10px; border-bottom: 1px solid #ede4ff; background: #faf8ff; flex-shrink: 0; }
+    .model-btn { flex: 1; padding: 8px; border-radius: 20px; border: 1px solid #d8ccff; background: #fff; color: #4c1d95; font-size: 12px; cursor: pointer; transition: all 0.2s; }
+    .model-btn.active { background: #7c3aed; border-color: #7c3aed; color: #fff; font-weight: 600; }
+    .chat-container { flex: 1; padding: 12px; background: #f5f0ff; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
     .messages { display: flex; flex-direction: column; gap: 8px; }
-
-    .message {
-      max-width: 80%; padding: 10px 14px; border-radius: 18px;
-      font-size: 14px; line-height: 1.5; word-wrap: break-word;
-      animation: fadeIn 0.2s;
-    }
-
-    .message.user {
-      align-self: flex-end; background: #ede4ff; color: #1e1b4b;
-      border-bottom-right-radius: 4px;
-    }
-
-    .message.assistant {
-      align-self: flex-start; background: #4c1d95; color: #f5f0ff;
-      border-bottom-left-radius: 4px;
-    }
-
-    /* مؤشر الكتابة */
-    .typing {
-      align-self: flex-start; display: flex; gap: 4px;
-      padding: 4px 12px; background: #4c1d95; border-radius: 20px;
-    }
-
-    .typing .dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: #fff; animation: blink 1.2s infinite;
-    }
-
+    .message { max-width: 80%; padding: 10px 14px; border-radius: 18px; font-size: 14px; line-height: 1.5; word-wrap: break-word; animation: fadeIn 0.2s; }
+    .message.user { align-self: flex-end; background: #ede4ff; color: #1e1b4b; border-bottom-right-radius: 4px; }
+    .message.assistant { align-self: flex-start; background: #4c1d95; color: #f5f0ff; border-bottom-left-radius: 4px; }
+    .typing { align-self: flex-start; display: flex; gap: 4px; padding: 4px 12px; background: #4c1d95; border-radius: 20px; }
+    .typing .dot { width: 6px; height: 6px; border-radius: 50%; background: #fff; animation: blink 1.2s infinite; }
     .typing .dot:nth-child(2) { animation-delay: 0.2s; }
     .typing .dot:nth-child(3) { animation-delay: 0.4s; }
     .hidden { display: none !important; }
-
-    /* شريط الكتابة */
-    .bottom-bar {
-      height: 56px; padding: 6px 8px;
-      border-top: 1px solid #ede4ff; background: #faf8ff;
-      display: flex; align-items: center; gap: 6px;
-      flex-shrink: 0;
-    }
-
-    .input-wrapper {
-      flex: 1; background: #fff; border-radius: 20px;
-      border: 1px solid #d8ccff; padding: 0 12px;
-      display: flex; align-items: center; height: 38px;
-    }
-
-    #message-input {
-      flex: 1; border: none; outline: none; background: transparent;
-      font-size: 14px; color: #1e1b4b;
-    }
-
+    .bottom-bar { height: 56px; padding: 6px 8px; border-top: 1px solid #ede4ff; background: #faf8ff; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .input-wrapper { flex: 1; background: #fff; border-radius: 20px; border: 1px solid #d8ccff; padding: 0 12px; display: flex; align-items: center; height: 38px; }
+    #message-input { flex: 1; border: none; outline: none; background: transparent; font-size: 14px; color: #1e1b4b; }
     #message-input::placeholder { color: #a78bfa; }
-
-    .send-btn {
-      border: none; border-radius: 20px; padding: 8px 18px;
-      background: #7c3aed; color: #fff; font-weight: 600; cursor: pointer;
-      font-size: 14px; transition: background 0.2s;
-    }
-
+    .send-btn { border: none; border-radius: 20px; padding: 8px 18px; background: #7c3aed; color: #fff; font-weight: 600; cursor: pointer; font-size: 14px; transition: background 0.2s; }
     .send-btn:active { background: #6d28d9; }
-
-    /* لوحة الإعدادات */
-    .settings-panel {
-      position: absolute; bottom: 0; left: 0; right: 0;
-      max-width: 480px; margin: auto;
-      background: #fff; border-top-left-radius: 20px; border-top-right-radius: 20px;
-      box-shadow: 0 -4px 20px rgba(139,92,246,0.2);
-      padding: 16px; z-index: 10;
-    }
-
-    .settings-header {
-      display: flex; justify-content: space-between;
-      margin-bottom: 12px; font-weight: bold; color: #4c1d95;
-    }
-
+    #upload-btn { font-size: 20px; cursor: pointer; padding: 4px; color: #7c3aed; }
+    .settings-panel { position: absolute; bottom: 0; left: 0; right: 0; max-width: 480px; margin: auto; background: #fff; border-top-left-radius: 20px; border-top-right-radius: 20px; box-shadow: 0 -4px 20px rgba(139,92,246,0.2); padding: 16px; z-index: 10; }
+    .settings-header { display: flex; justify-content: space-between; margin-bottom: 12px; font-weight: bold; color: #4c1d95; }
     .settings-item { margin-bottom: 12px; }
     .settings-item label { font-size: 12px; color: #4c1d95; display: block; margin-bottom: 4px; }
-
-    .settings-item select {
-      width: 100%; padding: 8px; border-radius: 10px;
-      border: 1px solid #d8ccff; font-size: 14px;
-    }
-
+    .settings-item select { width: 100%; padding: 8px; border-radius: 10px; border: 1px solid #d8ccff; font-size: 14px; }
     .settings-note { font-size: 11px; color: #a78bfa; margin-top: 8px; }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(4px); }
-      to { opacity: 1; transform: none; }
-    }
-
-    @keyframes blink {
-      0%, 100% { opacity: 0.3; }
-      50% { opacity: 1; }
-    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+    @keyframes blink { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
   </style>
 </head>
 <body>
@@ -219,10 +74,12 @@
       <div class="input-wrapper">
         <input id="message-input" type="text" placeholder="اكتب رسالتك لسماء..." />
       </div>
+      <!-- زر رفع الملفات -->
+      <label id="upload-btn" for="file-upload" title="أرسل صورة أو ملفًا">📎</label>
+      <input type="file" id="file-upload" style="display: none;" accept="image/*,.pdf,.txt,.doc,.docx" />
       <button id="send-btn" class="send-btn">إرسال</button>
     </footer>
 
-    <!-- لوحة الإعدادات -->
     <div id="settings-panel" class="settings-panel hidden">
       <div class="settings-header">
         <span>الإعدادات</span>
@@ -250,7 +107,6 @@
   </div>
 
   <script>
-    /* ========== وظائف سماء المدمجة ========== */
     const messagesEl = document.getElementById("messages");
     const typingEl = document.getElementById("typing");
     const inputEl = document.getElementById("message-input");
@@ -262,7 +118,7 @@
     const settingsPanel = document.getElementById("settings-panel");
     const closeSettingsBtn = document.getElementById("close-settings");
     const defaultModelSelect = document.getElementById("default-model");
-    const toneSelect = document.getElementById("tone-select");
+    const fileUpload = document.getElementById("file-upload");
 
     let selectedModel = "groq";
 
@@ -301,7 +157,7 @@
         addMessage(data.reply || "لم يصل رد.", "assistant");
       } catch (e) {
         typingEl.classList.add("hidden");
-        addMessage("تعذر الاتصال بسماء. تأكد من الاتصال.", "assistant");
+        addMessage("تعذر الاتصال بسماء.", "assistant");
       }
     }
 
@@ -310,25 +166,48 @@
       if (e.key === "Enter") sendMessage();
     });
 
-    // مسح المحادثة
+    // رفع الملفات
+    fileUpload.addEventListener("change", async () => {
+      const file = fileUpload.files[0];
+      if (!file) return;
+
+      addMessage(`📎 رفع ملف: ${file.name}`, "user");
+      typingEl.classList.remove("hidden");
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const res = await fetch("/upload", {
+          method: "POST",
+          body: formData
+        });
+        const data = await res.json();
+        typingEl.classList.add("hidden");
+        addMessage(data.reply || "تم استلام الملف.", "assistant");
+      } catch (e) {
+        typingEl.classList.add("hidden");
+        addMessage("فشل رفع الملف إلى سماء.", "assistant");
+      }
+
+      fileUpload.value = ""; // إعادة تعيين
+    });
+
     clearBtn.addEventListener("click", async () => {
       messagesEl.innerHTML = "";
       try { await fetch("/clear", { method: "POST" }); } catch(e) {}
     });
 
-    // الإعدادات
     settingsBtn.addEventListener("click", () => settingsPanel.classList.remove("hidden"));
     closeSettingsBtn.addEventListener("click", () => settingsPanel.classList.add("hidden"));
     defaultModelSelect.addEventListener("change", (e) => setModel(e.target.value));
 
-    // إخفاء لوحة الإعدادات عند النقر خارجها
     document.addEventListener("click", (e) => {
       if (!settingsPanel.contains(e.target) && e.target !== settingsBtn) {
         settingsPanel.classList.add("hidden");
       }
     });
 
-    // تركيز على حقل الإدخال
     inputEl.focus();
   </script>
 </body>
