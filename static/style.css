@@ -1,3 +1,5 @@
+/* style.css - تصميم "سماء" المتجاوب والمريح للعين */
+
 * {
   box-sizing: border-box;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -5,7 +7,7 @@
 
 body {
   margin: 0;
-  background: #0f172a;
+  background: #1e1b4b; /* بنفسجي داكن مريح بدل الأسود القاتم */
   color: #e5e7eb;
   display: flex;
   justify-content: center;
@@ -13,60 +15,84 @@ body {
   min-height: 100vh;
 }
 
+/* الحاوية الرئيسية - تملأ الشاشة على الجوال */
 .app {
   width: 100%;
-  max-width: 600px;
-  height: 90vh;
-  background: #020617;
-  border-radius: 16px;
-  border: 1px solid #1f2937;
+  max-width: 100%; /* تملأ العرض كاملاً على الجوال */
+  height: 100vh; /* ارتفاع كامل الشاشة */
+  height: 100dvh; /* للجوالات الحديثة */
+  background: linear-gradient(180deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%); /* تدرج لطيف */
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
+/* على الشاشات الكبيرة (سطح المكتب)، نعطيها مظهر النافذة */
+@media (min-width: 768px) {
+  .app {
+    max-width: 600px;
+    height: 90vh;
+    border-radius: 16px;
+    border: 1px solid #4c1d95;
+    box-shadow: 0 0 30px rgba(139, 92, 246, 0.15);
+  }
+}
+
+/* الرأس */
 .header {
-  padding: 12px 16px;
-  border-bottom: 1px solid #1f2937;
-  background: #020617;
+  padding: 14px 16px;
+  border-bottom: 1px solid #4c1d95;
+  background: rgba(30, 27, 75, 0.8);
+  backdrop-filter: blur(10px);
+  text-align: center;
 }
 
 .header h1 {
   margin: 0;
-  font-size: 20px;
+  font-size: 22px;
+  background: linear-gradient(135deg, #c4b5fd, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700;
 }
 
 .header p {
   margin: 4px 0 0;
   font-size: 12px;
-  color: #9ca3af;
+  color: #a5b4fc;
 }
 
+/* أزرار التبديل بين النماذج */
 .model-switch {
   display: flex;
   gap: 8px;
-  padding: 8px 12px;
-  border-bottom: 1px solid #1f2937;
-  background: #020617;
+  padding: 10px 12px;
+  border-bottom: 1px solid #4c1d95;
+  background: rgba(30, 27, 75, 0.6);
 }
 
 .model-btn {
   flex: 1;
-  padding: 6px 8px;
+  padding: 8px 10px;
   border-radius: 999px;
-  border: 1px solid #374151;
-  background: #020617;
-  color: #e5e7eb;
-  font-size: 12px;
+  border: 1px solid #6d28d9;
+  background: rgba(30, 27, 75, 0.8);
+  color: #c4b5fd;
+  font-size: 13px;
   cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .model-btn.active {
-  background: #22c55e;
-  border-color: #22c55e;
-  color: #020617;
+  background: #7c3aed;
+  border-color: #a78bfa;
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 0 15px rgba(124, 58, 237, 0.4);
 }
 
+/* حاوية المحادثة */
 .chat-container {
   flex: 1;
   padding: 12px;
@@ -74,61 +100,86 @@ body {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  background: rgba(15, 23, 42, 0.3);
 }
 
 .messages {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
+/* فقاعات المحادثة */
 .message {
-  max-width: 80%;
-  padding: 8px 10px;
-  border-radius: 12px;
-  font-size: 14px;
-  line-height: 1.5;
+  max-width: 85%;
+  padding: 10px 14px;
+  border-radius: 18px;
+  font-size: 15px;
+  line-height: 1.6;
+  word-wrap: break-word;
 }
 
+/* رسائل المستخدم (أنت) - تظهر على اليمين بلون دافئ */
 .message.user {
-  align-self: flex-start;
-  background: #1d4ed8;
-  color: #e5e7eb;
-  border-bottom-right-radius: 2px;
-}
-
-.message.assistant {
   align-self: flex-end;
-  background: #111827;
-  color: #e5e7eb;
-  border-bottom-left-radius: 2px;
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
+  color: #ffffff;
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 2px 10px rgba(79, 70, 229, 0.3);
 }
 
+/* رسائل سماء - تظهر على اليسار بلون أنثوي ناعم */
+.message.assistant {
+  align-self: flex-start;
+  background: linear-gradient(135deg, #4c1d95, #5b21b6);
+  color: #e9d5ff;
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 2px 10px rgba(76, 29, 149, 0.3);
+}
+
+/* مؤشر الكتابة */
 .typing {
   font-size: 12px;
-  color: #9ca3af;
+  color: #a78bfa;
   margin-top: 4px;
+  padding: 4px 10px;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
 }
 
 .hidden {
   display: none;
 }
 
+/* منطقة الإدخال */
 .input-area {
   display: flex;
-  gap: 8px;
-  padding: 10px 12px;
-  border-top: 1px solid #1f2937;
-  background: #020617;
+  gap: 10px;
+  padding: 12px 14px;
+  border-top: 1px solid #4c1d95;
+  background: rgba(30, 27, 75, 0.9);
+  backdrop-filter: blur(10px);
 }
 
 #message-input {
   flex: 1;
-  padding: 8px 10px;
+  padding: 12px 16px;
   border-radius: 999px;
-  border: 1px solid #374151;
-  background: #020617;
+  border: 1px solid #6d28d9;
+  background: rgba(15, 23, 42, 0.8);
   color: #e5e7eb;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+#message-input:focus {
+  border-color: #a78bfa;
+  box-shadow: 0 0 10px rgba(167, 139, 250, 0.2);
 }
 
 #message-input::placeholder {
@@ -136,12 +187,33 @@ body {
 }
 
 #send-btn {
-  padding: 8px 14px;
+  padding: 12px 20px;
   border-radius: 999px;
   border: none;
-  background: #22c55e;
-  color: #020617;
+  background: linear-gradient(135deg, #7c3aed, #a78bfa);
+  color: #ffffff;
   font-weight: 600;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 15px;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 15px rgba(124, 58, 237, 0.4);
+}
+
+#send-btn:active {
+  transform: scale(0.95);
+  box-shadow: 0 0 20px rgba(124, 58, 237, 0.6);
+}
+
+/* شريط التمرير المخصص */
+.chat-container::-webkit-scrollbar {
+  width: 4px;
+}
+
+.chat-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-container::-webkit-scrollbar-thumb {
+  background: #6d28d9;
+  border-radius: 10px;
 }
