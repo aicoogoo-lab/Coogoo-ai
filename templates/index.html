@@ -1,29 +1,37 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <title>Driving AI</title>
+  <meta charset="UTF-8" />
+  <title>Driving AI</title>
+  <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
-    <h1>مرحبًا بك يا Driving</h1>
-    <p>هذا هو موقع ذكاءك الشخصي</p>
+  <div class="app">
+    <header class="header">
+      <h1>Driving AI</h1>
+      <p>مساعدك الذكي الهجين (Groq + Gemini)</p>
+    </header>
 
-    <input id="msg" placeholder="اكتبي رسالتك هنا">
-    <button onclick="send()">إرسال</button>
+    <div class="model-switch">
+      <button id="groq-btn" class="model-btn active" data-model="groq">Groq (Llama)</button>
+      <button id="gemini-btn" class="model-btn" data-model="gemini">Gemini</button>
+    </div>
 
-    <p id="reply"></p>
+    <main class="chat-container">
+      <div id="messages" class="messages"></div>
+      <div id="typing" class="typing hidden">المساعد يكتب الآن…</div>
+    </main>
 
-    <script>
-        async function send() {
-            let message = document.getElementById("msg").value;
-            let res = await fetch("/ask", {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({message})
-            });
-            let data = await res.json();
-            document.getElementById("reply").innerText = data.reply;
-        }
-    </script>
+    <footer class="input-area">
+      <input
+        id="message-input"
+        type="text"
+        placeholder="اكتب رسالتك هنا..."
+      />
+      <button id="send-btn">إرسال</button>
+    </footer>
+  </div>
+
+  <script src="/static/script.js"></script>
 </body>
 </html>
