@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>Driving AI</title>
+</head>
+<body>
+    <h1>مرحبًا بك يا Driving</h1>
+    <p>هذا هو موقع ذكاءك الشخصي</p>
+
+    <input id="msg" placeholder="اكتبي رسالتك هنا">
+    <button onclick="send()">إرسال</button>
+
+    <p id="reply"></p>
+
+    <script>
+        async function send() {
+            let message = document.getElementById("msg").value;
+            let res = await fetch("/ask", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({message})
+            });
+            let data = await res.json();
+            document.getElementById("reply").innerText = data.reply;
+        }
+    </script>
+</body>
+</html>
