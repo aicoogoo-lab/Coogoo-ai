@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, jsonify
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 
-# مفاتيح الـ API من متغيرات البيئة
+# مفاتيح الـ API من متغيرات البيئة (اكتبيها في Render بنفس الأسماء هنا)
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
@@ -12,8 +12,8 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 GROQ_MODEL = "llama-3.3-70b-versatile"
 GEMINI_MODEL = "gemini-1.5-flash"
 
-# ذاكرة محادثة طويلة (داخل السيرفر)
-CHAT_HISTORY = []  # قائمة من الرسائل: {"role": "user"/"assistant", "content": "..."}
+# ذاكرة محادثة داخل السيرفر (طويلة نسبياً)
+CHAT_HISTORY = []  # [{"role": "user"/"assistant", "content": "..." }]
 
 # شخصية المساعد
 ASSISTANT_PERSONA = """
@@ -27,25 +27,18 @@ ASSISTANT_PERSONA = """
 
 
 def build_messages(user_message: str):
-    """
-    يبني قائمة الرسائل التي تُرسل للنموذج:
-    - system: شخصية المساعد
-    - history: آخر الرسائل
-    - user: الرسالة الحالية
-    """
+    """يبني الرسائل المرسلة للنموذج (شخصية + تاريخ + رسالة حالية)"""
     messages = [{"role": "system", "content": ASSISTANT_PERSONA}]
 
-    # نضيف جزء من التاريخ (مثلاً آخر 10 رسائل)
     for msg in CHAT_HISTORY[-10:]:
         messages.append(msg)
 
-    # نضيف الرسالة الحالية
     messages.append({"role": "user", "content": user_message})
     return messages
 
 
 def call_groq_llm(user_message: str) -> str:
-    """استدعاء نموذج Llama عبر Groq (متوافق مع OpenAI)"""
+    """استدعاء نموذج Llama عبر Groq"""
     if not GROQ_API_KEY:
         return "مفتاح Groq غير مضبوط في السيرفر."
 
@@ -54,7 +47,6 @@ def call_groq_llm(user_message: str) -> str:
         "Authorization": f"Bearer {GROQ_API_KEY}",
         "Content-Type": "application/json",
     }
-
     payload = {
         "model": GROQ_MODEL,
         "messages": build_messages(user_message),
@@ -78,7 +70,6 @@ def call_gemini_llm(user_message: str) -> str:
         f"{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
     )
 
-    # نبني محتوى يشمل الشخصية + التاريخ + الرسالة
     history_text = ""
     for msg in CHAT_HISTORY[-10:]:
         role = "المستخدم" if msg["role"] == "user" else "المساعد"
@@ -125,7 +116,7 @@ def ask():
     if not user_message:
         return jsonify({"reply": "الرجاء كتابة رسالة أولاً."})
 
-    # منطق اختيار الذكاء + تحويل احتياطي ذكي
+    # اختيار الذكاء + تحويل احتياطي
     try:
         if selected_ai == "gemini":
             try:
@@ -148,7 +139,6 @@ def ask():
     CHAT_HISTORY.append({"role": "user", "content": user_message})
     CHAT_HISTORY.append({"role": "assistant", "content": reply})
 
-    # نحد من طول الذاكرة (مثلاً 100 رسالة)
     if len(CHAT_HISTORY) > 100:
         CHAT_HISTORY = CHAT_HISTORY[-100:]
 
