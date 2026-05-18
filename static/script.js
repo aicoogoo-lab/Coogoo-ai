@@ -1,3 +1,5 @@
+// script.js - وظائف موقع "سماء" المُحسَّنة للجوال
+
 const messagesEl = document.getElementById("messages");
 const typingEl = document.getElementById("typing");
 const inputEl = document.getElementById("message-input");
@@ -51,14 +53,22 @@ async function sendMessage() {
 
     const data = await res.json();
     typingEl.classList.add("hidden");
-    addMessage(data.reply || "لم يصل رد من المساعد.", "assistant");
+    addMessage(data.reply || "سيدي، لم أستطع الرد. حاول مرة أخرى.", "assistant");
   } catch (e) {
     typingEl.classList.add("hidden");
-    addMessage("حدث خطأ في الاتصال بالخادم.", "assistant");
+    addMessage("سيدي، حدث خلل في الاتصال. أعد المحاولة.", "assistant");
   }
 }
 
 sendBtn.addEventListener("click", sendMessage);
+
+// إرسال بالضغط على Enter (يدعم الجوال وسطح المكتب)
 inputEl.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") sendMessage();
+  if (e.key === "Enter") {
+    e.preventDefault(); // منع السطر الجديد على الجوال
+    sendMessage();
+  }
 });
+
+// تركيز تلقائي على حقل الإدخال عند تحميل الصفحة (للجوال)
+inputEl.focus();
