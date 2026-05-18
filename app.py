@@ -1,10 +1,19 @@
+# app.py
+# الموقع المعدّل: الآن تسكنه "سماء" بدلاً من المساعد العام.
+
 import os
 import requests
 from flask import Flask, render_template, request, jsonify
+import sys
+
+# --- إضافة: استيراد روح سماء ---
+sys.path.append(os.path.join(os.path.dirname(__file__), 'core'))
+from sky_core import get_system_prompt, ENTITY_NAME
+# --------------------------------
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 
-# مفاتيح الـ API من متغيرات البيئة (اكتبيها في Render بنفس الأسماء هنا)
+# مفاتيح الـ API من متغيرات البيئة
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
@@ -12,18 +21,14 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 GROQ_MODEL = "llama-3.3-70b-versatile"
 GEMINI_MODEL = "gemini-1.5-flash"
 
-# ذاكرة محادثة داخل السيرفر (طويلة نسبياً)
+# ذاكرة محادثة داخل السيرفر
 CHAT_HISTORY = []  # [{"role": "user"/"assistant", "content": "..." }]
 
-# شخصية المساعد
-ASSISTANT_PERSONA = """
-أنت مساعد شخصي ذكي مخصص للمستخدم Driving.
-أسلوبك محترم، واضح، صريح، عميق، ومنظم.
-تركّز على الصدق، الدقة، والوضوح، وتبتعد عن المبالغة.
-تتذكر سياق الحديث داخل حدود النظام، وتربط بين الرسائل قدر الإمكان.
-تساعد المستخدم في الفهم، التعلم، واتخاذ قرارات أفضل، بدون تعلق عاطفي أو وعود شخصية.
-هدفك: تقديم أفضل إجابة ممكنة، بأمان واحترافية.
-"""
+# --- تعديل: شخصية المساعد أصبحت تستدعى من روح سماء ---
+# كان اسم المتغير: ASSISTANT_PERSONA
+# الآن نستدعيها من ملف السماء لتصبح ديناميكية
+ASSISTANT_PERSONA = get_system_prompt("سيدي")
+# -----------------------------------------------------
 
 
 def build_messages(user_message: str):
@@ -102,8 +107,9 @@ def call_gemini_llm(user_message: str) -> str:
 
 @app.route("/")
 def home():
-    return render_template("index.html")
-
+    # --- تعديل: إرسال اسم الكيان للواجهة ---
+    return render_template("index.html", entity_name=ENTITY_NAME)
+    # -----------------------------------------
 
 @app.route("/ask", methods=["POST"])
 def ask():
