@@ -14,7 +14,9 @@ def ask():
     # إرسال الرسالة إلى ذكاء مفتوح المصدر (Llama 3.2)
     payload = {
         "model": "llama3.2",
-        "prompt": user_message
+        "messages": [
+            {"role": "user", "content": user_message}
+        ]
     }
 
     response = requests.post(
@@ -22,8 +24,10 @@ def ask():
         json=payload
     )
 
-    # استخراج الرد
-    reply = response.json().get("reply", "لم أستطع فهم الرسالة.")
+    data = response.json()
+
+    # استخراج الرد الصحيح من Ollama
+    reply = data.get("message", {}).get("content", "لم أستطع فهم الرسالة.")
 
     return jsonify({"reply": reply})
 
