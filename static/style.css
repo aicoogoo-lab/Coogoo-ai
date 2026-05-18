@@ -1,0 +1,147 @@
+* {
+  box-sizing: border-box;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #0f172a;
+  color: #e5e7eb;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.app {
+  width: 100%;
+  max-width: 600px;
+  height: 90vh;
+  background: #020617;
+  border-radius: 16px;
+  border: 1px solid #1f2937;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.header {
+  padding: 12px 16px;
+  border-bottom: 1px solid #1f2937;
+  background: #020617;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.header p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.model-switch {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #1f2937;
+  background: #020617;
+}
+
+.model-btn {
+  flex: 1;
+  padding: 6px 8px;
+  border-radius: 999px;
+  border: 1px solid #374151;
+  background: #020617;
+  color: #e5e7eb;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.model-btn.active {
+  background: #22c55e;
+  border-color: #22c55e;
+  color: #020617;
+}
+
+.chat-container {
+  flex: 1;
+  padding: 12px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.messages {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.message {
+  max-width: 80%;
+  padding: 8px 10px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.message.user {
+  align-self: flex-start;
+  background: #1d4ed8;
+  color: #e5e7eb;
+  border-bottom-right-radius: 2px;
+}
+
+.message.assistant {
+  align-self: flex-end;
+  background: #111827;
+  color: #e5e7eb;
+  border-bottom-left-radius: 2px;
+}
+
+.typing {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 4px;
+}
+
+.hidden {
+  display: none;
+}
+
+.input-area {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid #1f2937;
+  background: #020617;
+}
+
+#message-input {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid #374151;
+  background: #020617;
+  color: #e5e7eb;
+}
+
+#message-input::placeholder {
+  color: #6b7280;
+}
+
+#send-btn {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: none;
+  background: #22c55e;
+  color: #020617;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 14px;
+}
