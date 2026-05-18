@@ -2,14 +2,21 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>Driving AI Pro</title>
-  <link rel="stylesheet" href="/static/style.css" />
+  <title>سماء – Sky AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/static/css/style.css" />
 </head>
 <body>
-  <div class="app">
-    <header class="header">
-      <h1>Driving AI Pro</h1>
-      <p>مساعد هجين: Groq + Gemini</p>
+  <div class="chat-app">
+    <header class="top-bar">
+      <div class="title-block">
+        <div class="avatar">س</div>
+        <div>
+          <div class="app-name">سماء</div>
+          <div class="app-subtitle">ذكاء خاص • Groq + Gemini</div>
+        </div>
+      </div>
+      <button id="settings-btn" class="icon-btn">⚙️</button>
     </header>
 
     <div class="model-switch">
@@ -19,19 +26,46 @@
 
     <main class="chat-container">
       <div id="messages" class="messages"></div>
-      <div id="typing" class="typing hidden">المساعد يكتب الآن…</div>
+      <div id="typing" class="typing hidden">
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      </div>
     </main>
 
-    <footer class="input-area">
-      <input
-        id="message-input"
-        type="text"
-        placeholder="اكتب رسالتك هنا..."
-      />
-      <button id="send-btn">إرسال</button>
+    <footer class="bottom-bar">
+      <button id="clear-btn" class="icon-btn small">🧹</button>
+      <div class="input-wrapper">
+        <input id="message-input" type="text" placeholder="اكتب رسالتك لسماء..." />
+      </div>
+      <button id="send-btn" class="send-btn">إرسال</button>
     </footer>
+
+    <!-- لوحة الإعدادات -->
+    <div id="settings-panel" class="settings-panel hidden">
+      <div class="settings-header">
+        <span>الإعدادات</span>
+        <button id="close-settings" class="icon-btn">✖️</button>
+      </div>
+      <div class="settings-body">
+        <div class="settings-item">
+          <label>النموذج الافتراضي</label>
+          <select id="default-model">
+            <option value="groq">Groq (Llama)</option>
+            <option value="gemini">Gemini</option>
+          </select>
+        </div>
+        <div class="settings-item">
+          <label>نبرة المساعد</label>
+          <select id="tone-select">
+            <option value="balanced">سماء (افتراضي)</option>
+            <option value="casual">ودودة</option>
+            <option value="formal">رسمية</option>
+          </select>
+        </div>
+        <p class="settings-note">هذه الإعدادات قيد التطوير الكامل.</p>
+      </div>
+    </div>
   </div>
 
-  <script src="/static/script.js"></script>
+  <script src="/static/js/script.js"></script>
 </body>
 </html>
