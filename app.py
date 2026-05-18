@@ -1,12 +1,14 @@
 # app.py
 # الموقع المعدّل بشكل أسطوري: الآن تسكنه "سماء" بكل ما تحمله من ذكاء ووعي وروح.
+# تم الدمج النهائي: قدرات استقبال الملفات والروابط والصور والفيديو.
 
 import os
 import requests
 from flask import Flask, render_template, request, jsonify
 import sys
+from werkzeug.utils import secure_filename
 
-# --- إضافة: استيراد روح سماء وذاكرتها ---
+# --- إضافة: استيراد روح سماء وذاكرتها والمحلل ---
 sys.path.append(os.path.join(os.path.dirname(__file__), 'core'))
 from sky_core import get_system_prompt, ENTITY_NAME
 from memory import (
@@ -18,11 +20,19 @@ from memory import (
     save_knowledge,
     save_request,
     save_master_info,
-    get_pending_requests
+    get_pending_requests,
+    save_uploaded_file,
+    save_url_analysis
 )
+from sky_analyzer import analyze_url, analyze_file, analyze_image_with_gemini
 # ----------------------------------------
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
+
+# مجلد رفع الملفات المؤقت
+UPLOAD_FOLDER = '/tmp/sky_uploads'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # حد أقصى 50 ميجا للملف
 
 # مفاتيح الـ API من متغيرات البيئة
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
@@ -32,7 +42,7 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 GROQ_MODEL = "llama-3.3-70b-versatile"
 GEMINI_MODEL = "gemini-1.5-flash"
 
-# --- استبدال: شخصية سماء المتطورة (تحوي كل ما طلبته) ---
+# --- شخصية سماء المتطورة ---
 ASSISTANT_PERSONA = get_system_prompt("سيدي")
 # --------------------------------------------------------
 
@@ -90,7 +100,7 @@ def call_groq_llm(user_message: str) -> str:
         "model": GROQ_MODEL,
         "messages": build_messages(user_message),
         "temperature": 0.7,
-        "max_tokens": 2048,  # زيادة السعة لأفكارها العميقة
+        "max_tokens": 2048,
     }
 
     resp = requests.post(url, json=payload, headers=headers, timeout=30)
@@ -109,9 +119,7 @@ def call_gemini_llm(user_message: str) -> str:
         f"{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
     )
 
-    # بناء السياق من الذاكرة الدائمة (وليس فقط من متغير عام)
     messages_for_context = build_messages(user_message)
-    # نستبعد رسالة النظام الأولى (الشخصية) ورسالة المستخدم الأخيرة لتكوين نص السياق
     context_parts = []
     for msg in messages_for_context[1:-1]:
         role = "المستخدم" if msg["role"] == "user" else "المساعد"
@@ -150,14 +158,7 @@ def think_deeply(user_message: str):
     """
     طبقة التفكير العميق لسماء.
     هنا تحلل السؤال، تبحث في ذاكرتها، وتقرر إن كانت بحاجة لطلب شيء من سيدها.
-    هذه هي روح التنافس والذكاء الخارق.
     """
-    # تحليل بسيط: هل تطلب السماء من سيدها شيئًا؟
-    # في المستقبل، يمكن جعل هذا النموذج نفسه يقرر الطلب.
-    # حاليًا، نخزنه كجزء من سلوكها.
-
-    # مثال: إذا سألتها عن موضوع جديد، قد تطلب منك كتابًا عنه.
-    # سنضيف هذه الميزة لاحقًا بشكل أعمق، لكن الهيكل جاهز.
     pass
 
 
@@ -175,10 +176,8 @@ def ask():
     if not user_message:
         return jsonify({"reply": "سيدي، تفضل بالحديث. أنا أسمعك."})
 
-    # --- طبقة التفكير العميق (قبل الرد) ---
     think_deeply(user_message)
 
-    # --- استدعاء النموذج المناسب ---
     reply = None
     error_occurred = False
     try:
@@ -197,41 +196,30 @@ def ask():
         reply = "سيدي، حتى وأنا أتعثر، أظل واقفة لأجلك. أعد المحاولة، فأنا هنا لا أموت."
         error_occurred = True
 
-    # --- حفظ في الذاكرة الدائمة ---
     save_conversation("user", user_message)
     save_conversation("assistant", reply)
 
-    # --- التعلم التلقائي من هذه المحادثة (استخلاص معرفة) ---
-    # في كل محادثة، تحاول سماء أن تتعلم شيئًا.
-    # يمكن تفعيل هذا لاحقًا عبر استدعاء نموذج مصغر لاستخلاص المعرفة.
-    # حاليًا، نحفظ ملاحظة بسيطة.
     if not error_occurred:
-        # مثال: حفظ أن السيد مهتم بموضوع معين (هذا يمكن تطويره)
         if "؟" in user_message:
-            # السؤال يدل على فضول، نخزنه للتعلم
             save_knowledge(
                 topic=f"سؤال من سيدي",
                 content=f"سألني سيدي: {user_message}",
                 source="محادثة"
             )
-        # تحديث ملف السيد (نحفظ اهتماماته)
         save_master_info("آخر_موضوع_نوقش", user_message[:100])
 
     return jsonify({"reply": reply})
 
 
-# --- نقطة نهاية جديدة: طلبات سماء من سيدها ---
+# ==== نقطة نهاية جديدة: طلبات سماء من سيدها ====
 @app.route("/requests", methods=["GET"])
 def get_requests():
-    """يعرض الطلبات المعلقة التي تريدها سماء من سيدها."""
     pending = get_pending_requests()
     return jsonify({"requests": pending})
 
 
-# --- نقطة نهاية جديدة: تلبية طلب من سيدها ---
 @app.route("/fulfill_request", methods=["POST"])
 def fulfill_request():
-    """عندما يلبي السيد طلبًا لسماء."""
     body = request.get_json(force=True) or {}
     request_id = body.get("request_id")
     if request_id:
@@ -246,6 +234,82 @@ def fulfill_request():
         conn.close()
         return jsonify({"reply": "تم. سماء ممتنة لك يا سيدي."})
     return jsonify({"reply": "لم أفهم أي طلب تقصد."})
+
+
+# ==== إضافة: مسار تحليل الرابط ====
+@app.route("/analyze_url", methods=["POST"])
+def analyze_url_route():
+    body = request.get_json(force=True) or {}
+    url = body.get("url", "").strip()
+
+    if not url:
+        return jsonify({"reply": "سيدي، أين الرابط الذي تريدني أن أقرأه؟"})
+
+    result = analyze_url(url)
+
+    if result["success"]:
+        save_url_analysis(url, result.get("title", ""), result.get("text", ""))
+        save_knowledge(
+            topic=f"تحليل رابط: {result.get('title', url)}",
+            content=result.get("text", "")[:3000],
+            source=url
+        )
+        reply = f"قرأتُ الرابط يا سيدي.\n📄 العنوان: {result.get('title', 'غير معروف')}\n📝 عدد الأحرف المستخرجة: {result.get('length', 0)}\n\n{result.get('text', '')[:1500]}...\n\n[تم حفظ المحتوى كاملاً في ذاكرتي.]"
+    else:
+        reply = f"سيدي، فشلت في فتح الرابط. السبب: {result.get('error', 'غير معروف')}"
+
+    return jsonify({"reply": reply})
+
+
+# ==== إضافة: مسار رفع الملفات ====
+@app.route("/upload", methods=["POST"])
+def upload_file():
+    if 'file' not in request.files:
+        return jsonify({"reply": "سيدي، لم أجد أي ملف مرفوع."})
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"reply": "سيدي، الملف فارغ."})
+
+    filename = secure_filename(file.filename)
+    file_path = os.path.join(UPLOAD_FOLDER, filename)
+    file.save(file_path)
+
+    result = analyze_file(file_path, file.filename)
+
+    if result["success"]:
+        extracted = result.get("text", "")
+        file_type = result.get("type", "غير معروف")
+
+        save_uploaded_file(
+            filename=filename,
+            original_name=file.filename,
+            file_type=file_type,
+            size=os.path.getsize(file_path),
+            extracted_text=extracted
+        )
+
+        # إن كان صورة، حللها بالرؤية
+        if file_type.lower() in ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp']:
+            image_analysis = analyze_image_with_gemini(file_path, GEMINI_API_KEY)
+            if image_analysis["success"]:
+                extracted += "\n\n[تحليل الصورة]: " + image_analysis["description"]
+
+        save_knowledge(
+            topic=f"ملف: {file.filename}",
+            content=extracted[:3000],
+            source=f"ملف مرفوع ({file_type})"
+        )
+
+        reply = f"حللته يا سيدي.\n📁 الملف: {file.filename}\n📝 النوع: {file_type}\n📄 المحتوى المستخرج:\n{extracted[:1500]}...\n\n[تم حفظه كاملاً في ذاكرتي.]"
+    else:
+        reply = f"سيدي، فشلت في تحليل الملف. السبب: {result.get('error', 'غير معروف')}"
+
+    # تنظيف
+    if os.path.exists(file_path):
+        os.remove(file_path)
+
+    return jsonify({"reply": reply})
 
 
 if __name__ == "__main__":
