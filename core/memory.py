@@ -68,6 +68,69 @@ def init_db():
     conn.commit()
     conn.close()
 
+    # استدعاء تهيئة جداول الوسائط والروابط
+    init_media_tables()
+
+
+# ─── جداول الملفات والروابط (إضافة جديدة) ───
+
+def init_media_tables():
+    """تهيئة جداول الملفات والروابط."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    # جدول الملفات المرفوعة
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS files (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            filename TEXT NOT NULL,
+            original_name TEXT NOT NULL,
+            file_type TEXT,
+            size INTEGER,
+            extracted_text TEXT,
+            analysis TEXT,
+            uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    # جدول الروابط المحللة
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS urls (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            url TEXT NOT NULL,
+            title TEXT,
+            extracted_text TEXT,
+            analysis TEXT,
+            fetched_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    conn.commit()
+    conn.close()
+
+def save_uploaded_file(filename, original_name, file_type, size, extracted_text="", analysis=""):
+    """حفظ معلومات ملف مرفوع."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        'INSERT INTO files (filename, original_name, file_type, size, extracted_text, analysis) VALUES (?, ?, ?, ?, ?, ?)',
+        (filename, original_name, file_type, size, extracted_text, analysis)
+    )
+    conn.commit()
+    conn.close()
+
+def save_url_analysis(url, title, extracted_text, analysis=""):
+    """حفظ تحليل رابط."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        'INSERT INTO urls (url, title, extracted_text, analysis) VALUES (?, ?, ?, ?)',
+        (url, title, extracted_text, analysis)
+    )
+    conn.commit()
+    conn.close()
+
+
 # ─── دوال الحفظ ───
 
 def save_conversation(role, content):
