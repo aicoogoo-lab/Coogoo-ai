@@ -11,7 +11,6 @@ def home():
 def ask():
     user_message = request.json.get("message", "")
 
-    # إرسال الرسالة إلى ذكاء مفتوح المصدر (Llama 3.2)
     payload = {
         "model": "llama3.2",
         "messages": [
@@ -26,8 +25,25 @@ def ask():
 
     data = response.json()
 
-    # استخراج الرد الصحيح من Ollama
-    reply = data.get("message", {}).get("content", "لم أستطع فهم الرسالة.")
+    # محاولة استخراج الرد من عدة أماكن محتملة
+    reply = None
+
+    # 1) بعض واجهات Ollama ترجع: data["message"]["content"]
+    if isinstance(data.get("message"), dict):
+        reply = data["message"].get("content")
+
+    # 2) بعض النسخ ترجع: data["messages"][0]["content"]
+    if not reply and isinstance(data.get("messages"), list):
+        if len(data["messages"]) > 0:
+            reply = data["messages"][0].get("content")
+
+    # 3) بعض النسخ ترجع: data["response"]
+    if not reply:
+        reply = data.get("response")
+
+    # 4) لو ما حصلنا أي رد
+    if not reply:
+        reply = "لم أستطع فهم الرسالة."
 
     return jsonify({"reply": reply})
 
