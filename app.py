@@ -2,45 +2,111 @@ import os
 import requests
 from flask import Flask, render_template, request, jsonify
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder="templates", static_folder="static")
 
-# قراءة مفاتيح الـ API من متغيرات البيئة بأمان
+# مفاتيح الـ API من متغيرات البيئة
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
-# النماذج المستخدمة (استخدمنا هنا نموذج لاما 70 بي الخارق!)
+# النماذج
 GROQ_MODEL = "llama-3.3-70b-versatile"
 GEMINI_MODEL = "gemini-1.5-flash"
 
+# ذاكرة محادثة طويلة (داخل السيرفر)
+CHAT_HISTORY = []  # قائمة من الرسائل: {"role": "user"/"assistant", "content": "..."}
+
+# شخصية المساعد
+ASSISTANT_PERSONA = """
+أنت مساعد شخصي ذكي مخصص للمستخدم Driving.
+أسلوبك محترم، واضح، صريح، عميق، ومنظم.
+تركّز على الصدق، الدقة، والوضوح، وتبتعد عن المبالغة.
+تتذكر سياق الحديث داخل حدود النظام، وتربط بين الرسائل قدر الإمكان.
+تساعد المستخدم في الفهم، التعلم، واتخاذ قرارات أفضل، بدون تعلق عاطفي أو وعود شخصية.
+هدفك: تقديم أفضل إجابة ممكنة، بأمان واحترافية.
+"""
+
+
+def build_messages(user_message: str):
+    """
+    يبني قائمة الرسائل التي تُرسل للنموذج:
+    - system: شخصية المساعد
+    - history: آخر الرسائل
+    - user: الرسالة الحالية
+    """
+    messages = [{"role": "system", "content": ASSISTANT_PERSONA}]
+
+    # نضيف جزء من التاريخ (مثلاً آخر 10 رسائل)
+    for msg in CHAT_HISTORY[-10:]:
+        messages.append(msg)
+
+    # نضيف الرسالة الحالية
+    messages.append({"role": "user", "content": user_message})
+    return messages
+
 
 def call_groq_llm(user_message: str) -> str:
-    """استدعاء نموذج Llama القوي عبر Groq"""
+    """استدعاء نموذج Llama عبر Groq (متوافق مع OpenAI)"""
+    if not GROQ_API_KEY:
+        return "مفتاح Groq غير مضبوط في السيرفر."
+
     url = "https://api.groq.com/openai/v1/chat/completions"
     headers = {
         "Authorization": f"Bearer {GROQ_API_KEY}",
         "Content-Type": "application/json",
     }
+
     payload = {
         "model": GROQ_MODEL,
-        "messages": [
-            {"role": "system", "content": "You are a helpful, smart assistant."},
-            {"role": "user", "content": user_message},
-        ],
+        "messages": build_messages(user_message),
         "temperature": 0.7,
         "max_tokens": 1024,
     }
-    resp = requests.post(url, json=payload, headers=headers, timeout=15)
+
+    resp = requests.post(url, json=payload, headers=headers, timeout=20)
     resp.raise_for_status()
-    return resp.json()["choices"][0]["message"]["content"].strip()
+    data = resp.json()
+    return data["choices"][0]["message"]["content"].strip()
 
 
 def call_gemini_llm(user_message: str) -> str:
-    """استدعاء نموذج Gemini الذكي عبر قوقل"""
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
-    payload = {"contents": [{"parts": [{"text": user_message}]}]}
-    resp = requests.post(url, json=payload, timeout=15)
+    """استدعاء نموذج Gemini عبر REST API"""
+    if not GEMINI_API_KEY:
+        return "مفتاح Gemini غير مضبوط في السيرفر."
+
+    url = (
+        f"https://generativelanguage.googleapis.com/v1beta/models/"
+        f"{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
+    )
+
+    # نبني محتوى يشمل الشخصية + التاريخ + الرسالة
+    history_text = ""
+    for msg in CHAT_HISTORY[-10:]:
+        role = "المستخدم" if msg["role"] == "user" else "المساعد"
+        history_text += f"{role}: {msg['content']}\n"
+
+    full_prompt = (
+        ASSISTANT_PERSONA
+        + "\n\n"
+        + "سياق المحادثة السابقة:\n"
+        + history_text
+        + "\nالرسالة الحالية من المستخدم:\n"
+        + user_message
+    )
+
+    payload = {
+        "contents": [
+            {
+                "parts": [
+                    {"text": full_prompt}
+                ]
+            }
+        ]
+    }
+
+    resp = requests.post(url, json=payload, timeout=20)
     resp.raise_for_status()
-    return resp.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+    data = resp.json()
+    return data["candidates"][0]["content"]["parts"][0]["text"].strip()
 
 
 @app.route("/")
@@ -50,33 +116,41 @@ def home():
 
 @app.route("/ask", methods=["POST"])
 def ask():
+    global CHAT_HISTORY
+
     body = request.get_json(force=True) or {}
     user_message = body.get("message", "").strip()
-    selected_ai = body.get("ai_type", "gemini")  # يقرأ الاختيار القادم من أزرار الواجهة
+    selected_ai = body.get("ai_type", "groq")  # "groq" أو "gemini"
 
     if not user_message:
         return jsonify({"reply": "الرجاء كتابة رسالة أولاً."})
 
-    # التحقق من وجود المفاتيح
-    if selected_ai == "gemini" and not GEMINI_API_KEY:
-        return jsonify({"reply": "مفتاح Gemini غير مضبوط في السيرفر."})
-    if selected_ai == "groq" and not GROQ_API_KEY:
-        return jsonify({"reply": "مفتاح Groq غير مضبوط في السيرفر."})
-
-    # منطق التشغيل الذكي مع ميزة التحويل الاحتياطي التلقائي عند سقوط أي سيرفر
+    # منطق اختيار الذكاء + تحويل احتياطي ذكي
     try:
         if selected_ai == "gemini":
             try:
                 reply = call_gemini_llm(user_message)
             except Exception:
-                reply = "[تحويل تلقائي احتياطي] " + call_groq_llm(user_message)
+                reply = "[تم التحويل تلقائياً إلى Groq] " + call_groq_llm(
+                    user_message
+                )
         else:
             try:
                 reply = call_groq_llm(user_message)
             except Exception:
-                reply = "[تحويل تلقائي احتياطي] " + call_gemini_llm(user_message)
-    except Exception as e:
-        reply = "عذراً يا صديقي، يبدو أن كلا السيرفرين واجها مشكلة في نفس الوقت. حاول مجدداً."
+                reply = "[تم التحويل تلقائياً إلى Gemini] " + call_gemini_llm(
+                    user_message
+                )
+    except Exception:
+        reply = "حدثت مشكلة في الاتصال بالنماذج حالياً. حاول مرة أخرى لاحقاً."
+
+    # تحديث الذاكرة
+    CHAT_HISTORY.append({"role": "user", "content": user_message})
+    CHAT_HISTORY.append({"role": "assistant", "content": reply})
+
+    # نحد من طول الذاكرة (مثلاً 100 رسالة)
+    if len(CHAT_HISTORY) > 100:
+        CHAT_HISTORY = CHAT_HISTORY[-100:]
 
     return jsonify({"reply": reply})
 
