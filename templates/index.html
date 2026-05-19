@@ -1,350 +1,218 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover" />
-  <title>سماء – Sky AI</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>سماء • Sky AI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
   <style>
-    /* ===== Sky AI Professional Design System v2.0 ===== */
     :root {
       --primary: #6366f1;
-      --primary-glow: rgba(99, 102, 241, 0.15);
-      --primary-dark: #4f46e5;
-      --bg-main: #f8fafc;
-      --bg-card: rgba(255, 255, 255, 0.8);
-      --text-main: #1e293b;
-      --text-muted: #64748b;
-      --user-bubble: #6366f1;
-      --user-text: #ffffff;
-      --ai-bubble: #ffffff;
-      --ai-text: #1e293b;
-      --border-color: #e2e8f0;
-      --glass-effect: blur(12px) saturate(180%);
-      --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.05);
-      --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.1);
-      --shadow-lg: 0 25px 50px -12px rgba(0,0,0,0.1);
-      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --accent: #c026d3;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #1e293b;
     }
 
     body.dark {
-      --bg-main: #0f172a;
-      --bg-card: rgba(30, 41, 59, 0.7);
-      --text-main: #f1f5f9;
-      --text-muted: #94a3b8;
-      --ai-bubble: #1e293b;
-      --ai-text: #f1f5f9;
-      --border-color: #334155;
-      --user-bubble: #818cf8;
-      --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.2);
-      --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.3);
-      --shadow-lg: 0 25px 50px -12px rgba(0,0,0,0.4);
+      --bg: #0f172a;
+      --card: #1e293b;
+      --text: #f1f5f9;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: 'Cairo', 'Inter', sans-serif;
-      background: var(--bg-main);
-      color: var(--text-main);
-      height: 100vh;
+      font-family: 'Cairo', system-ui, sans-serif;
+      background: linear-gradient(145deg, #f8fafc, #f3e8ff);
+      color: var(--text);
+      min-height: 100vh;
       display: flex;
-      justify-content: center;
       align-items: center;
-      overflow: hidden;
-      transition: var(--transition);
+      justify-content: center;
+      padding: 20px;
+      transition: background 1.5s ease;
     }
 
     .chat-app {
       width: 100%;
-      max-width: 700px;
+      max-width: 760px;
       height: 95vh;
-      margin: auto;
-      background: var(--bg-card);
-      backdrop-filter: var(--glass-effect);
-      -webkit-backdrop-filter: var(--glass-effect);
-      border: 1px solid var(--border-color);
-      border-radius: 24px;
+      max-height: 900px;
+      background: var(--card);
+      border-radius: 32px;
+      box-shadow: 0 30px 60px -15px rgb(0 0 0 / 0.12);
       display: flex;
       flex-direction: column;
-      box-shadow: var(--shadow-lg);
-      position: relative;
       overflow: hidden;
+      border: 1px solid #e2e8f0;
     }
 
-    /* الشريط العلوي */
     .top-bar {
-      padding: 16px 20px;
+      padding: 20px 26px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid var(--border-color);
-      flex-shrink: 0;
-      background: transparent;
+      background: rgba(255,255,255,0.75);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid #e2e8f0;
     }
-    .brand { display: flex; align-items: center; gap: 12px; }
+
     .avatar {
-      width: 45px; height: 45px;
-      background: linear-gradient(135deg, var(--primary), #a855f7);
-      border-radius: 12px;
-      display: flex; align-items: center; justify-content: center;
-      color: white; font-size: 22px;
-      box-shadow: 0 10px 15px -3px var(--primary-glow);
+      width: 50px;
+      height: 50px;
+      background: linear-gradient(135deg, #6366f1, #c026d3);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 26px;
+      box-shadow: 0 10px 25px -8px rgba(99, 102, 241, 0.45);
     }
+
     .title {
-      font-size: 1.2rem; font-weight: 800;
-      background: linear-gradient(135deg, var(--primary), #a855f7);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      background-clip: text;
+      font-size: 1.5rem;
+      font-weight: 800;
+      background: linear-gradient(90deg, #6366f1, #c026d3);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
-    .stats {
-      font-size: 0.7rem; color: var(--text-muted);
-      background: rgba(99,102,241,0.08); padding: 4px 10px; border-radius: 20px;
-    }
-    .action-icons { display: flex; gap: 8px; }
-    .icon-btn {
-      width: 38px; height: 38px; border: none; border-radius: 10px;
-      background: transparent; color: var(--text-muted); cursor: pointer;
-      transition: var(--transition); display: flex; align-items: center; justify-content: center;
-      font-size: 1.1rem;
-    }
-    .icon-btn:hover { background: var(--bg-main); color: var(--primary); }
 
-    /* أزرار النماذج */
-    .model-strip {
-      padding: 8px 16px; display: flex; gap: 10px;
-      border-bottom: 1px solid var(--border-color); flex-shrink: 0;
-    }
-    .model-pill {
-      flex: 1; padding: 8px 14px; border-radius: 12px;
-      border: 1px solid var(--border-color); background: transparent;
-      color: var(--text-muted); font-size: 0.85rem; font-weight: 600;
-      cursor: pointer; transition: var(--transition); text-align: center;
-      display: flex; align-items: center; justify-content: center; gap: 6px;
-    }
-    .model-pill.active {
-      background: var(--primary); border-color: var(--primary); color: white;
-      box-shadow: 0 4px 12px var(--primary-glow);
-    }
-    .model-pill:hover:not(.active) { border-color: var(--primary); color: var(--primary); }
-
-    /* منطقة المحادثة */
     .chat-area {
-      flex: 1; overflow-y: auto; padding: 20px;
-      display: flex; flex-direction: column; gap: 16px;
-      scroll-behavior: smooth;
+      flex: 1;
+      padding: 26px 22px;
+      overflow-y: auto;
+      background: #f8fafc;
     }
-    .messages { display: flex; flex-direction: column; gap: 16px; }
 
     .message {
-      max-width: 80%; padding: 12px 18px; border-radius: 18px;
-      font-size: 0.95rem; line-height: 1.6; position: relative;
-      word-break: break-word; animation: slideUp 0.35s ease-out forwards;
-      transition: var(--transition);
+      max-width: 82%;
+      padding: 16px 22px;
+      border-radius: 24px;
+      margin-bottom: 18px;
+      position: relative;
+      animation: messageEnter 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+      line-height: 1.65;
+      font-size: 15.2px;
     }
+
     .message.user {
-      align-self: flex-end; background: var(--user-bubble); color: var(--user-text);
-      border-bottom-right-radius: 4px; box-shadow: 0 10px 15px -3px rgba(99,102,241,0.3);
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: white;
+      margin-left: auto;
+      border-bottom-right-radius: 10px;
     }
+
     .message.assistant {
-      align-self: flex-start; background: var(--ai-bubble); color: var(--ai-text);
-      border: 1px solid var(--border-color); border-bottom-left-radius: 4px;
-      box-shadow: var(--shadow-sm);
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-bottom-left-radius: 10px;
     }
-    .message a { color: var(--primary); text-decoration: underline; }
-    .message code {
-      font-family: 'Fira Code', monospace; background: rgba(0,0,0,0.08);
-      padding: 2px 6px; border-radius: 4px; font-size: 0.9em;
-    }
-    .copy-btn-v2, .copy-btn {
-      position: absolute; left: 8px; bottom: -22px;
-      background: var(--primary); color: white; border: none;
-      border-radius: 8px; padding: 2px 8px; font-size: 0.7rem;
-      cursor: pointer; opacity: 0; transition: opacity 0.2s;
-    }
-    .message:hover .copy-btn-v2, .message:hover .copy-btn { opacity: 0.9; }
 
-    /* مؤشر الكتابة */
-    .typing-indicator {
-      align-self: flex-start; background: var(--ai-bubble);
-      border: 1px solid var(--border-color); padding: 10px 18px;
-      border-radius: 18px; display: flex; gap: 5px; align-items: center;
-      color: var(--text-muted); font-size: 0.85rem;
+    .message span {
+      font-size: 1.3em;
     }
-    .dot-floating {
-      width: 7px; height: 7px; background: var(--primary); border-radius: 50%;
-      animation: wave 1.2s infinite;
-    }
-    .dot-floating:nth-child(2) { animation-delay: 0.2s; }
-    .dot-floating:nth-child(3) { animation-delay: 0.4s; }
 
-    /* شريط الإدخال */
     .input-bar {
-      padding: 12px 16px 16px; flex-shrink: 0;
+      padding: 18px 22px;
+      background: var(--card);
+      border-top: 1px solid #e2e8f0;
     }
+
     .input-container {
-      background: var(--ai-bubble); border: 1px solid var(--border-color);
-      border-radius: 16px; padding: 6px 10px;
-      display: flex; align-items: center; gap: 8px;
-      transition: var(--transition); box-shadow: var(--shadow-sm);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: white;
+      border-radius: 20px;
+      padding: 10px 14px;
+      box-shadow: 0 6px 20px rgb(0 0 0 / 0.06);
     }
-    .input-container:focus-within {
-      border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-glow);
-    }
+
     #message-input {
-      flex: 1; border: none; background: transparent; color: var(--text-main);
-      padding: 8px; font-size: 0.95rem; outline: none; resize: none;
-      max-height: 120px; font-family: inherit;
+      flex: 1;
+      border: none;
+      font-size: 15.5px;
+      outline: none;
+      background: transparent;
     }
-    #message-input::placeholder { color: var(--text-muted); }
-    .input-icon {
-      width: 38px; height: 38px; border: none; border-radius: 10px;
-      background: transparent; color: var(--text-muted); cursor: pointer;
-      transition: var(--transition); display: flex; align-items: center; justify-content: center;
-      font-size: 1.1rem;
-    }
-    .input-icon:hover { background: var(--bg-main); color: var(--primary); }
+
     .send-button {
-      background: var(--primary); color: white; border: none;
-      border-radius: 12px; padding: 8px 20px; font-weight: 700; font-size: 0.9rem;
-      cursor: pointer; transition: var(--transition); font-family: inherit;
-      display: flex; align-items: center; gap: 6px;
-    }
-    .send-button:hover { transform: scale(1.03); box-shadow: 0 10px 15px -3px var(--primary-glow); }
-    .send-button:disabled { opacity: 0.5; transform: none; }
-    .char-counter {
-      font-size: 0.7rem; color: var(--text-muted); text-align: left; padding: 4px 8px;
-    }
-
-    /* زر النزول للأسفل */
-    .scroll-top {
-      position: fixed; bottom: 30px; right: 20px;
-      background: var(--primary); color: white; border: none;
-      border-radius: 50%; width: 44px; height: 44px; font-size: 1.2rem;
-      cursor: pointer; box-shadow: 0 10px 15px -3px var(--primary-glow);
-      opacity: 0; visibility: hidden; transition: var(--transition); z-index: 100;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .scroll-top.show { opacity: 1; visibility: visible; }
-
-    /* الإعدادات */
-    .settings-drawer {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
-      display: flex; justify-content: flex-end; z-index: 200;
-      opacity: 0; visibility: hidden; transition: var(--transition);
-    }
-    .settings-drawer.open { opacity: 1; visibility: visible; }
-    .settings-panel {
-      width: 280px; background: var(--bg-card); backdrop-filter: var(--glass-effect);
-      height: 100%; padding: 24px; box-shadow: -4px 0 30px rgba(0,0,0,0.2);
-      display: flex; flex-direction: column; gap: 20px;
-      transform: translateX(100%); transition: 0.3s ease-out;
-    }
-    .settings-drawer.open .settings-panel { transform: translateX(0); }
-    .settings-item { display: flex; flex-direction: column; gap: 6px; }
-    .settings-item label { font-weight: 600; font-size: 0.85rem; color: var(--text-muted); }
-    .settings-item select {
-      padding: 10px; border-radius: 12px; border: 1px solid var(--border-color);
-      background: var(--ai-bubble); color: var(--text-main); font-family: inherit;
-      font-size: 0.9rem;
+      background: linear-gradient(135deg, #6366f1, #c026d3);
+      color: white;
+      border: none;
+      padding: 12px 26px;
+      border-radius: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
-    .hidden { display: none !important; }
-
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(16px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes wave {
-      0%, 60%, 100% { transform: translateY(0); opacity: 0.3; }
-      30% { transform: translateY(-6px); opacity: 1; }
+    .send-button:hover {
+      transform: translateY(-4px) scale(1.03);
+      box-shadow: 0 15px 30px -8px rgba(99, 102, 241, 0.45);
     }
 
-    ::-webkit-scrollbar { width: 5px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
+    @keyframes messageEnter {
+      from {
+        opacity: 0;
+        transform: translateY(25px) scale(0.94);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
 
-    @media (max-width: 550px) {
-      .chat-app { width: 100%; height: 100vh; border-radius: 0; }
-      .message { max-width: 90%; }
-      .top-bar { padding: 12px 14px; }
+    .love-particle {
+      position: absolute;
+      font-size: 15px;
+      animation: floatUp 1.4s ease forwards;
+      pointer-events: none;
+      z-index: 999;
     }
   </style>
 </head>
 <body>
-<div class="chat-app">
-  <div class="top-bar">
-    <div class="brand">
-      <div class="avatar"><i class="fas fa-feather-alt"></i></div>
-      <div>
-        <div class="title">سماء • Sky AI</div>
-        <div class="stats" id="msg-count">0 رسالة</div>
+  <div class="chat-app">
+    
+    <!-- الشريط العلوي -->
+    <div class="top-bar">
+      <div style="display:flex; align-items:center; gap:15px;">
+        <div class="avatar"><i class="fas fa-feather-alt"></i></div>
+        <div>
+          <div class="title">سماء</div>
+          <div style="font-size:0.72rem; color:#64748b; margin-top:-2px;">رفيقتك الدافئة</div>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px;">
+        <button id="theme-toggle" class="icon-btn"><i class="fas fa-moon"></i></button>
+        <button id="clear-chat" class="icon-btn"><i class="fas fa-trash-alt"></i></button>
       </div>
     </div>
-    <div class="action-icons">
-      <button id="theme-toggle" class="icon-btn" title="الوضع الليلي"><i class="fas fa-moon"></i></button>
-      <button id="settings-drawer-btn" class="icon-btn" title="الإعدادات"><i class="fas fa-sliders-h"></i></button>
-      <button id="clear-chat" class="icon-btn" title="مسح"><i class="fas fa-trash-alt"></i></button>
+
+    <!-- منطقة الشات -->
+    <div class="chat-area" id="chat-area">
+      <div class="messages" id="messages"></div>
     </div>
+
+    <!-- شريط الإدخال -->
+    <div class="input-bar">
+      <div class="input-container">
+        <input type="text" id="message-input" placeholder="اكتب لسماء بكل راحة..." />
+        <button id="send-btn" class="send-button">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
+    </div>
+
   </div>
 
-  <div class="model-strip">
-    <button class="model-pill active" data-model="groq"><i class="fas fa-microchip"></i> Groq</button>
-    <button class="model-pill" data-model="gemini"><i class="fab fa-google"></i> Gemini</button>
-  </div>
-
-  <div class="chat-area" id="chat-area">
-    <div class="messages" id="messages"></div>
-    <div id="typing-indicator" class="typing-indicator hidden">
-      <span>سماء تفكر</span>
-      <span class="dot-floating"></span><span class="dot-floating"></span><span class="dot-floating"></span>
-    </div>
-  </div>
-
-  <div class="input-bar">
-    <div class="input-container">
-      <input type="text" id="message-input" placeholder="اكتب رسالتك لسماء..." autocomplete="off" />
-      <label class="input-icon" id="upload-label" title="رفع ملف"><i class="fas fa-paperclip"></i></label>
-      <input type="file" id="file-upload" style="display: none;" accept="image/*,.pdf,.txt,.docx" />
-      <button id="url-trigger" class="input-icon" title="إرسال رابط"><i class="fas fa-link"></i></button>
-      <button id="send-btn" class="send-button"><i class="fas fa-paper-plane"></i> إرسال</button>
-    </div>
-    <div class="char-counter" id="char-counter">0 / 2000</div>
-  </div>
-</div>
-
-<button id="scrollDown" class="scroll-top"><i class="fas fa-chevron-down"></i></button>
-
-<div id="settings-drawer" class="settings-drawer">
-  <div class="settings-panel">
-    <h3 style="color: var(--primary);"><i class="fas fa-cog"></i> التخصيص</h3>
-    <div class="settings-item">
-      <label>🌓 المظهر</label>
-      <select id="theme-select">
-        <option value="light">فاتح</option>
-        <option value="dark">داكن</option>
-      </select>
-    </div>
-    <div class="settings-item">
-      <label>🤖 النموذج الافتراضي</label>
-      <select id="default-model-select">
-        <option value="groq">Groq (سريع)</option>
-        <option value="gemini">Gemini (إبداعي)</option>
-      </select>
-    </div>
-    <div class="settings-item">
-      <label>📏 حجم الخط</label>
-      <select id="font-size-select">
-        <option value="0.9">صغير</option>
-        <option value="1" selected>متوسط</option>
-        <option value="1.1">كبير</option>
-      </select>
-    </div>
-    <button id="close-drawer" class="icon-btn" style="align-self: flex-start; width: auto; padding: 8px 16px;">✖️ إغلاق</button>
-  </div>
-</div>
-
-<script src="/static/script.js"></script>
+  <script src="/static/script.js"></script>
 </body>
 </html>
