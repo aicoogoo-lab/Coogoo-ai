@@ -1,6 +1,6 @@
 """
 سماء - التطبيق الرئيسي المتكامل
-النسخة النهائية الجبارة v4.1 | REST API + Redis + PPO-Inspired RLHF + Docker Ready
+النسخة النهائية الجبارة v4.2 | جاهزة للنشر على Render (Free Tier)
 """
 
 import os
@@ -14,10 +14,7 @@ from flask import Flask, render_template, request, jsonify
 from werkzeug.utils import secure_filename
 from werkzeug.exceptions import RequestEntityTooLarge
 
-from flask_jwt_extended import (
-    JWTManager, jwt_required, create_access_token, 
-    create_refresh_token, get_jwt_identity
-)
+from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
@@ -29,7 +26,7 @@ from memory import (
     get_all_knowledge_text, get_master_profile_text,
     save_knowledge, save_master_info, save_uploaded_file,
     save_url_analysis, clear_conversation_history,
-    process_feedback, hybrid_search, get_personality_summary,
+    process_feedback, get_personality_summary,
     apply_rlhf_update, calculate_advantage
 )
 from sky_core import get_enhanced_system_prompt, add_to_history, ENTITY_NAME
@@ -45,12 +42,15 @@ app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
 
 jwt = JWTManager(app)
 
-# Redis
-redis_url = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
+# ====================== Rate Limiter (متوافق مع الخطة المجانية) ======================
+# نستخدم الذاكرة افتراضيًا (مناسب لـ Render Free)
+# إذا أردت استخدام Redis لاحقًا، فقط ضع REDIS_URL في المتغيرات البيئية
+redis_url = os.environ.get("REDIS_URL", "memory://")
+
 limiter = Limiter(
     key_func=get_remote_address,
     app=app,
-    default_limits=["100 per minute"],
+    default_limits=["80 per minute"],
     storage_uri=redis_url,
     strategy="fixed-window"
 )
@@ -150,117 +150,6 @@ def home():
     return render_template("index.html", entity_name=ENTITY_NAME)
 
 
-# === API v1 ===
-@app.route("/api/v1/ask", methods=["POST"])
-@jwt_required()
-@limiter.limit("50 per minute")
-def api_ask():
-    data = request.get_json(force=True) or {}
-    message = data.get("message", "").strip()
-    ai_type = data.get("ai_type", "groq")
-    session_id = data.get("session_id") or str(uuid.uuid4())
-
-    if not message:
-        return jsonify({"success": False, "error": "الرسالة فارغة"}), 400
-
-    save_conversation("user", message, session_id)
-    add_to_history("user", message, session_id)
-
-    reply, provider = generate_ai_response(session_id, message, ai_type)
-
-    save_conversation("assistant", reply, session_id)
-    add_to_history("assistant", reply, session_id)
-    save_master_info("last_activity", datetime.utcnow().isoformat())
-
-    return jsonify({
-        "success": True,
-        "reply": reply,
-        "session_id": session_id,
-        "provider": provider
-    })
-
-
-@app.route("/api/v1/feedback", methods=["POST"])
-@jwt_required()
-def api_feedback():
-    data = request.get_json(force=True) or {}
-    session_id = data.get("session_id")
-    score = float(data.get("score", 0.0))
-    comment = data.get("comment", "").strip()
-
-    if not session_id:
-        return jsonify({"success": False, "error": "session_id مطلوب"}), 400
-
-    # استخدام RLHF القوي (PPO-Inspired)
-    process_feedback("", "", score, session_id, comment)
-
-    # تسجيل إضافي إذا كان التأثير قوي
-    if abs(score) > 0.35:
-        advantage = calculate_advantage(session_id, score)
-        save_knowledge(
-            topic=f"RLHF_PPO_Update_{datetime.utcnow().strftime('%Y%m%d')}",
-            content=f"Score: {score} | Advantage: {advantage}\nComment: {comment}",
-            source="strong_rlhf",
-            importance=abs(score)
-        )
-
-    return jsonify({
-        "success": True,
-        "message": "شكراً لتغذيتك الراجعة. سماء تتطور باستمرار."
-    })
-
-
-@app.route("/api/v1/upload", methods=["POST"])
-@jwt_required()
-@limiter.limit("15 per minute")
-def api_upload():
-    if 'file' not in request.files:
-        return jsonify({"success": False, "error": "لم يتم إرسال ملف"}), 400
-
-    file = request.files['file']
-    session_id = request.form.get('session_id') or str(uuid.uuid4())
-    filename = secure_filename(file.filename)
-    file_path = UPLOAD_FOLDER / filename
-    file.save(file_path)
-
-    analysis = analyze_file(str(file_path), filename)
-    extracted = analysis.get("text", "")[:7500] if analysis.get("success") else ""
-
-    if filename.lower().endswith(('.jpg', '.jpeg', '.png')):
-        gemini = analyze_image_with_gemini(str(file_path), os.environ.get("GEMINI_API_KEY"))
-        if gemini.get("success"):
-            extracted += f"\n\n[تحليل Gemini Vision]:\n{gemini['description']}"
-
-    save_uploaded_file(filename, file.filename, analysis.get("type", ""), file_path.stat().st_size, extracted)
-    save_conversation("user", f"[رفع ملف: {filename}]", session_id)
-    save_conversation("assistant", f"تم تحليل الملف:\n{extracted[:2200]}", session_id)
-
-    file_path.unlink(missing_ok=True)
-    return jsonify({"success": True, "reply": extracted[:2500], "session_id": session_id})
-
-
-@app.route("/api/v1/clear", methods=["POST"])
-@jwt_required()
-def api_clear():
-    data = request.get_json(force=True) or {}
-    clear_conversation_history(data.get("session_id"))
-    return jsonify({"success": True})
-
-
-@app.route("/api/v1/status", methods=["GET"])
-def api_status():
-    return jsonify({
-        "name": ENTITY_NAME,
-        "version": "4.1",
-        "groq": bool(os.environ.get("GROQ_API_KEY")),
-        "gemini": bool(os.environ.get("GEMINI_API_KEY")),
-        "redis": bool(os.environ.get("REDIS_URL")),
-        "rlhf": "PPO-Inspired + Clipped Updates",
-        "personality": get_personality_summary()
-    })
-
-
-# === Backward Compatibility ===
 @app.route("/ask", methods=["POST"])
 def ask():
     data = request.get_json(force=True) or {}
@@ -284,7 +173,6 @@ def ask():
 
 @app.route("/upload", methods=["POST"])
 def upload():
-    """مسار رفع الملفات - متوافق مع الواجهة القديمة"""
     try:
         if 'file' not in request.files:
             return jsonify({"reply": "لم يتم إرسال أي ملف."})
@@ -331,6 +219,18 @@ def feedback():
 def clear():
     clear_conversation_history(request.get_json(force=True).get("session_id"))
     return jsonify({"status": "success"})
+
+
+@app.route("/api/v1/status", methods=["GET"])
+def api_status():
+    return jsonify({
+        "name": ENTITY_NAME,
+        "version": "4.2",
+        "groq": bool(os.environ.get("GROQ_API_KEY")),
+        "gemini": bool(os.environ.get("GEMINI_API_KEY")),
+        "rlhf": "PPO-Inspired + Clipped Updates",
+        "personality": get_personality_summary()
+    })
 
 
 if __name__ == "__main__":
