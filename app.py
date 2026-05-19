@@ -6,7 +6,7 @@ import requests
 import sys
 import re
 import json
-import hashlib
+import uuid
 from datetime import datetime, timedelta
 from flask import Flask, render_template, request, jsonify, session
 from werkzeug.utils import secure_filename
@@ -61,7 +61,7 @@ class AdvancedMemory:
     """مدير الذاكرة المتقدم - يتذكر كل شيء"""
     
     def __init__(self):
-        self.session_buffers = {}  # تخزين مؤقت للجلسات النشطة
+        self.session_buffers = {}
     
     def get_session_id(self, request) -> str:
         """استخراج أو إنشاء معرف جلسة فريد"""
@@ -72,7 +72,6 @@ class AdvancedMemory:
         if not session_id:
             session_id = request.cookies.get('sky_session_id')
         if not session_id:
-            import uuid
             session_id = str(uuid.uuid4())
         return session_id
     
@@ -157,7 +156,7 @@ def build_smart_context(session_id: str, user_message: str, extra_context: str =
 # ============================================================================
 
 def call_gateway(messages: list, model: str) -> str:
-    """استدعاء البوابة الموحدة"""
+    """استدعاء البوابة الموحدة - بمهلة قصيرة جداً"""
     if not GATEWAY_URL:
         return None
     try:
@@ -167,7 +166,7 @@ def call_gateway(messages: list, model: str) -> str:
             "temperature": 0.3,
             "max_tokens": 2048
         }
-        resp = requests.post(f"{GATEWAY_URL}/v1/chat/completions", json=payload, timeout=50)
+        resp = requests.post(f"{GATEWAY_URL}/v1/chat/completions", json=payload, timeout=8)
         resp.raise_for_status()
         data = resp.json()
         return data.get("content", data.get("choices", [{}])[0].get("message", {}).get("content", ""))
@@ -204,7 +203,6 @@ def call_gemini(messages: list) -> str:
     try:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
         
-        # تحويل تنسيق الرسائل لنظام Gemini
         full_prompt = ""
         for msg in messages:
             if msg["role"] == "system":
@@ -226,30 +224,31 @@ def call_gemini(messages: list) -> str:
         return None
 
 def get_ai_response(session_id: str, user_message: str, ai_type: str, extra_context: str = "") -> tuple:
-    """الحصول على رد من الذكاء الاصطناعي مع إعادة المحاولة التلقائية"""
+    """
+    الحصول على رد من الذكاء الاصطناعي.
+    الأولوية: النماذج المباشرة (أسرع) -> البوابة (احتياط) -> النموذج الآخر (طوارئ)
+    """
     
-    # بناء السياق الذكي
     messages = build_smart_context(session_id, user_message, extra_context)
-    
-    # المحاولات المتتالية
     response = None
     used_provider = None
     
-    # 1. محاولة البوابة أولاً
-    if GATEWAY_URL:
+    # 1. محاولة النموذج المباشر أولاً (أسرع)
+    if ai_type == "groq":
+        response = call_groq(messages)
+        if response:
+            used_provider = "groq-direct"
+    else:
+        response = call_gemini(messages)
+        if response:
+            used_provider = "gemini-direct"
+    
+    # 2. إذا فشل النموذج المباشر، نجرب البوابة
+    if not response and GATEWAY_URL:
         gateway_model = "groq/llama-3.3-70b-versatile" if ai_type == "groq" else "google/gemini-1.5-flash"
         response = call_gateway(messages, gateway_model)
         if response:
             used_provider = f"gateway-{ai_type}"
-    
-    # 2. إذا فشلت البوابة، استخدم النموذج المباشر
-    if not response:
-        if ai_type == "groq":
-            response = call_groq(messages)
-            used_provider = "groq-direct"
-        else:
-            response = call_gemini(messages)
-            used_provider = "gemini-direct"
     
     # 3. تجربة النموذج الآخر كبديل أخير
     if not response:
@@ -284,23 +283,18 @@ def ask():
         ai_type = data.get("ai_type", "groq")
         session_id = data.get("session_id")
         
-        # الحصول على معرف الجلسة
         if not session_id:
             session_id = request.headers.get('X-Session-Id')
         if not session_id:
-            import uuid
             session_id = str(uuid.uuid4())
         
         if not user_message:
             return jsonify({"reply": "الرجاء كتابة رسالة.", "session_id": session_id})
         
-        # حفظ رسالة المستخدم فوراً
         memory_manager.add_to_memory(session_id, "user", user_message)
         
-        # تحليل النية
         intent = analyze_intent(user_message)
         
-        # معالجة الروابط
         extra_context = ""
         urls = extract_all_urls(user_message)
         for url in urls:
@@ -310,17 +304,13 @@ def ask():
                 save_url_analysis(url, result.get("title", ""), result.get("text", ""))
                 save_knowledge(topic=f"رابط: {result.get('title', url)}", content=result['text'][:2000], source=url)
         
-        # الحصول على الرد
         ai_reply, used_provider = get_ai_response(session_id, user_message, ai_type, extra_context)
         
-        # حفظ رد الذكاء الاصطناعي
         memory_manager.add_to_memory(session_id, "assistant", ai_reply)
         
-        # حفظ معلومات عن المستخدم
         save_master_info("آخر_نشاط", user_message[:100])
         save_master_info("آخر_رد", ai_reply[:100])
         
-        # إحصائيات السياق
         context_count = len(get_recent_conversations(100, session_id))
         
         return jsonify({
@@ -347,14 +337,12 @@ def upload():
         
         session_id = request.form.get('session_id') or request.headers.get('X-Session-Id')
         if not session_id:
-            import uuid
             session_id = str(uuid.uuid4())
         
         filename = secure_filename(file.filename)
         file_path = os.path.join(UPLOAD_FOLDER, filename)
         file.save(file_path)
         
-        # تحليل الملف
         result = analyze_file(file_path, file.filename)
         
         extracted_text = ""
@@ -363,7 +351,6 @@ def upload():
             file_type = result.get("type", "غير معروف")
             save_uploaded_file(filename, file.filename, file_type, os.path.getsize(file_path), extracted_text)
             
-            # تحليل الصور بشكل خاص
             if file_type.lower() in ['jpg','jpeg','png','gif','webp','bmp']:
                 img_analysis = analyze_image_with_gemini(file_path, GEMINI_API_KEY)
                 if img_analysis["success"]:
