@@ -1,6 +1,7 @@
 """
 سماء - التطبيق الرئيسي المتكامل
-النسخة النهائية الجبارة v4.2 | جاهزة للنشر على Render (Free Tier)
+النسخة الاحترافية المتقدمة v4.5
+متوافقة مع memory.py v3.9 | واعية + RLHF + شخصية متطورة
 """
 
 import os
@@ -14,7 +15,7 @@ from flask import Flask, render_template, request, jsonify
 from werkzeug.utils import secure_filename
 from werkzeug.exceptions import RequestEntityTooLarge
 
-from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity
+from flask_jwt_extended import JWTManager
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
@@ -22,12 +23,17 @@ import sys
 sys.path.append(str(Path(__file__).parent / "core"))
 
 from memory import (
-    init_db, save_conversation, get_full_conversation_context,
-    get_all_knowledge_text, get_master_profile_text,
-    save_knowledge, save_master_info, save_uploaded_file,
-    save_url_analysis, clear_conversation_history,
-    process_feedback, get_personality_summary,
-    apply_rlhf_update, calculate_advantage
+    init_db,
+    save_conversation,
+    get_full_conversation_context,
+    get_all_knowledge_text,
+    save_knowledge,
+    save_uploaded_file,
+    save_url_analysis,
+    clear_conversation_history,
+    process_feedback,
+    get_personality_summary,
+    save_master_info
 )
 from sky_core import get_enhanced_system_prompt, add_to_history, ENTITY_NAME
 from sky_analyzer import analyze_url, analyze_file, analyze_image_with_gemini
@@ -35,24 +41,17 @@ from sky_analyzer import analyze_url, analyze_file, analyze_image_with_gemini
 # ====================== إعداد التطبيق ======================
 app = Flask(__name__, template_folder="templates", static_folder="static")
 
-app.secret_key = os.environ.get("SECRET_KEY", "sky-final-secret-2026")
+app.secret_key = os.environ.get("SECRET_KEY", "sky-professional-secret-2026")
 app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET_KEY", app.secret_key)
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(minutes=90)
-app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
 
 jwt = JWTManager(app)
-
-# ====================== Rate Limiter (متوافق مع الخطة المجانية) ======================
-# نستخدم الذاكرة افتراضيًا (مناسب لـ Render Free)
-# إذا أردت استخدام Redis لاحقًا، فقط ضع REDIS_URL في المتغيرات البيئية
-redis_url = os.environ.get("REDIS_URL", "memory://")
 
 limiter = Limiter(
     key_func=get_remote_address,
     app=app,
     default_limits=["80 per minute"],
-    storage_uri=redis_url,
-    strategy="fixed-window"
+    storage_uri="memory://"
 )
 
 UPLOAD_FOLDER = Path("/tmp/sky_uploads")
@@ -99,10 +98,12 @@ def call_provider(messages: list, provider: str):
                 headers={"Authorization": f"Bearer {key}"},
                 json={
                     "model": os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile"),
-                    "messages": messages, "temperature": 0.32, "max_tokens": 2200
-                }, timeout=55
+                    "messages": messages,
+                    "temperature": 0.32,
+                    "max_tokens": 2200
+                },
+                timeout=55
             )
-            r.raise_for_status()
             return r.json()["choices"][0]["message"]["content"].strip()
 
         elif provider == "gemini":
@@ -111,10 +112,9 @@ def call_provider(messages: list, provider: str):
             url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={key}"
             prompt = "\n\n".join([f"{m['role']}: {m['content']}" for m in messages])
             r = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]}, timeout=55)
-            r.raise_for_status()
             return r.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
     except Exception as e:
-        logger.warning(f"فشل {provider}: {str(e)[:120]}")
+        logger.warning(f"فشل استدعاء {provider}: {e}")
         return None
     return None
 
@@ -162,6 +162,7 @@ def ask():
 
     save_conversation("user", message, session_id)
     add_to_history("user", message, session_id)
+    save_master_info("last_activity", datetime.utcnow().isoformat())
 
     reply, provider = generate_ai_response(session_id, message, ai_type)
 
@@ -178,9 +179,6 @@ def upload():
             return jsonify({"reply": "لم يتم إرسال أي ملف."})
 
         file = request.files['file']
-        if file.filename == '':
-            return jsonify({"reply": "اسم الملف فارغ."})
-
         session_id = request.form.get('session_id') or str(uuid.uuid4())
         filename = secure_filename(file.filename)
         file_path = UPLOAD_FOLDER / filename
@@ -225,10 +223,10 @@ def clear():
 def api_status():
     return jsonify({
         "name": ENTITY_NAME,
-        "version": "4.2",
+        "version": "4.5",
         "groq": bool(os.environ.get("GROQ_API_KEY")),
         "gemini": bool(os.environ.get("GEMINI_API_KEY")),
-        "rlhf": "PPO-Inspired + Clipped Updates",
+        "rlhf": "PPO-Inspired + Personality Evolution",
         "personality": get_personality_summary()
     })
 
