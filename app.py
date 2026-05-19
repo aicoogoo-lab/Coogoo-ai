@@ -1,5 +1,5 @@
 # app.py
-# سماء - نسخة احترافية متكاملة. دمج الدقة الجديدة مع القدرات الكاملة.
+# سماء - نسخة احترافية متكاملة مع بوابة الذكاء العالمي (Sky Gateway)
 
 import os
 import requests
@@ -25,12 +25,15 @@ UPLOAD_FOLDER = '/tmp/sky_uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024
 
-# مفاتيح API
+# مفاتيح API (للاستخدام المباشر الاحتياطي)
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
 GROQ_MODEL = "llama-3.3-70b-versatile"
 GEMINI_MODEL = "gemini-1.5-flash"
+
+# --- رابط البوابة الجديدة ---
+GATEWAY_URL = os.environ.get("GATEWAY_URL", "https://sky-gateway.onrender.com")
 
 # شخصية سماء (دمج: الصرامة الجديدة + القدرات الكاملة)
 SYSTEM_PERSONA = get_system_prompt("سيدي") + """
@@ -82,7 +85,32 @@ def build_messages(user_message, extra_context=""):
     messages.append({"role": "user", "content": user_message})
     return messages
 
-# ---------- استدعاء النماذج ----------
+# ---------- استدعاء البوابة (الجديد) ----------
+def call_gateway(user_message, extra_context="", model="groq/llama-3.3-70b-versatile"):
+    """محاولة استخدام البوابة الموحدة أولاً."""
+    if not GATEWAY_URL:
+        return None
+    try:
+        messages = build_messages(user_message, extra_context)
+        payload = {
+            "model": model,
+            "messages": messages,
+            "temperature": 0.2,
+            "max_tokens": 2048
+        }
+        resp = requests.post(
+            f"{GATEWAY_URL}/v1/chat/completions",
+            json=payload,
+            timeout=45
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        # البوابة ترجع {"role": "assistant", "content": "..."}
+        return data.get("content", "")
+    except Exception:
+        return None
+
+# ---------- استدعاء النماذج المباشرة (احتياط) ----------
 def call_groq(user_message, extra_context=""):
     if not GROQ_API_KEY:
         return "مفتاح Groq غير مضبوط."
@@ -120,12 +148,12 @@ def call_gemini(user_message, extra_context=""):
 def home():
     return render_template("index.html", entity_name=ENTITY_NAME)
 
-# ---------- نقطة المحادثة (ذكية: تفرز تلقائيًا) ----------
+# ---------- نقطة المحادثة (ذكية: بوابة أولاً، ثم احتياط) ----------
 @app.route("/ask", methods=["POST"])
 def ask():
     data = request.get_json(force=True) or {}
     user_message = data.get("message", "").strip()
-    model = data.get("ai_type", "groq")
+    model = data.get("ai_type", "groq")  # "groq" أو "gemini" من الواجهة
 
     if not user_message:
         return jsonify({"reply": "اكتب رسالة أولاً."})
@@ -133,10 +161,9 @@ def ask():
     # --- الفرز التلقائي: هل هذا رابط؟ ---
     url_match = is_url(user_message)
     extra_context = ""
-    
+
     if url_match:
         url = url_match.group(0)
-        # نحلل الرابط ونضيف محتواه للسياق
         result = analyze_url(url)
         if result["success"]:
             extra_context = f"المحتوى الفعلي للرابط ({url}):\n{result['text'][:4000]}"
@@ -145,20 +172,24 @@ def ask():
         else:
             extra_context = f"فشل فتح الرابط: {result.get('error')}"
 
-    # --- استدعاء النموذج المناسب ---
-    try:
-        if model == "gemini":
-            try:
+    # --- استدعاء النموذج (بوابة أولاً) ---
+    reply = None
+
+    # نحدد اسم النموذج المناسب للبوابة
+    gateway_model = "groq/llama-3.3-70b-versatile" if model == "groq" else "gemini/gemini-1.5-flash"
+
+    # 1) محاولة استخدام البوابة
+    reply = call_gateway(user_message, extra_context, gateway_model)
+
+    # 2) إذا فشلت البوابة، نستخدم النماذج المباشرة
+    if not reply:
+        try:
+            if model == "gemini":
                 reply = call_gemini(user_message, extra_context)
-            except:
+            else:
                 reply = call_groq(user_message, extra_context)
-        else:
-            try:
-                reply = call_groq(user_message, extra_context)
-            except:
-                reply = call_gemini(user_message, extra_context)
-    except:
-        reply = "حدث خطأ في الاتصال. حاولي مجددًا."
+        except:
+            reply = "حدث خطأ في الاتصال. حاولي مجددًا."
 
     # حفظ في الذاكرة
     save_conversation("user", user_message)
