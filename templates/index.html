@@ -2,941 +2,512 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>سماء • Sky AI - رفيقتك الذكية الحية</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>سماء • Sky AI</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  
   <style>
-    /* ============================================
-       سماء - الواجهة الذكية الحية v6.0
-       نبض، عمق، وعي، حياة
-    ============================================ */
-    
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
-
+    /* =============================================
+       سماء - الواجهة الذكية الحية v6.0 (المستقبلية)
+    ============================================= */
     :root {
       --primary: #6366f1;
-      --primary-dark: #4f46e5;
-      --primary-glow: rgba(99, 102, 241, 0.4);
-      --accent: #c026d3;
-      --accent-glow: rgba(192, 38, 211, 0.3);
-      --bg: #0a0a2a;
-      --card: rgba(30, 30, 60, 0.75);
+      --accent: #d946ef;
+      --bg: #090d16;
+      --card: rgba(22, 28, 45, 0.6);
       --text: #f1f5f9;
       --text-muted: #94a3b8;
-      --border: rgba(255, 255, 255, 0.1);
-      --user-bubble: linear-gradient(135deg, #6366f1, #c026d3);
-      --assistant-bubble: rgba(255, 255, 255, 0.08);
-      --shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.5);
-      --glow: 0 0 30px rgba(99, 102, 241, 0.3);
+      --border: rgba(99, 102, 241, 0.15);
+      --glow: rgba(99, 102, 241, 0.3);
+      --user-bubble: linear-gradient(135deg, #4f46e5, #c026d3);
+      --assistant-bubble: rgba(30, 41, 59, 0.7);
     }
 
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
     body {
       font-family: 'Cairo', system-ui, sans-serif;
-      background: linear-gradient(135deg, #0a0a2a 0%, #1a1a3a 50%, #0f0f2a 100%);
+      background-color: var(--bg);
       color: var(--text);
       min-height: 100vh;
-      display: flex;
-      align-items: center;
+      display: flex; 
+      align-items: center; 
       justify-content: center;
-      padding: 12px;
+      padding: 0;
+      overflow: hidden;
       position: relative;
-      overflow-x: hidden;
     }
 
-    /* خلفية الجسيمات الذكية */
-    #particles-canvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 0;
+    /* خلفية الجسيمات الحية */
+    #ambient-particles {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 1;
       pointer-events: none;
     }
 
-    /* عين السماء الذكية */
-    .sky-eye {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      width: 50px;
-      height: 50px;
-      background: linear-gradient(135deg, var(--primary), var(--accent));
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 100;
-      box-shadow: var(--glow);
-      cursor: pointer;
-      transition: all 0.3s ease;
-      animation: float 3s ease-in-out infinite;
-    }
-    
-    .sky-eye::before {
-      content: '👁';
-      font-size: 24px;
-      animation: pulse 2s ease-in-out infinite;
-    }
-    
-    .sky-eye.listening::before {
-      content: '🎧';
-      animation: listeningWave 0.8s ease-in-out infinite;
-    }
-    
-    .sky-eye.thinking::before {
-      content: '💭';
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes float {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-8px); }
-    }
-    
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.1); opacity: 0.8; }
-    }
-    
-    @keyframes listeningWave {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.2); text-shadow: 0 0 10px white; }
-    }
-    
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-
-    /* الحاوية الرئيسية - زجاجية بعمق */
+    /* حاوية التطبيق الذكي الذائب في الخلفية */
     .chat-app {
-      width: 100%;
-      max-width: 780px;
-      height: 92vh;
-      max-height: 880px;
-      background: rgba(30, 30, 60, 0.55);
-      backdrop-filter: blur(20px);
-      border-radius: 40px;
-      box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-      display: flex;
-      flex-direction: column;
+      width: 100%; max-width: 760px; height: 100vh;
+      background: var(--card);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      display: flex; flex-direction: column; 
       overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, 0.15);
+      border: 1px solid var(--border);
       position: relative;
-      z-index: 1;
+      z-index: 2;
+      box-shadow: 0 0 50px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(99, 102, 241, 0.05);
     }
 
-    /* الشريط العلوي */
+    @media (min-width: 768px) {
+      .chat-app {
+        height: 92vh;
+        max-height: 850px;
+        border-radius: 32px;
+        box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.6);
+      }
+    }
+
+    /* الشريط العلوي - النبض العصبي */
     .top-bar {
-      padding: 20px 24px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: rgba(20, 20, 45, 0.7);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 16px 22px; display: flex; justify-content: space-between; align-items: center;
+      background: rgba(15, 23, 42, 0.4); 
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
     }
 
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
+    .brand { display: flex; align-items: center; gap: 14px; }
+    
+    /* الأفاتار الحي - يتنفس */
     .avatar {
-      width: 52px;
-      height: 52px;
+      width: 48px; height: 48px;
       background: linear-gradient(135deg, var(--primary), var(--accent));
-      border-radius: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 26px;
-      box-shadow: var(--glow);
-      animation: avatarBreathing 3s ease-in-out infinite;
-      transition: all 0.3s ease;
+      border-radius: 16px; display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 22px;
+      position: relative;
+      box-shadow: 0 0 15px var(--glow);
+      animation: livingPulse 3s infinite ease-in-out;
     }
     
-    @keyframes avatarBreathing {
-      0%, 100% { 
-        transform: scale(1);
-        box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
-      }
-      50% { 
-        transform: scale(1.03);
-        box-shadow: 0 0 40px rgba(99, 102, 241, 0.6);
-      }
+    /* هالة الوعي الخارجي خلف الأفاتار */
+    .avatar::after {
+      content: ''; position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px;
+      border-radius: 18px; background: linear-gradient(135deg, var(--primary), var(--accent));
+      z-index: -1; opacity: 0.5; filter: blur(6px);
     }
 
     .title {
-      font-size: 1.6rem;
-      font-weight: 800;
-      background: linear-gradient(90deg, #a5b4fc, #c084fc, #f0abfc);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-size: 200% auto;
-      animation: titleShine 4s linear infinite;
+      font-size: 1.4rem; font-weight: 800; letter-spacing: -0.5px;
+      background: linear-gradient(90deg, #ffffff, #a5b4fc);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
-    
-    @keyframes titleShine {
-      0% { background-position: 0% center; }
-      100% { background-position: 200% center; }
-    }
-
-    .subtitle {
-      font-size: 0.7rem;
-      color: var(--text-muted);
-      margin-top: -3px;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-    
-    .subtitle i {
-      font-size: 10px;
-      animation: blink 1.5s ease-in-out infinite;
-    }
-    
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.3; }
-    }
+    .subtitle { font-size: 0.75rem; color: var(--text-muted); margin-top: -1px; display: flex; align-items: center; gap: 5px; }
+    .subtitle::before { content: ''; width: 6px; height: 6px; background: #10b981; border-radius: 50%; display: inline-block; box-shadow: 0 0 8px #10b981; }
 
     .icon-btn {
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      width: 40px;
-      height: 40px;
-      border-radius: 14px;
-      color: var(--text-muted);
-      cursor: pointer;
-      transition: all 0.2s ease;
+      background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.05);
+      color: var(--text-muted); width: 38px; height: 38px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    
-    .icon-btn:hover {
-      background: rgba(255, 255, 255, 0.2);
-      transform: scale(1.05);
-    }
+    .icon-btn:hover { color: #ef4444; background: rgba(239, 68, 68, 0.1); transform: scale(1.05); }
 
-    /* منطقة الشات */
-    .chat-area {
-      flex: 1;
-      overflow-y: auto;
-      padding: 24px 20px;
+    /* منطقة الشات والتدفق الحيوي */
+    .chat-area { 
+      flex: 1; overflow-y: auto; padding: 22px 18px; 
+      background: rgba(10, 15, 26, 0.4);
       scroll-behavior: smooth;
     }
-    
-    .chat-area::-webkit-scrollbar {
-      width: 4px;
-    }
-    
-    .chat-area::-webkit-scrollbar-track {
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 10px;
-    }
-    
-    .chat-area::-webkit-scrollbar-thumb {
-      background: var(--primary);
-      border-radius: 10px;
-    }
+    .messages { display: flex; flex-direction: column; gap: 16px; }
 
-    .messages {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    /* الرسائل مع تأثيرات حية */
+    /* فقاعات الرسائل العضوية */
     .message {
-      max-width: 85%;
-      padding: 14px 20px;
-      border-radius: 24px;
-      position: relative;
-      animation: messageEnter 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-      line-height: 1.6;
-      font-size: 15px;
+      max-width: 85%; padding: 14px 18px; border-radius: 22px;
+      position: relative; line-height: 1.6; font-size: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      transform-origin: top;
+      animation: messageEnter 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     }
     
-    @keyframes messageEnter {
-      0% {
-        opacity: 0;
-        transform: translateY(20px) scale(0.95);
-      }
-      100% {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
-    }
-
     .message.user {
-      background: linear-gradient(135deg, var(--primary), var(--accent));
-      color: white;
-      align-self: flex-end;
-      border-bottom-right-radius: 8px;
-      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+      background: var(--user-bubble); color: white; align-self: flex-end; 
+      border-bottom-right-radius: 4px; box-shadow: 0 8px 20px rgba(99, 102, 241, 0.25);
     }
-    
-    .message.user::before {
-      content: '';
-      position: absolute;
-      bottom: -8px;
-      right: 0;
-      width: 0;
-      height: 0;
-      border-style: solid;
-      border-width: 8px 8px 0 0;
-      border-color: var(--accent) transparent transparent transparent;
-      filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.1));
-    }
-
     .message.assistant {
-      background: rgba(255, 255, 255, 0.08);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      align-self: flex-start;
-      border-bottom-left-radius: 8px;
-    }
-    
-    .message.assistant::before {
-      content: '';
-      position: absolute;
-      bottom: -8px;
-      left: 0;
-      width: 0;
-      height: 0;
-      border-style: solid;
-      border-width: 8px 0 0 8px;
-      border-color: rgba(255, 255, 255, 0.08) transparent transparent transparent;
+      background: var(--assistant-bubble); border: 1px solid var(--border);
+      color: var(--text); align-self: flex-start; border-bottom-left-radius: 4px;
+      backdrop-filter: blur(5px);
     }
 
-    /* مؤشر الكتابة النابض الحيوي */
+    /* مؤشر الوعي والتفكير */
     .typing-indicator {
-      align-self: flex-start;
-      background: rgba(255, 255, 255, 0.08);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      padding: 12px 20px;
-      border-radius: 20px;
-      display: flex;
-      gap: 8px;
-      width: fit-content;
-      animation: breathingBorder 1.5s ease-in-out infinite;
+      align-self: flex-start; background: var(--assistant-bubble); border: 1px solid var(--border);
+      padding: 12px 18px; border-radius: 20px; display: flex; align-items: center; gap: 8px;
+      color: var(--text-muted); font-size: 0.85rem;
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.05);
+      animation: thinkingPulse 2s infinite ease-in-out;
     }
-    
-    @keyframes breathingBorder {
-      0%, 100% {
-        border-color: rgba(99, 102, 241, 0.3);
-        box-shadow: 0 0 10px rgba(99, 102, 241, 0.1);
-      }
-      50% {
-        border-color: rgba(99, 102, 241, 0.8);
-        box-shadow: 0 0 25px rgba(99, 102, 241, 0.3);
-      }
-    }
-    
-    .typing-text {
-      font-size: 13px;
-      color: var(--text-muted);
-    }
-    
-    .dot {
-      width: 8px;
-      height: 8px;
-      background: linear-gradient(135deg, var(--primary), var(--accent));
-      border-radius: 50%;
-      animation: typingWave 1.2s ease-in-out infinite;
-    }
-    
-    .dot:nth-child(2) { animation-delay: 0.15s; }
-    .dot:nth-child(3) { animation-delay: 0.3s; }
-    .dot:nth-child(4) { animation-delay: 0.45s; }
-    
-    @keyframes typingWave {
-      0%, 60%, 100% {
-        transform: translateY(0);
-        opacity: 0.4;
-      }
-      30% {
-        transform: translateY(-10px);
-        opacity: 1;
-      }
-    }
+    .dot-container { display: flex; gap: 4px; align-items: center; }
+    .dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: wave 1.2s infinite; }
+    .dot:nth-child(2) { animation-delay: 0.2s; background: var(--primary); }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+    .hidden { display: none !important; }
 
-    /* شريط الإدخال */
-    .input-bar {
-      padding: 16px 20px 20px;
-      background: rgba(20, 20, 45, 0.7);
-      backdrop-filter: blur(12px);
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    /* شريط الإدخال والهالة العصبية */
+    .input-bar { 
+      padding: 16px; 
+      background: rgba(15, 23, 42, 0.6); 
+      border-top: 1px solid var(--border); 
     }
-
     .input-container {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: rgba(255, 255, 255, 0.06);
-      border-radius: 28px;
-      padding: 6px 6px 6px 16px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(30, 41, 59, 0.7); 
+      border-radius: 24px; padding: 6px 10px;
+      border: 1px solid var(--border);
       transition: all 0.3s ease;
     }
-    
     .input-container:focus-within {
-      border-color: var(--primary);
-      box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    #message-input {
-      flex: 1;
-      border: none;
-      background: transparent;
-      color: var(--text);
-      font-size: 15px;
-      font-family: 'Cairo', sans-serif;
-      padding: 12px 0;
-      outline: none;
-      direction: rtl;
+      border-color: var(--accent);
+      box-shadow: 0 0 20px var(--glow);
+      transform: translateY(-1px);
     }
     
-    #message-input::placeholder {
-      color: var(--text-muted);
+    #message-input { 
+      flex: 1; border: none; font-size: 15px; outline: none; 
+      background: transparent; color: white; padding: 8px 4px;
     }
+    #message-input::placeholder { color: rgba(255,255,255,0.3); }
 
-    .attach-btn, .send-btn {
+    .input-bar .icon-btn {
+      background: transparent; border: none; color: var(--text-muted);
+    }
+    .input-bar .icon-btn:hover { color: var(--primary); background: rgba(99, 102, 241, 0.1); }
+
+    .send-button {
       background: linear-gradient(135deg, var(--primary), var(--accent));
-      border: none;
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      color: white;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      color: white; border: none; width: 40px; height: 40px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.3s ease;
+      box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
     }
-    
-    .attach-btn {
-      background: rgba(255, 255, 255, 0.1);
-    }
-    
-    .send-btn {
-      background: linear-gradient(135deg, var(--primary), var(--accent));
-      box-shadow: 0 2px 10px rgba(99, 102, 241, 0.4);
-    }
-    
-    .send-btn:active {
-      transform: scale(0.95);
-    }
+    .send-button:hover { transform: scale(1.05); filter: brightness(1.1); box-shadow: 0 0 15px var(--accent); }
 
-    /* معاينة الملفات */
-    .file-preview-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 12px;
-      padding: 0 8px;
+    /* ملفات المرفقات الذكية */
+    .file-preview-wrapper {
+      display: flex; flex-wrap: wrap; gap: 8px; padding: 0 8px;
     }
-    
     .file-preview {
-      background: rgba(255, 255, 255, 0.08);
-      border-radius: 12px;
-      padding: 6px 12px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(255, 255, 255, 0.05); padding: 6px 12px; border-radius: 12px; 
+      margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.05);
+      font-size: 0.8rem; animation: messageEnter 0.2s ease;
     }
-    
     .file-preview button {
-      background: rgba(255, 255, 255, 0.2);
-      border: none;
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      color: white;
-      cursor: pointer;
-    }
-    
-    /* أزرار الردود */
-    .message-reactions {
-      display: flex;
-      gap: 8px;
-      margin-top: 10px;
-    }
-    
-    .reaction-btn {
-      background: rgba(255, 255, 255, 0.08);
-      border: none;
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      font-size: 14px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-    
-    .reaction-btn:active {
-      transform: scale(1.2);
+      background: transparent; border: none; color: #ef4444; font-size: 1rem; cursor: pointer;
     }
 
-    /* تأثيرات الذكاء */
-    .neural-glow {
-      position: fixed;
-      bottom: 100px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 200px;
-      height: 200px;
-      background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
-      border-radius: 50%;
-      pointer-events: none;
-      z-index: 0;
-      opacity: 0;
-      transition: opacity 0.3s ease;
+    /* تحسين شريط التمرير (Scrollbar) ليصبح خفياً وذكياً */
+    .chat-area::-webkit-scrollbar { width: 4px; }
+    .chat-area::-webkit-scrollbar-track { background: transparent; }
+    .chat-area::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.2); border-radius: 99px; }
+
+    /* الأنيميشنات الحية الحركية */
+    @keyframes messageEnter { 
+      from { opacity: 0; transform: translateY(12px) scale(0.98); } 
+      to { opacity: 1; transform: translateY(0) scale(1); } 
     }
-    
-    .hidden {
-      display: none !important;
+    @keyframes wave { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-6px); } }
+    @keyframes livingPulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 15px rgba(99, 102, 241, 0.3); }
+      50% { transform: scale(1.03); box-shadow: 0 0 25px rgba(217, 70, 239, 0.5); }
     }
-    
-    /* تنسيقات الجوال */
-    @media (max-width: 768px) {
-      body {
-        padding: 0;
-      }
-      
-      .chat-app {
-        height: 100vh;
-        max-height: none;
-        border-radius: 0;
-      }
-      
-      .message {
-        max-width: 90%;
-      }
-      
-      .top-bar {
-        padding: 16px 20px;
-      }
-      
-      .avatar {
-        width: 45px;
-        height: 45px;
-        font-size: 22px;
-      }
-      
-      .title {
-        font-size: 1.3rem;
-      }
+    @keyframes thinkingPulse {
+      0%, 100% { border-color: var(--border); box-shadow: 0 0 15px rgba(99, 102, 241, 0.05); }
+      50% { border-color: var(--accent); box-shadow: 0 0 20px rgba(217, 70, 239, 0.15); }
     }
   </style>
 </head>
 <body>
 
-  <canvas id="particles-canvas"></canvas>
-  <div class="sky-eye" id="skyEye"></div>
-  <div class="neural-glow" id="neuralGlow"></div>
+  <canvas id="ambient-particles"></canvas>
 
   <div class="chat-app">
     <div class="top-bar">
       <div class="brand">
-        <div class="avatar" id="avatar">
-          <i class="fas fa-feather-alt"></i>
-        </div>
+        <div class="avatar"><i class="fas fa-feather-alt"></i></div>
         <div>
           <div class="title">سماء</div>
-          <div class="subtitle">
-            <i class="fas fa-circle"></i>
-            <span id="status-text">متصلة</span>
-          </div>
+          <div class="subtitle">رفيقتك الدافئة</div>
         </div>
       </div>
-      <button id="clear-chat" class="icon-btn">
-        <i class="fas fa-trash-alt"></i>
-      </button>
+      <div>
+        <button id="clear-chat" class="icon-btn" title="مسح المحادثة"><i class="fas fa-trash-alt"></i></button>
+      </div>
     </div>
 
     <div class="chat-area" id="chat-area">
       <div class="messages" id="messages"></div>
+      
       <div id="typing-indicator" class="typing-indicator hidden">
-        <span class="typing-text">سماء تفكر</span>
-        <span class="dot"></span>
-        <span class="dot"></span>
-        <span class="dot"></span>
-        <span class="dot"></span>
+        <span>سماء تعي وتفكر</span>
+        <div class="dot-container">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        </div>
       </div>
     </div>
 
     <div class="input-bar">
+      <div id="file-preview-container" class="file-preview-wrapper"></div>
       <div class="input-container">
         <input type="file" id="file-input" style="display: none;" multiple>
-        <button id="attach-btn" class="attach-btn">
-          <i class="fas fa-paperclip"></i>
-        </button>
-        <input type="text" id="message-input" placeholder="اكتب لسماء..." autocomplete="off">
-        <button id="send-btn" class="send-btn">
-          <i class="fas fa-paper-plane"></i>
-        </button>
+        <button id="attach-btn" class="icon-btn" title="إرفاق ملف"><i class="fas fa-paperclip"></i></button>
+        <input type="text" id="message-input" placeholder="اكتب لسماء، إنها تستمع إليك..." autocomplete="off">
+        <button id="send-btn" class="send-button"><i class="fas fa-paper-plane"></i></button>
       </div>
-      <div id="file-preview-container" class="file-preview-container"></div>
     </div>
   </div>
 
   <script>
-    (function() {
-      // ============================================
-      // خلفية الجسيمات الذكية
-      // ============================================
-      const canvas = document.getElementById('particles-canvas');
-      const ctx = canvas.getContext('2d');
-      let particles = [];
-      let mouseX = 0, mouseY = 0;
-      
-      function resizeCanvas() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+    // 1. نظام محرك الجسيمات الحية التفاعلية الخلفية (Ambient Particles Network)
+    const canvas = document.getElementById('ambient-particles');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    class Particle {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 2 + 0.5;
+        this.speedX = Math.random() * 0.4 - 0.2;
+        this.speedY = Math.random() * 0.4 - 0.2;
+        this.opacity = Math.random() * 0.5 + 0.2;
       }
-      
-      function initParticles() {
-        particles = [];
-        const particleCount = Math.min(80, Math.floor(window.innerWidth / 15));
-        for (let i = 0; i < particleCount; i++) {
-          particles.push({
-            x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height,
-            radius: Math.random() * 2 + 1,
-            vx: (Math.random() - 0.5) * 0.3,
-            vy: (Math.random() - 0.5) * 0.2,
-            alpha: Math.random() * 0.3 + 0.2
-          });
-        }
-      }
-      
-      function drawParticles() {
-        if (!ctx) return;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        for (let p of particles) {
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(99, 102, 241, ${p.alpha})`;
-          ctx.fill();
-          
-          // حركة الذكاء - تتجه نحو المؤشر
-          const dx = mouseX - p.x;
-          const dy = mouseY - p.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 150) {
-            const angle = Math.atan2(dy, dx);
-            p.vx += Math.cos(angle) * 0.02;
-            p.vy += Math.sin(angle) * 0.02;
-          }
-          
-          // تخميد الحركة
-          p.vx *= 0.98;
-          p.vy *= 0.98;
-          
-          p.x += p.vx;
-          p.y += p.vy;
-          
-          // عودة عند الخروج
-          if (p.x < 0) p.x = canvas.width;
-          if (p.x > canvas.width) p.x = 0;
-          if (p.y < 0) p.y = canvas.height;
-          if (p.y > canvas.height) p.y = 0;
-        }
-        
-        // رسم خطوط بين الجسيمات القريبة
-        for (let i = 0; i < particles.length; i++) {
-          for (let j = i + 1; j < particles.length; j++) {
-            const dx = particles[i].x - particles[j].x;
-            const dy = particles[i].y - particles[j].y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < 100) {
-              ctx.beginPath();
-              ctx.moveTo(particles[i].x, particles[i].y);
-              ctx.lineTo(particles[j].x, particles[j].y);
-              ctx.strokeStyle = `rgba(99, 102, 241, ${0.1 * (1 - dist / 100)})`;
-              ctx.stroke();
-            }
+      update(touchX, touchY) {
+        this.x += this.speedX;
+        this.y += this.speedY;
+
+        if (this.x > canvas.width) this.x = 0;
+        else if (this.x < 0) this.x = canvas.width;
+        if (this.y > canvas.height) this.y = 0;
+        else if (this.y < 0) this.y = canvas.height;
+
+        // تفاعل ذكي خفيف عند لمس شاشة الموبايل
+        if (touchX && touchY) {
+          let dx = touchX - this.x;
+          let dy = touchY - this.y;
+          let distance = Math.sqrt(dx * dx + dy * dy);
+          if (distance < 100) {
+            this.x += dx * 0.02;
+            this.y += dy * 0.02;
           }
         }
-        
-        requestAnimationFrame(drawParticles);
       }
-      
-      function initParticlesSystem() {
-        resizeCanvas();
-        initParticles();
-        drawParticles();
-        
-        window.addEventListener('resize', () => {
-          resizeCanvas();
-          initParticles();
+      draw() {
+        ctx.fillStyle = `rgba(99, 102, 241, ${this.opacity})`;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // تقليل العدد للموبايل للحفاظ على الأداء المذهل والسلاسة
+    const particleCount = 45;
+    for (let i = 0; i < particleCount; i++) {
+      particles.push(new Particle());
+    }
+
+    let lastTouchX = null;
+    let lastTouchY = null;
+    window.addEventListener('pointermove', (e) => {
+      lastTouchX = e.clientX;
+      lastTouchY = e.clientY;
+    });
+    window.addEventListener('pointerleave', () => {
+      lastTouchX = null; lastTouchY = null;
+    });
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        p.update(lastTouchX, lastTouchY);
+        p.draw();
+      });
+      requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
+
+    // 2. منطق التطبيق والمحادثة والتكامل (SkyChat Machine)
+    class SkyChat {
+      constructor() {
+        this.messagesEl = document.getElementById('messages');
+        this.input = document.getElementById('message-input');
+        this.sendBtn = document.getElementById('send-btn');
+        this.typing = document.getElementById('typing-indicator');
+        this.clearBtn = document.getElementById('clear-chat');
+        this.attachBtn = document.getElementById('attach-btn');
+        this.fileInput = document.getElementById('file-input');
+        this.filePreviewContainer = document.getElementById('file-preview-container');
+
+        this.sessionId = localStorage.getItem('sky_session') || this.generateSessionId();
+        this.selectedFiles = [];
+
+        this.init();
+      }
+
+      generateSessionId() {
+        const id = 'sky-' + Date.now();
+        localStorage.setItem('sky_session', id);
+        return id;
+      }
+
+      init() {
+        this.sendBtn.addEventListener('click', () => this.sendMessage());
+        this.input.addEventListener('keypress', e => {
+          if (e.key === 'Enter') this.sendMessage();
         });
-        
-        window.addEventListener('mousemove', (e) => {
-          mouseX = e.clientX;
-          mouseY = e.clientY;
-        });
-        
-        window.addEventListener('touchmove', (e) => {
-          if (e.touches[0]) {
-            mouseX = e.touches[0].clientX;
-            mouseY = e.touches[0].clientY;
-          }
-        });
+        this.clearBtn.addEventListener('click', () => this.clearChat());
+        this.attachBtn.addEventListener('click', () => this.fileInput.click());
+        this.fileInput.addEventListener('change', () => this.handleFileSelect());
+
+        this.restoreMessages();
+        this.showWelcomeIfEmpty();
       }
-      
-      // ============================================
-      // قلب التطبيق - SkyChat
-      // ============================================
-      class SkyChat {
-        constructor() {
-          this.messagesEl = document.getElementById('messages');
-          this.input = document.getElementById('message-input');
-          this.sendBtn = document.getElementById('send-btn');
-          this.typing = document.getElementById('typing-indicator');
-          this.clearBtn = document.getElementById('clear-chat');
-          this.attachBtn = document.getElementById('attach-btn');
-          this.fileInput = document.getElementById('file-input');
-          this.filePreviewContainer = document.getElementById('file-preview-container');
-          this.chatArea = document.getElementById('chat-area');
-          this.skyEye = document.getElementById('skyEye');
-          this.statusText = document.getElementById('status-text');
-          this.neuralGlow = document.getElementById('neuralGlow');
-          this.avatar = document.getElementById('avatar');
-          
-          this.sessionId = localStorage.getItem('sky_session') || this.generateSessionId();
-          this.selectedFiles = [];
-          
-          // تأثير الاهتزاز (للجوال)
-          this.vibrate = () => {
-            if (window.navigator && window.navigator.vibrate) {
-              window.navigator.vibrate(10);
-            }
-          };
-          
-          this.init();
+
+      async sendMessage() {
+        const text = this.input.value.trim();
+        if (!text && this.selectedFiles.length === 0) return;
+
+        if (text) this.addMessage(text, 'user');
+        this.input.value = '';
+
+        // معالجة المرفقات
+        for (let file of this.selectedFiles) {
+          await this.uploadFile(file);
         }
-        
-        generateSessionId() {
-          const id = 'sky-' + Date.now() + '-' + Math.random().toString(36).substr(2, 8);
-          localStorage.setItem('sky_session', id);
-          return id;
-        }
-        
-        init() {
-          this.sendBtn.addEventListener('click', () => this.sendMessage());
-          this.input.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this.sendMessage();
+        this.selectedFiles = [];
+        this.filePreviewContainer.innerHTML = '';
+
+        if (!text) return;
+
+        this.showTyping(true);
+
+        try {
+          const res = await fetch('/ask', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: text, session_id: this.sessionId })
           });
-          this.clearBtn.addEventListener('click', () => this.clearChat());
-          this.attachBtn.addEventListener('click', () => this.fileInput.click());
-          this.fileInput.addEventListener('change', () => this.handleFileSelect());
-          
-          // تأثير الاستماع عند الكتابة
-          this.input.addEventListener('focus', () => {
-            this.skyEye.classList.add('listening');
-            this.statusText.textContent = 'تستمع';
-            this.neuralGlow.style.opacity = '0.5';
-          });
-          
-          this.input.addEventListener('blur', () => {
-            this.skyEye.classList.remove('listening');
-            this.statusText.textContent = 'متصلة';
-            this.neuralGlow.style.opacity = '0';
-          });
-          
-          this.restoreMessages();
-          this.showWelcomeIfEmpty();
+          const data = await res.json();
+          this.showTyping(false);
+          if (data.reply) this.addMessage(data.reply, 'assistant');
+        } catch {
+          this.showTyping(false);
+          this.addMessage('حدث خطأ غير متوقع في الاتصال بسماء. اعد المحاولة لطفاً.', 'assistant');
         }
-        
-        async sendMessage() {
-          const text = this.input.value.trim();
-          if (!text && this.selectedFiles.length === 0) return;
-          
-          // تأثير الإرسال
-          this.vibrate();
-          this.sendBtn.style.transform = 'scale(0.95)';
-          setTimeout(() => {
-            this.sendBtn.style.transform = '';
-          }, 150);
-          
-          // إظهار تأثير النبض
-          this.neuralGlow.style.opacity = '0.8';
-          setTimeout(() => {
-            if (!this.input.matches(':focus')) {
-              this.neuralGlow.style.opacity = '0';
-            }
-          }, 500);
-          
-          if (text) {
-            this.addMessage(text, 'user');
-          }
-          this.input.value = '';
-          
-          // رفع الملفات
-          for (let file of this.selectedFiles) {
-            await this.uploadFile(file);
-          }
-          this.selectedFiles = [];
-          this.filePreviewContainer.innerHTML = '';
-          
-          if (!text) return;
-          
-          this.showTyping(true);
-          this.skyEye.classList.add('thinking');
-          this.statusText.textContent = 'تفكر';
-          
-          try {
-            const res = await fetch('/ask', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ 
-                message: text, 
-                session_id: this.sessionId 
-              })
-            });
-            const data = await res.json();
-            this.showTyping(false);
-            this.skyEye.classList.remove('thinking');
-            this.statusText.textContent = 'متصلة';
-            
-            if (data.reply) {
-              this.addMessage(data.reply, 'assistant');
-              // اهتزاز خفيف عند الرد
-              setTimeout(() => this.vibrate(), 100);
-            }
-          } catch (error) {
-            this.showTyping(false);
-            this.skyEye.classList.remove('thinking');
-            this.statusText.textContent = 'متصلة';
-            this.addMessage('حدث خطأ. حاول مرة أخرى.', 'assistant');
-          }
+      }
+
+      async uploadFile(file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('session_id', this.sessionId);
+
+        try {
+          const res = await fetch('/upload', { method: 'POST', body: formData });
+          const data = await res.json();
+          if (data.reply) this.addMessage(data.reply, 'assistant');
+        } catch {
+          this.addMessage('فشل في معالجة ورفع الملف المرفق.', 'assistant');
         }
-        
-        async uploadFile(file) {
-          const formData = new FormData();
-          formData.append('file', file);
-          formData.append('session_id', this.sessionId);
-          
-          try {
-            const res = await fetch('/upload', { method: 'POST', body: formData });
-            const data = await res.json();
-            if (data.reply) this.addMessage(data.reply, 'assistant');
-          } catch {
-            this.addMessage('فشل رفع الملف.', 'assistant');
-          }
-        }
-        
-        handleFileSelect() {
-          const files = Array.from(this.fileInput.files);
-          this.selectedFiles = [...this.selectedFiles, ...files];
-          this.renderFilePreviews();
-          this.fileInput.value = '';
-        }
-        
-        renderFilePreviews() {
-          this.filePreviewContainer.innerHTML = '';
-          this.selectedFiles.forEach((file, index) => {
-            const div = document.createElement('div');
-            div.className = 'file-preview';
-            let icon = 'fa-file';
-            if (file.type.startsWith('image/')) icon = 'fa-image';
-            else if (file.type.startsWith('video/')) icon = 'fa-video';
-            else if (file.type === 'application/pdf') icon = 'fa-file-pdf';
-            
-            div.innerHTML = `
-              <i class="fas ${icon}"></i>
-              <span>${file.name.length > 30 ? file.name.substr(0, 27) + '...' : file.name}</span>
-              <button onclick="window.skyChat.removeFile(${index})">×</button>
-            `;
-            this.filePreviewContainer.appendChild(div);
-          });
-        }
-        
-        removeFile(index) {
-          this.selectedFiles.splice(index, 1);
-          this.renderFilePreviews();
-        }
-        
-        addMessage(content, sender) {
+      }
+
+      handleFileSelect() {
+        const files = Array.from(this.fileInput.files);
+        this.selectedFiles = [...this.selectedFiles, ...files];
+        this.renderFilePreviews();
+        this.fileInput.value = '';
+      }
+
+      renderFilePreviews() {
+        this.filePreviewContainer.innerHTML = '';
+        this.selectedFiles.forEach((file, index) => {
           const div = document.createElement('div');
-          div.className = `message ${sender}`;
-          div.innerHTML = content.replace(/\n/g, '<br>');
-          this.messagesEl.appendChild(div);
-          
-          // إضافة أزرار ردود للمساعد
-          if (sender === 'assistant') {
-            const reactions = document.createElement('div');
-            reactions.className = 'message-reactions';
-            reactions.innerHTML = `
-              <button class="reaction-btn" onclick="this.closest('.message').style.opacity='0.7'">👍</button>
-              <button class="reaction-btn" onclick="this.closest('.message').style.opacity='0.7'">❤️</button>
-              <button class="reaction-btn" onclick="this.closest('.message').style.opacity='0.7'">📋</button>
-            `;
-            div.appendChild(reactions);
-          }
-          
-          this.scrollToBottom();
-        }
-        
-        showTyping(show) {
-          this.typing.classList.toggle('hidden', !show);
-          this.scrollToBottom();
-        }
-        
-        scrollToBottom() {
-          setTimeout(() => {
-            this.chatArea.scrollTop = this.chatArea.scrollHeight;
-          }, 50);
-        }
-        
-        showWelcomeIfEmpty() {
-          if (this.messagesEl.children.length === 0) {
-            setTimeout(() => {
-              this.addMessage('مرحباً بك... أنا سماء. كيف حالك اليوم؟ ✨', 'assistant');
-            }, 500);
-          }
-        }
-        
-        clearChat() {
-          if (!confirm('مسح المحادثة؟')) return;
-          this.messagesEl.innerHTML = '';
-          localStorage.removeItem('sky_session');
-          this.sessionId = this.generateSessionId();
-          this.showWelcomeIfEmpty();
-          this.vibrate();
+          div.className = 'file-preview';
+          div.innerHTML = `
+            <span><i class="fas fa-file-alt" style="margin-left: 5px; color: var(--primary);"></i>${file.name.crypto || file.name.substring(0,20)}</span>
+            <button onclick="window.SkyChat.removeFile(${index})">×</button>
+          `;
+          this.filePreviewContainer.appendChild(div);
+        });
+      }
+
+      removeFile(index) {
+        this.selectedFiles.splice(index, 1);
+        this.renderFilePreviews();
+      }
+
+      addMessage(content, sender) {
+        const div = document.createElement('div');
+        div.className = `message ${sender}`;
+        div.innerHTML = content.replace(/\n/g, '<br>');
+        this.messagesEl.appendChild(div);
+        this.saveMessageToLocal(content, sender);
+        this.scrollToBottom();
+      }
+
+      showTyping(show) {
+        this.typing.classList.toggle('hidden', !show);
+        this.scrollToBottom();
+      }
+
+      scrollToBottom() {
+        const chatArea = document.getElementById('chat-area');
+        chatArea.scrollTop = chatArea.scrollHeight;
+      }
+
+      showWelcomeIfEmpty() {
+        if (this.messagesEl.children.length === 0) {
+          this.addMessage('مرحباً بك... أنا سماء، رفيقتك الدافئة هنا دائماً للاستماع إليك ومساعدتك بذكاء وعمق. كيف حال روحك اليوم؟ ✨', 'assistant');
         }
       }
-      
-      // تشغيل كل شيء
-      initParticlesSystem();
-      window.skyChat = new SkyChat();
-      
-      // إضافة تأثير تنفس مستمر للرأس
-      setInterval(() => {
-        const avatar = document.getElementById('avatar');
-        if (avatar) {
-          avatar.style.animation = 'none';
-          setTimeout(() => {
-            avatar.style.animation = 'avatarBreathing 3s ease-in-out infinite';
-          }, 10);
-        }
-      }, 3000);
-    })();
+
+      saveMessageToLocal(content, sender) {
+        let history = JSON.parse(localStorage.getItem(`history_${this.sessionId}`)) || [];
+        history.push({ content, sender });
+        localStorage.setItem(`history_${this.sessionId}`, JSON.stringify(history));
+      }
+
+      restoreMessages() {
+        let history = JSON.parse(localStorage.getItem(`history_${this.sessionId}`)) || [];
+        history.forEach(msg => {
+          const div = document.createElement('div');
+          div.className = `message ${msg.sender}`;
+          div.innerHTML = msg.content.replace(/\n/g, '<br>');
+          this.messagesEl.appendChild(div);
+        });
+        this.scrollToBottom();
+      }
+
+      clearChat() {
+        if (!confirm('هل تود مسح الذاكرة الحالية وجلسة المحادثة؟')) return;
+        this.messagesEl.innerHTML = '';
+        localStorage.removeItem(`history_${this.sessionId}`);
+        localStorage.removeItem('sky_session');
+        this.sessionId = this.generateSessionId();
+        this.showWelcomeIfEmpty();
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      window.SkyChat = new SkyChat();
+    });
   </script>
 </body>
 </html>
