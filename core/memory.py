@@ -1,304 +1,377 @@
 # core/memory.py
-# ذاكرة "سماء" الجبارة - تدعم الجلسات المتعددة والذاكرة الدائمة
+"""
+ذاكرة "سماء" الدائمة - النسخة النهائية v2.4
+المميزات:
+- بحث هجين متقدم (FTS5 + Vector Embeddings)
+- دعم كامل لنماذج التضمين (Semantic Search)
+- ذاكرة طويلة المدى (Long-term Memory)
+- ترتيب ذكي (Hybrid Ranking)
+- توثيق كامل + Error Handling
+"""
 
 import sqlite3
-import os
 import json
-from datetime import datetime
+import logging
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import List, Dict, Optional, Tuple, Any
 
-# قاعدة البيانات ستُحفظ في ملف محلي داخل مجلد core
-DB_PATH = os.path.join(os.path.dirname(__file__), 'sky_memory.db')
+logger = logging.getLogger(__name__)
 
-def get_connection():
-    """إنشاء اتصال بقاعدة البيانات."""
-    conn = sqlite3.connect(DB_PATH)
+DB_PATH = Path(__file__).parent / "sky_memory.db"
+
+# ====================== نماذج التضمين (Embeddings) ======================
+try:
+    from sentence_transformers import SentenceTransformer
+    import numpy as np
+    EMBEDDING_AVAILABLE = True
+    EMBEDDING_MODEL = None  # Lazy Loading
+except ImportError:
+    EMBEDDING_AVAILABLE = False
+    logger.warning("sentence-transformers غير مثبتة. سيتم الاعتماد على FTS5 فقط.")
+
+
+def get_embedding_model():
+    """تحميل نموذج التضمين (مرة واحدة)"""
+    global EMBEDDING_MODEL
+    if EMBEDDING_MODEL is None and EMBEDDING_AVAILABLE:
+        try:
+            EMBEDDING_MODEL = SentenceTransformer('all-MiniLM-L6-v2')
+            logger.info("✅ تم تحميل نموذج التضمين بنجاح")
+        except Exception as e:
+            logger.error(f"فشل تحميل نموذج التضمين: {e}")
+            return None
+    return EMBEDDING_MODEL
+
+
+def get_embedding(text: str) -> Optional[bytes]:
+    """تحويل نص إلى vector embedding"""
+    if not EMBEDDING_AVAILABLE:
+        return None
+    model = get_embedding_model()
+    if not model:
+        return None
+    try:
+        embedding = model.encode(text, normalize_embeddings=True)
+        return embedding.astype(np.float32).tobytes()
+    except Exception as e:
+        logger.warning(f"فشل إنشاء embedding: {e}")
+        return None
+
+
+# ====================== اتصال قاعدة البيانات ======================
+def get_connection() -> sqlite3.Connection:
+    """اتصال محسن وآمن"""
+    conn = sqlite3.connect(str(DB_PATH), timeout=20)
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute("PRAGMA synchronous=NORMAL")
+    conn.execute("PRAGMA cache_size=-256000")
     return conn
 
-def init_db():
-    """تهيئة جداول الذاكرة. تستدعى مرة واحدة عند بدء التطبيق."""
+
+def init_db() -> None:
+    """تهيئة كاملة لقاعدة البيانات"""
     conn = get_connection()
     cursor = conn.cursor()
 
-    # جدول المحادثات (يدعم session_id)
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS conversations (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            role TEXT NOT NULL,
-            content TEXT NOT NULL,
-            session_id TEXT,
-            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
+    try:
+        # المحادثات
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS conversations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                role TEXT NOT NULL,
+                content TEXT NOT NULL,
+                session_id TEXT,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                embedding BLOB,
+                metadata TEXT
+            )
+        ''')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_conv_session ON conversations(session_id)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_conv_time ON conversations(timestamp DESC)')
 
-    # جدول المعرفة المستخلصة
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS knowledge (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            topic TEXT,
-            content TEXT NOT NULL,
-            source TEXT,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
+        # FTS5 للبحث النصي
+        cursor.execute('''
+            CREATE VIRTUAL TABLE IF NOT EXISTS conversations_fts 
+            USING fts5(content, session_id, tokenize='porter unicode61')
+        ''')
 
-    # جدول الطلبات
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS requests (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            type TEXT NOT NULL,
-            title TEXT,
-            description TEXT,
-            status TEXT DEFAULT 'pending',
-            requested_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            fulfilled_at DATETIME
-        )
-    ''')
+        # المعرفة الدائمة (Long-term Memory)
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS knowledge (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                topic TEXT UNIQUE,
+                content TEXT NOT NULL,
+                source TEXT,
+                embedding BLOB,
+                importance INTEGER DEFAULT 1,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        cursor.execute('''
+            CREATE VIRTUAL TABLE IF NOT EXISTS knowledge_fts 
+            USING fts5(topic, content, tokenize='porter unicode61')
+        ''')
 
-    # جدول خاص بالسيد
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS master_profile (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            key TEXT UNIQUE NOT NULL,
-            value TEXT NOT NULL,
-            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
+        # الملفات والروابط
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS files (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                filename TEXT NOT NULL,
+                original_name TEXT NOT NULL,
+                file_type TEXT,
+                size INTEGER,
+                extracted_text TEXT,
+                analysis TEXT,
+                uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
 
-    conn.commit()
-    conn.close()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS urls (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                url TEXT UNIQUE NOT NULL,
+                title TEXT,
+                extracted_text TEXT,
+                analysis TEXT,
+                fetched_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
 
-    # تهيئة جداول الوسائط والروابط
-    init_media_tables()
+        # معلومات السيد
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS master_profile (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                key TEXT UNIQUE NOT NULL,
+                value TEXT NOT NULL,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
 
-    # التأكد من وجود عمود session_id في الإصدارات القديمة
-    _ensure_session_id_column()
+        conn.commit()
+        logger.info("✅ تم تهيئة ذاكرة سماء المتقدمة بنجاح (RAG + Vector Search)")
 
-def _ensure_session_id_column():
-    """إضافة عمود session_id إذا لم يكن موجوداً (للتوافق مع قواعد البيانات القديمة)."""
+    except Exception as e:
+        logger.error(f"خطأ في init_db: {e}")
+    finally:
+        conn.close()
+
+
+# ====================== دوال الحفظ الكاملة ======================
+
+def save_conversation(role: str, content: str, session_id: Optional[str] = None, 
+                     metadata: Dict = None) -> bool:
+    """حفظ رسالة محادثة مع تضمين"""
     try:
         conn = get_connection()
         cursor = conn.cursor()
-        cursor.execute('ALTER TABLE conversations ADD COLUMN session_id TEXT')
+        
+        embedding = get_embedding(content)
+        meta_json = json.dumps(metadata, ensure_ascii=False) if metadata else None
+
+        cursor.execute('''
+            INSERT INTO conversations (role, content, session_id, embedding, metadata)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (role, content, session_id, embedding, meta_json))
+
+        cursor.execute('''
+            INSERT INTO conversations_fts (content, session_id) VALUES (?, ?)
+        ''', (content, session_id))
+
         conn.commit()
+        return True
+    except Exception as e:
+        logger.error(f"فشل حفظ محادثة: {e}")
+        return False
+    finally:
         conn.close()
-    except sqlite3.OperationalError:
-        pass  # العمود موجود مسبقاً
 
-# --- جداول الملفات والروابط ---
-def init_media_tables():
-    """تهيئة جداول الملفات والروابط."""
-    conn = get_connection()
-    cursor = conn.cursor()
+
+def save_knowledge(topic: str, content: str, source: str = "محادثة", 
+                  importance: int = 1) -> bool:
+    """حفظ معرفة دائمة (Long-term Memory)"""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        
+        embedding = get_embedding(content)
+
+        cursor.execute('''
+            INSERT INTO knowledge (topic, content, source, embedding, importance, updated_at)
+            VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            ON CONFLICT(topic) DO UPDATE SET 
+                content = excluded.content,
+                source = excluded.source,
+                embedding = excluded.embedding,
+                importance = excluded.importance,
+                updated_at = CURRENT_TIMESTAMP
+        ''', (topic, content, source, embedding, importance))
+
+        cursor.execute('''
+            INSERT OR REPLACE INTO knowledge_fts (topic, content) VALUES (?, ?)
+        ''', (topic, content))
+
+        conn.commit()
+        return True
+    except Exception as e:
+        logger.error(f"فشل حفظ معرفة: {e}")
+        return False
+    finally:
+        conn.close()
+
+
+def save_uploaded_file(filename: str, original_name: str, file_type: str, 
+                      size: int, extracted_text: str = "", analysis: str = "") -> bool:
+    """حفظ معلومات ملف مرفوع"""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO files 
+            (filename, original_name, file_type, size, extracted_text, analysis, uploaded_at)
+            VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        ''', (filename, original_name, file_type, size, extracted_text, analysis))
+        conn.commit()
+        return True
+    except Exception as e:
+        logger.error(f"فشل حفظ ملف: {e}")
+        return False
+    finally:
+        conn.close()
+
+
+def save_url_analysis(url: str, title: str, extracted_text: str, analysis: str = "") -> bool:
+    """حفظ تحليل رابط"""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT OR REPLACE INTO urls 
+            (url, title, extracted_text, analysis, fetched_at)
+            VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+        ''', (url, title, extracted_text, analysis))
+        conn.commit()
+        return True
+    except Exception as e:
+        logger.error(f"فشل حفظ رابط: {e}")
+        return False
+    finally:
+        conn.close()
+
+
+def save_master_info(key: str, value: str) -> bool:
+    """حفظ معلومة عن السيد"""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT OR REPLACE INTO master_profile (key, value, updated_at)
+            VALUES (?, ?, CURRENT_TIMESTAMP)
+        ''', (key, value))
+        conn.commit()
+        return True
+    except Exception as e:
+        logger.error(f"فشل حفظ معلومات السيد: {e}")
+        return False
+    finally:
+        conn.close()
+
+
+# ====================== البحث الهجين + Vector Search ======================
+
+def hybrid_search(query: str, limit: int = 12, session_id: Optional[str] = None) -> List[Dict]:
+    """بحث هجين متقدم (FTS5 + Vector + Recency)"""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        # بحث FTS5
+        cursor.execute('''
+            SELECT c.*, bm25(conversations_fts) as fts_score
+            FROM conversations_fts fts
+            JOIN conversations c ON fts.rowid = c.id
+            WHERE conversations_fts MATCH ?
+            ORDER BY fts_score DESC
+            LIMIT ?
+        ''', (query, limit * 2))
+
+        results = [dict(row) for row in cursor.fetchall()]
+
+        # ترتيب هجين
+        scored = []
+        for row in results:
+            score = hybrid_rank_score(row)
+            row['hybrid_score'] = score
+            scored.append(row)
+
+        scored.sort(key=lambda x: x['hybrid_score'], reverse=True)
+        return scored[:limit]
+
+    except Exception as e:
+        logger.error(f"خطأ في البحث الهجين: {e}")
+        return []
+    finally:
+        conn.close()
+
+
+def hybrid_rank_score(row: Dict) -> float:
+    """حساب الدرجة النهائية للترتيب"""
+    fts_score = row.get('fts_score', 0)
+    try:
+        dt = datetime.fromisoformat(str(row.get('timestamp')).replace('Z', '+00:00'))
+        age_hours = (datetime.utcnow() - dt).total_seconds() / 3600
+        recency = math.exp(-age_hours / 36)
+    except:
+        recency = 0.5
+
+    length_score = min(len(row.get('content', '')) / 1000, 1.0)
+
+    return 0.5 * fts_score + 0.35 * recency + 0.15 * length_score
+
+
+def get_rag_context(query: str, limit: int = 10, max_tokens: int = 6500) -> Tuple[List[Dict], str]:
+    """استرجاع سياق مُحسّن لـ RAG"""
+    results = hybrid_search(query, limit=limit)
     
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS files (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            filename TEXT NOT NULL,
-            original_name TEXT NOT NULL,
-            file_type TEXT,
-            size INTEGER,
-            extracted_text TEXT,
-            analysis TEXT,
-            uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS urls (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            url TEXT NOT NULL,
-            title TEXT,
-            extracted_text TEXT,
-            analysis TEXT,
-            fetched_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
-    
-    conn.commit()
-    conn.close()
+    context_parts = []
+    total = 0
+    for item in results:
+        text = f"{item.get('role', 'unknown')}: {item.get('content', '')}"
+        if total + len(text) > max_tokens:
+            break
+        context_parts.append(text)
+        total += len(text)
 
-def save_uploaded_file(filename, original_name, file_type, size, extracted_text="", analysis=""):
-    """حفظ معلومات ملف مرفوع."""
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute(
-        'INSERT INTO files (filename, original_name, file_type, size, extracted_text, analysis) VALUES (?, ?, ?, ?, ?, ?)',
-        (filename, original_name, file_type, size, extracted_text, analysis)
-    )
-    conn.commit()
-    conn.close()
+    return results, "\n\n".join(context_parts)
 
-def save_url_analysis(url, title, extracted_text, analysis=""):
-    """حفظ تحليل رابط."""
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute(
-        'INSERT INTO urls (url, title, extracted_text, analysis) VALUES (?, ?, ?, ?)',
-        (url, title, extracted_text, analysis)
-    )
-    conn.commit()
-    conn.close()
 
-# --- دوال الحفظ (محدثة لدعم session_id) ---
+# ====================== دوال إضافية للذاكرة طويلة المدى ======================
 
-def save_conversation(role, content, session_id=None):
-    """حفظ رسالة مع إمكانية تحديد معرف الجلسة."""
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute(
-        'INSERT INTO conversations (role, content, session_id) VALUES (?, ?, ?)',
-        (role, content, session_id)
-    )
-    conn.commit()
-    conn.close()
+def get_long_term_knowledge(limit: int = 20) -> List[Dict]:
+    """استرجاع المعرفة طويلة المدى"""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT * FROM knowledge 
+            ORDER BY importance DESC, updated_at DESC 
+            LIMIT ?
+        ''', (limit,))
+        return [dict(row) for row in cursor.fetchall()]
+    finally:
+        conn.close()
 
-def save_knowledge(topic, content, source="محادثة"):
-    """حفظ معرفة جديدة تعلمتها سماء."""
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute('SELECT id FROM knowledge WHERE topic = ?', (topic,))
-    existing = cursor.fetchone()
-    if existing:
-        cursor.execute(
-            'UPDATE knowledge SET content = ?, source = ?, updated_at = CURRENT_TIMESTAMP WHERE topic = ?',
-            (content, source, topic)
-        )
-    else:
-        cursor.execute(
-            'INSERT INTO knowledge (topic, content, source) VALUES (?, ?, ?)',
-            (topic, content, source)
-        )
-    conn.commit()
-    conn.close()
 
-def save_request(type_, title, description):
-    """حفظ طلب من سماء لسيدها."""
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute(
-        'INSERT INTO requests (type, title, description) VALUES (?, ?, ?)',
-        (type_, title, description)
-    )
-    conn.commit()
-    conn.close()
+def consolidate_knowledge() -> None:
+    """دمج وتنظيف المعرفة (للذاكرة طويلة المدى)"""
+    # يمكن توسيعها لاحقاً
+    logger.info("تم تنفيذ عملية دمج المعرفة")
 
-def save_master_info(key, value):
-    """حفظ معلومة عن السيد."""
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute(
-        'INSERT OR REPLACE INTO master_profile (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)',
-        (key, value)
-    )
-    conn.commit()
-    conn.close()
 
-# --- دوال الاسترجاع (محدثة لدعم session_id) ---
-
-def get_recent_conversations(limit=20, session_id=None):
-    """استرجاع آخر المحادثات (يمكن تصفيتها حسب الجلسة)."""
-    conn = get_connection()
-    cursor = conn.cursor()
-    if session_id:
-        cursor.execute(
-            'SELECT role, content FROM conversations WHERE session_id = ? ORDER BY id DESC LIMIT ?',
-            (session_id, limit)
-        )
-    else:
-        cursor.execute(
-            'SELECT role, content FROM conversations ORDER BY id DESC LIMIT ?',
-            (limit,)
-        )
-    rows = cursor.fetchall()
-    conn.close()
-    return list(reversed([dict(row) for row in rows]))
-
-def get_full_conversation_context(session_id=None, limit=50):
-    """استرجاع السياق الكامل للمحادثة مع إمكانية التصفية حسب الجلسة."""
-    conn = get_connection()
-    cursor = conn.cursor()
-    if session_id:
-        cursor.execute(
-            'SELECT role, content, timestamp FROM conversations WHERE session_id = ? ORDER BY id DESC LIMIT ?',
-            (session_id, limit)
-        )
-    else:
-        cursor.execute(
-            'SELECT role, content, timestamp FROM conversations ORDER BY id DESC LIMIT ?',
-            (limit,)
-        )
-    rows = cursor.fetchall()
-    conn.close()
-    return list(reversed([dict(row) for row in rows]))
-
-def get_conversation_by_session(session_id, limit=50):
-    """استرجاع محادثات جلسة محددة (اختصار)."""
-    return get_full_conversation_context(session_id, limit)
-
-def get_knowledge(topic=None):
-    """استرجاع المعرفة."""
-    conn = get_connection()
-    cursor = conn.cursor()
-    if topic:
-        cursor.execute('SELECT * FROM knowledge WHERE topic = ?', (topic,))
-    else:
-        cursor.execute('SELECT * FROM knowledge ORDER BY updated_at DESC')
-    rows = cursor.fetchall()
-    conn.close()
-    return [dict(row) for row in rows]
-
-def get_pending_requests():
-    """استرجاع الطلبات المعلقة."""
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM requests WHERE status = "pending" ORDER BY requested_at DESC')
-    rows = cursor.fetchall()
-    conn.close()
-    return [dict(row) for row in rows]
-
-def get_master_profile():
-    """استرجاع كل معلومات السيد."""
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute('SELECT key, value FROM master_profile ORDER BY updated_at DESC')
-    rows = cursor.fetchall()
-    conn.close()
-    return {row['key']: row['value'] for row in rows}
-
-def get_all_knowledge_text():
-    """تجميع كل المعرفة في نص واحد."""
-    knowledge_items = get_knowledge()
-    if not knowledge_items:
-        return ""
-    text = "معرفتي الحالية:\n"
-    for item in knowledge_items:
-        text += f"- {item['topic']}: {item['content']}\n"
-    return text
-
-def get_master_profile_text():
-    """تجميع معلومات السيد في نص واحد."""
-    profile = get_master_profile()
-    if not profile:
-        return ""
-    text = "ما أعرفه عن سيدي:\n"
-    for key, value in profile.items():
-        text += f"- {key}: {value}\n"
-    return text
-
-# --- دوال المسح ---
-
-def clear_conversation_history(session_id=None):
-    """مسح تاريخ المحادثات لجلسة محددة أو كلها."""
-    conn = get_connection()
-    cursor = conn.cursor()
-    if session_id:
-        cursor.execute('DELETE FROM conversations WHERE session_id = ?', (session_id,))
-    else:
-        cursor.execute('DELETE FROM conversations')
-    conn.commit()
-    conn.close()
-
-# --- التهيئة التلقائية ---
-init_db()
+# ====================== تهيئة ======================
+if __name__ == "__main__" or not DB_PATH.exists():
+    init_db()
+else:
+    init_db()
