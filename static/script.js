@@ -1,184 +1,261 @@
-const chatWindow = document.getElementById("chatWindow");
-const userInput = document.getElementById("userInput");
-const sendBtn = document.getElementById("sendBtn");
-const modelSelect = document.getElementById("modelSelect");
-const settingsToggle = document.getElementById("settingsToggle");
-const settingsPanel = document.getElementById("settingsPanel");
-const closeSettings = document.getElementById("closeSettings");
-const clearChatBtn = document.getElementById("clearChat");
-const clearLocalBtn = document.getElementById("clearLocal");
-const scrollDownBtn = document.getElementById("scrollDown");
+// static/script.js - النسخة الجبارة
+let currentSessionId = localStorage.getItem('sky_session_id') || null;
+let messageCount = 0;
 
-const STORAGE_KEY = "samaa_chat_history_v1";
+// تهيئة المتغيرات
+const messagesEl = document.getElementById("messages");
+const chatContainer = document.getElementById("chat-container");
+const typingEl = document.getElementById("typing");
+const inputEl = document.getElementById("message-input");
+const sendBtn = document.getElementById("send-btn");
+const groqBtn = document.getElementById("groq-btn");
+const geminiBtn = document.getElementById("gemini-btn");
+const clearBtn = document.getElementById("clear-btn");
+const settingsBtn = document.getElementById("settings-btn");
+const settingsPanel = document.getElementById("settings-panel");
+const closeSettingsBtn = document.getElementById("close-settings");
+const defaultModelSelect = document.getElementById("default-model");
+const fileUpload = document.getElementById("file-upload");
+const urlBtn = document.getElementById("url-btn");
+const msgCountSpan = document.getElementById("msg-count");
 
-// تحميل المحادثة من التخزين المحلي
-function loadChatFromStorage() {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (!saved) return;
-    try {
-        const messages = JSON.parse(saved);
-        messages.forEach(msg => {
-            addMessage(msg.text, msg.sender, false);
-        });
-        scrollToBottom();
-    } catch (e) {
-        console.error("خطأ في قراءة المحادثة من التخزين:", e);
-    }
+let selectedModel = localStorage.getItem('sky_selected_model') || "groq";
+
+// تحديث عدد الرسائل
+function updateMsgCount() {
+    const count = document.querySelectorAll('#messages .message').length;
+    if (msgCountSpan) msgCountSpan.innerText = `${count} رسالة`;
 }
 
-// حفظ المحادثة في التخزين المحلي
-function saveChatToStorage() {
-    const bubbles = chatWindow.querySelectorAll(".message-bubble");
-    const data = [];
-    bubbles.forEach(bubble => {
-        const sender = bubble.dataset.sender || "assistant";
-        const text = bubble.querySelector(".text")?.innerText || bubble.innerText;
-        data.push({ sender, text });
-    });
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-}
-
-// إضافة رسالة للواجهة
-function addMessage(text, sender = "assistant", save = true) {
-    const row = document.createElement("div");
-    row.classList.add("message-row", sender);
-
-    const bubble = document.createElement("div");
-    bubble.classList.add("message-bubble");
-    bubble.dataset.sender = sender;
-
-    const span = document.createElement("div");
-    span.classList.add("text");
-    span.innerText = text;
-
-    bubble.appendChild(span);
-
+// إضافة رسالة مع نسخ
+function addMessage(text, sender) {
+    const div = document.createElement("div");
+    div.className = `message ${sender}`;
+    div.textContent = text;
+    
     if (sender === "assistant") {
         const copyBtn = document.createElement("button");
-        copyBtn.classList.add("copy-btn");
-        copyBtn.innerText = "نسخ";
-        copyBtn.addEventListener("click", () => {
-            navigator.clipboard.writeText(text).then(() => {
-                copyBtn.innerText = "✓";
-                setTimeout(() => (copyBtn.innerText = "نسخ"), 1000);
+        copyBtn.className = "copy-btn";
+        copyBtn.textContent = "📋";
+        copyBtn.title = "نسخ";
+        copyBtn.onclick = () => {
+            navigator.clipboard.writeText(text);
+            copyBtn.textContent = "✅";
+            setTimeout(() => copyBtn.textContent = "📋", 2000);
+        };
+        div.appendChild(copyBtn);
+    }
+    
+    messagesEl.appendChild(div);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+    updateMsgCount();
+    saveMessagesToLocal();
+}
+
+// حفظ واستعادة الرسائل
+function saveMessagesToLocal() {
+    const msgs = [];
+    document.querySelectorAll('#messages .message').forEach(el => {
+        let text = el.childNodes[0]?.nodeValue || el.innerText;
+        text = text.replace(/[📋✅]|نسخ/gi, '').trim();
+        const sender = el.classList.contains('user') ? 'user' : 'assistant';
+        msgs.push({ text, sender });
+    });
+    localStorage.setItem('sky_messages_v3', JSON.stringify(msgs));
+    localStorage.setItem('sky_session_id', currentSessionId || '');
+}
+
+function restoreMessages() {
+    const saved = localStorage.getItem('sky_messages_v3');
+    const savedSession = localStorage.getItem('sky_session_id');
+    
+    if (savedSession) currentSessionId = savedSession;
+    
+    if (saved) {
+        try {
+            const msgs = JSON.parse(saved);
+            messagesEl.innerHTML = '';
+            msgs.forEach(m => {
+                const div = document.createElement("div");
+                div.className = `message ${m.sender}`;
+                div.textContent = m.text;
+                if (m.sender === "assistant") {
+                    const copyBtn = document.createElement("button");
+                    copyBtn.className = "copy-btn";
+                    copyBtn.textContent = "📋";
+                    copyBtn.onclick = () => {
+                        navigator.clipboard.writeText(m.text);
+                        copyBtn.textContent = "✅";
+                        setTimeout(() => copyBtn.textContent = "📋", 2000);
+                    };
+                    div.appendChild(copyBtn);
+                }
+                messagesEl.appendChild(div);
             });
-        });
-        bubble.appendChild(copyBtn);
-    }
-
-    row.appendChild(bubble);
-    chatWindow.appendChild(row);
-
-    if (save) saveChatToStorage();
-    scrollToBottom();
-}
-
-// تمرير لأسفل
-function scrollToBottom() {
-    chatWindow.scrollTop = chatWindow.scrollHeight;
-}
-
-// إظهار/إخفاء زر النزول
-chatWindow.addEventListener("scroll", () => {
-    const nearBottom =
-        chatWindow.scrollHeight - chatWindow.scrollTop - chatWindow.clientHeight < 80;
-    if (nearBottom) {
-        scrollDownBtn.classList.add("hidden");
+        } catch(e) {}
     } else {
-        scrollDownBtn.classList.remove("hidden");
+        // رسالة ترحيب
+        addMessage("✨ مرحباً بك في سماء! أنا مساعدك الذكي. أسألني أي شيء، وسأتذكر كل تفاصيل محادثتنا. ✨", "assistant");
     }
-});
+    updateMsgCount();
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
 
-scrollDownBtn.addEventListener("click", scrollToBottom);
-
-// إرسال الرسالة
+// إرسال رسالة مع ذاكرة كاملة
 async function sendMessage() {
-    const text = userInput.value.trim();
+    const text = inputEl.value.trim();
     if (!text) return;
-
-    const model = modelSelect.value || "groq";
-
+    
     addMessage(text, "user");
-    userInput.value = "";
-    userInput.style.height = "auto";
-
-    const thinkingId = "thinking-" + Date.now();
-    addMessage("… سماء تفكر في رد مناسب لك", "assistant");
-    const thinkingBubble = chatWindow.querySelector(
-        `.message-bubble:last-child .text`
-    );
-    thinkingBubble.dataset.thinkingId = thinkingId;
-
+    inputEl.value = "";
+    typingEl.classList.remove("hidden");
+    
     try {
         const res = await fetch("/ask", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message: text, model })
+            headers: { 
+                "Content-Type": "application/json",
+                "X-Session-Id": currentSessionId || ''
+            },
+            body: JSON.stringify({ 
+                message: text, 
+                ai_type: selectedModel,
+                session_id: currentSessionId
+            })
         });
-
         const data = await res.json();
-        const reply = data.reply || "لم يصل رد من سماء.";
-
-        // إزالة رسالة التفكير الأخيرة
-        const lastRow = chatWindow.querySelector(".message-row.assistant:last-child");
-        if (lastRow) lastRow.remove();
-
-        addMessage(reply, "assistant");
+        
+        if (data.session_id && !currentSessionId) {
+            currentSessionId = data.session_id;
+            localStorage.setItem('sky_session_id', currentSessionId);
+        }
+        
+        typingEl.classList.add("hidden");
+        
+        // عرض معلومات الذاكرة
+        let replyText = data.reply;
+        if (data.context_used && data.context_used > 0) {
+            replyText += `\n\n📌 (أتذكر ${data.context_used} رسالة سابقة)`;
+        }
+        if (data.provider && data.provider !== 'none') {
+            // لا نعرض معلومات المزود للمستخدم العادي
+        }
+        
+        addMessage(replyText, "assistant");
     } catch (e) {
-        const lastRow = chatWindow.querySelector(".message-row.assistant:last-child");
-        if (lastRow) lastRow.remove();
-
-        addMessage("حدث خطأ أثناء الاتصال بسماء. حاول مرة أخرى.", "assistant");
+        typingEl.classList.add("hidden");
+        addMessage("⚠️ تعذر الاتصال بسماء. تأكد من اتصال الإنترنت.", "assistant");
     }
 }
 
-// تكبير/تصغير حقل الإدخال تلقائيًا
-userInput.addEventListener("input", () => {
-    userInput.style.height = "auto";
-    userInput.style.height = userInput.scrollHeight + "px";
-});
-
-// إرسال بالزر
-sendBtn.addEventListener("click", sendMessage);
-
-// إرسال بزر Enter (مع Shift للسطر الجديد)
-userInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
+// تبديل النموذج
+function setModel(model) {
+    selectedModel = model;
+    localStorage.setItem('sky_selected_model', model);
+    if (groqBtn && geminiBtn) {
+        groqBtn.classList.toggle("active", model === "groq");
+        geminiBtn.classList.toggle("active", model === "gemini");
     }
-});
+}
 
-// فتح/إغلاق الإعدادات
-settingsToggle.addEventListener("click", () => {
-    settingsPanel.classList.toggle("hidden");
-});
+// مسح المحادثة
+async function clearConversation() {
+    if (confirm("هل تريد مسح كل المحادثة؟ سيتم حذف الذاكرة بالكامل.")) {
+        messagesEl.innerHTML = "";
+        localStorage.removeItem("sky_messages_v3");
+        
+        if (currentSessionId) {
+            try {
+                await fetch("/clear", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ session_id: currentSessionId })
+                });
+            } catch(e) {}
+        }
+        
+        currentSessionId = null;
+        localStorage.removeItem('sky_session_id');
+        addMessage("✨ تم مسح المحادثة والذاكرة بالكامل. يمكنك البدء من جديد. ✨", "assistant");
+    }
+}
 
-closeSettings.addEventListener("click", () => {
-    settingsPanel.classList.add("hidden");
-});
-
-// مسح المحادثة من الباك إند + التخزين
-clearChatBtn.addEventListener("click", async () => {
-    if (!confirm("هل أنت متأكد من مسح المحادثة بالكامل؟")) return;
-
+// رفع ملف
+async function uploadFile(file) {
+    if (!file) return;
+    addMessage(`📎 جاري رفع وتحليل: ${file.name}`, "user");
+    typingEl.classList.remove("hidden");
+    
+    const formData = new FormData();
+    formData.append("file", file);
+    if (currentSessionId) formData.append("session_id", currentSessionId);
+    
     try {
-        await fetch("/clear", { method: "POST" });
-    } catch (e) {
-        console.warn("تعذر الاتصال بالخادم لمسح الذاكرة، سيتم المسح محليًا فقط.");
+        const res = await fetch("/upload", {
+            method: "POST",
+            body: formData,
+            headers: { "X-Session-Id": currentSessionId || '' }
+        });
+        const data = await res.json();
+        typingEl.classList.add("hidden");
+        
+        if (data.session_id && !currentSessionId) {
+            currentSessionId = data.session_id;
+            localStorage.setItem('sky_session_id', currentSessionId);
+        }
+        
+        addMessage(data.reply, "assistant");
+    } catch(e) {
+        typingEl.classList.add("hidden");
+        addMessage("⚠️ فشل رفع الملف.", "assistant");
     }
+}
 
-    chatWindow.innerHTML = "";
-    localStorage.removeItem(STORAGE_KEY);
-});
+// رابط
+function sendUrl() {
+    const url = prompt("ألصق الرابط هنا:");
+    if (url && url.startsWith('http')) {
+        inputEl.value = url;
+        sendMessage();
+    } else if(url) {
+        alert("الرجاء إدخال رابط صحيح يبدأ بـ http:// أو https://");
+    }
+}
 
-// تنظيف الشاشة فقط (بدون لمس ذاكرة الباك إند)
-clearLocalBtn.addEventListener("click", () => {
-    chatWindow.innerHTML = "";
-    localStorage.removeItem(STORAGE_KEY);
-});
+// ============================================================================
+// ربط الأحداث
+// ============================================================================
 
-// تحميل المحادثة عند فتح الصفحة
-window.addEventListener("load", () => {
-    loadChatFromStorage();
+document.addEventListener('DOMContentLoaded', () => {
+    if (sendBtn) sendBtn.addEventListener("click", sendMessage);
+    if (inputEl) inputEl.addEventListener("keypress", (e) => { if (e.key === "Enter") sendMessage(); });
+    if (groqBtn) groqBtn.addEventListener("click", () => setModel("groq"));
+    if (geminiBtn) geminiBtn.addEventListener("click", () => setModel("gemini"));
+    if (clearBtn) clearBtn.addEventListener("click", clearConversation);
+    if (urlBtn) urlBtn.addEventListener("click", sendUrl);
+    if (fileUpload) fileUpload.addEventListener("change", (e) => {
+        if (e.target.files[0]) uploadFile(e.target.files[0]);
+        fileUpload.value = '';
+    });
+    
+    // إعدادات
+    if (settingsBtn) {
+        settingsBtn.addEventListener("click", () => {
+            if (settingsPanel) settingsPanel.classList.toggle("hidden");
+        });
+    }
+    if (closeSettingsBtn) {
+        closeSettingsBtn.addEventListener("click", () => {
+            if (settingsPanel) settingsPanel.classList.add("hidden");
+        });
+    }
+    if (defaultModelSelect) {
+        defaultModelSelect.value = selectedModel;
+        defaultModelSelect.addEventListener("change", (e) => setModel(e.target.value));
+    }
+    
+    // استعادة الرسائل
+    restoreMessages();
+    setModel(selectedModel);
+    if (inputEl) inputEl.focus();
 });
