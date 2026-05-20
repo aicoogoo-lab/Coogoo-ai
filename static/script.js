@@ -1,22 +1,15 @@
 /* ============================================================
-   SkyOS v7.5 — Holographic JS Engine (Ultimate Edition)
-   - جلسات ذكية متقدمة
+   SkyOS v7.2 — Crown Edition (JavaScript Engine)
+   - جلسات ذكية
    - واجهة حية متحركة
    - ملفات / صوت / رؤية
    - Workspace + Settings
    - Toasts + Status + Theme
-   - نظام تقييم (Feedback/RLHF)
-   - تصدير المحادثة
-   - أوامر سريعة متطورة
-   - توافق كامل مع Font Awesome
+   - تم تصحيح جميع الأخطاء
    ============================================================ */
 
 (() => {
   "use strict";
-
-  /* ============================
-     Config & Helpers
-     ============================ */
 
   const ENDPOINTS = (window.SKY_CONFIG && window.SKY_CONFIG.endpoints) || {
     ask: "/ask",
@@ -28,24 +21,20 @@
     status: "/api/v1/status",
   };
 
-  const LS_SESSION_KEY = "sky_session_id_v75";
-  const LS_SESSIONS_LIST = "sky_sessions_list_v75";
-  const LS_THEME_KEY = "sky_theme_v75";
-  const LS_NOTES_KEY = "sky_workspace_notes_v75";
+  const LS_SESSION_KEY = "sky_session_id_v72";
+  const LS_SESSIONS_LIST = "sky_sessions_list_v72";
+  const LS_THEME_KEY = "sky_theme_v72";
+  const LS_NOTES_KEY = "sky_workspace_notes_v72";
 
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => Array.from(document.querySelectorAll(sel));
-
-  /* ============================
-     State
-     ============================ */
 
   let sessionId = loadOrCreateSessionId();
   let sessions = loadSessions();
   let isDark = loadTheme();
   let isSending = false;
 
-  // UI elements
+  // DOM Elements
   const chatWindow = $("#chat-window");
   const userInput = $("#user-input");
   const sendBtn = $("#send-btn");
@@ -70,24 +59,10 @@
   const workspacePanel = $("#workspace-panel");
   const menuToggleBtn = $("#menu-toggle");
   const sidebar = $("#sidebar");
+  const clearChatBtn = $("#clear-chat-btn");
+  const exportChatBtn = $("#export-chat-btn");
 
-  /* ============================
-     Init
-     ============================ */
-
-  setSession(sessionId);
-  renderSessionList();
-  buildSettingsPanel();
-  buildWorkspacePanel();
-  loadWorkspaceNotes();
-  loadLocalHistory();
-  pingStatus();
-  setupEvents();
-  autoResizeTextarea(userInput);
-
-  /* ============================
-     Utilities
-     ============================ */
+  // ========== Utilities ==========
 
   function loadOrCreateSessionId() {
     let id = localStorage.getItem(LS_SESSION_KEY);
@@ -116,19 +91,27 @@
   function loadTheme() {
     const saved = localStorage.getItem(LS_THEME_KEY);
     if (saved === "dark") {
+      document.body.classList.remove("light");
       document.body.classList.add("dark");
       return true;
     }
     if (saved === "light") {
+      document.body.classList.add("light");
       document.body.classList.remove("dark");
       return false;
     }
-    return document.body.classList.contains("dark");
+    return !document.body.classList.contains("light");
   }
 
   function setTheme(dark) {
     isDark = dark;
-    document.body.classList.toggle("dark", dark);
+    if (dark) {
+      document.body.classList.remove("light");
+      document.body.classList.add("dark");
+    } else {
+      document.body.classList.add("light");
+      document.body.classList.remove("dark");
+    }
     localStorage.setItem(LS_THEME_KEY, dark ? "dark" : "light");
   }
 
@@ -149,7 +132,7 @@
     renderWorkspaceSessions();
   }
 
-  function showToast(text, type = "info", timeout = 4200) {
+  function showToast(text, type = "info", timeout = 4000) {
     if (!toastContainer) return;
     const t = document.createElement("div");
     t.className = "toast";
@@ -182,7 +165,7 @@
     let safe = div.innerHTML;
     safe = safe.replace(
       /(https?:\/\/[^\s]+)/g,
-      (m) => `<a href="${m}" target="_blank" rel="noopener noreferrer" style="color: #c084fc;">${m}</a>`
+      (m) => `<a href="${m}" target="_blank" rel="noopener noreferrer" style="color: var(--primary-3);">${m}</a>`
     );
     safe = safe.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
     safe = safe.replace(/\*(.*?)\*/g, "<em>$1</em>");
@@ -193,10 +176,10 @@
   function createMessageElement({ role = "assistant", text = "", time = null, messageId = null }) {
     const row = document.createElement("div");
     row.className = `message-row ${role === "user" ? "user" : "assistant"}`;
-    if (messageId) row.dataset.messageId = messageId;
+    if (messageId) row.dataset.msgId = messageId;
 
     const avatar = document.createElement("div");
-    avatar.className = "avatar " + (role === "user" ? "user-avatar" : "assistant-avatar");
+    avatar.className = `avatar ${role === "user" ? "user-avatar" : "assistant-avatar"}`;
     avatar.innerHTML = role === "user" ? '<i class="fas fa-user"></i>' : '<i class="fas fa-robot"></i>';
 
     const bubble = document.createElement("div");
@@ -221,28 +204,33 @@
     bubble.appendChild(header);
     bubble.appendChild(content);
 
-    // إضافة أزرار التقييم للرسائل (للمساعد فقط)
-    if (role === "assistant" && messageId) {
+    // Feedback buttons for assistant messages only
+    if (role === "assistant") {
       const feedbackDiv = document.createElement("div");
       feedbackDiv.className = "message-feedback";
       feedbackDiv.style.display = "flex";
-      feedbackDiv.style.gap = "8px";
-      feedbackDiv.style.marginTop = "10px";
-      feedbackDiv.style.justifyContent = "flex-start";
+      feedbackDiv.style.gap = "12px";
+      feedbackDiv.style.marginTop = "12px";
+      feedbackDiv.style.paddingTop = "8px";
+      feedbackDiv.style.borderTop = "1px solid var(--border)";
       feedbackDiv.innerHTML = `
-        <button class="feedback-btn good" data-score="1" data-message-id="${messageId}" style="background: none; border: none; cursor: pointer; color: rgba(255,255,255,0.4); transition: all 0.2s;">
-          <i class="fas fa-thumbs-up"></i>
+        <button class="feedback-btn good" data-score="1" style="background: none; border: none; cursor: pointer; color: var(--text-muted); transition: all 0.2s;">
+          <i class="fas fa-thumbs-up"></i> مفيد
         </button>
-        <button class="feedback-btn bad" data-score="-1" data-message-id="${messageId}" style="background: none; border: none; cursor: pointer; color: rgba(255,255,255,0.4); transition: all 0.2s;">
-          <i class="fas fa-thumbs-down"></i>
+        <button class="feedback-btn bad" data-score="-1" style="background: none; border: none; cursor: pointer; color: var(--text-muted); transition: all 0.2s;">
+          <i class="fas fa-thumbs-down"></i> غير مفيد
         </button>
       `;
       bubble.appendChild(feedbackDiv);
+      
+      const goodBtn = feedbackDiv.querySelector(".good");
+      const badBtn = feedbackDiv.querySelector(".bad");
+      if (goodBtn) goodBtn.addEventListener("click", () => sendFeedback(1, sessionId, text, goodBtn, badBtn));
+      if (badBtn) badBtn.addEventListener("click", () => sendFeedback(0, sessionId, text, goodBtn, badBtn));
     }
 
     row.appendChild(avatar);
     row.appendChild(bubble);
-
     return row;
   }
 
@@ -252,22 +240,10 @@
     const el = createMessageElement({ role, text, messageId: id });
     chatWindow.appendChild(el);
     scrollToBottom();
-
-    // إضافة event listeners لأزرار التقييم
-    if (role === "assistant") {
-      const goodBtn = el.querySelector(".feedback-btn.good");
-      const badBtn = el.querySelector(".feedback-btn.bad");
-      if (goodBtn) {
-        goodBtn.addEventListener("click", () => sendFeedback(1, sessionId, id, goodBtn, badBtn));
-      }
-      if (badBtn) {
-        badBtn.addEventListener("click", () => sendFeedback(-1, sessionId, id, goodBtn, badBtn));
-      }
-    }
     return id;
   }
 
-  async function sendFeedback(score, sessId, messageId, goodBtn, badBtn) {
+  async function sendFeedback(score, sessId, comment, goodBtn, badBtn) {
     try {
       const response = await fetch(ENDPOINTS.feedback, {
         method: "POST",
@@ -275,28 +251,19 @@
         body: JSON.stringify({
           score: score === 1 ? 1 : 0,
           session_id: sessId,
-          comment: `Message: ${messageId}`,
-        }),
+          comment: comment.slice(0, 100)
+        })
       });
       
-      if (response.ok) {
-        // تحديث واجهة الأزرار
-        if (goodBtn && badBtn) {
-          if (score === 1) {
-            goodBtn.style.color = "#22c55e";
-            badBtn.style.color = "rgba(255,255,255,0.2)";
-            goodBtn.style.transform = "scale(1.1)";
-            showToast("شكراً على تقييمك الإيجابي! 🤍", "success");
-          } else {
-            badBtn.style.color = "#ef4444";
-            goodBtn.style.color = "rgba(255,255,255,0.2)";
-            badBtn.style.transform = "scale(1.1)";
-            showToast("شكراً على ملاحظاتك، سأتحسن! 🌱", "info");
-          }
-          setTimeout(() => {
-            if (goodBtn) goodBtn.style.transform = "";
-            if (badBtn) badBtn.style.transform = "";
-          }, 300);
+      if (response.ok && goodBtn && badBtn) {
+        if (score === 1) {
+          goodBtn.style.color = "#22c55e";
+          badBtn.style.color = "var(--text-muted)";
+          showToast("شكراً على تقييمك الإيجابي! 🤍", "success");
+        } else {
+          badBtn.style.color = "#ef4444";
+          goodBtn.style.color = "var(--text-muted)";
+          showToast("شكراً على ملاحظاتك، سأتحسن! 🌱", "info");
         }
       }
     } catch (e) {
@@ -352,49 +319,11 @@
     resize();
   }
 
-  function exportChat() {
-    const messages = $$("#chat-window .message-row");
-    if (!messages.length) {
-      showToast("لا توجد رسائل لتصديرها", "error");
-      return;
-    }
-
-    let exportText = `SkyOS Chat Export\nSession: ${sessionId}\nDate: ${new Date().toLocaleString("ar-SA")}\n${"=".repeat(50)}\n\n`;
-    
-    messages.forEach((msg) => {
-      const isUser = msg.classList.contains("user");
-      const author = isUser ? "أنت" : "SkyOS";
-      const content = msg.querySelector(".message-content")?.innerText || "";
-      const time = msg.querySelector(".message-time")?.innerText || "";
-      exportText += `[${author}] ${time}\n${content}\n${"-".repeat(40)}\n`;
-    });
-
-    const blob = new Blob([exportText], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `skyos_chat_${sessionId.slice(0, 8)}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast("تم تصدير المحادثة بنجاح 📄", "success");
-  }
-
-  function clearChat() {
-    if (confirm("هل أنت متأكد من مسح جميع الرسائل؟")) {
-      if (chatWindow) chatWindow.innerHTML = "";
-      localStorage.removeItem("sky_local_history_v75_" + sessionId);
-      appendMessage("assistant", "✨ تم مسح المحادثة. كيف يمكنني مساعدتك الآن؟");
-      showToast("تم مسح المحادثة", "success");
-    }
-  }
-
-  /* ============================
-     Local history mirror
-     ============================ */
+  // ========== Local History ==========
 
   function addToHistoryLocal(role, content) {
     try {
-      const key = "sky_local_history_v75_" + sessionId;
+      const key = `sky_local_history_v72_${sessionId}`;
       const raw = localStorage.getItem(key);
       const arr = raw ? JSON.parse(raw) : [];
       arr.push({ role, content, t: Date.now() });
@@ -405,30 +334,26 @@
 
   function loadLocalHistory() {
     try {
-      const key = "sky_local_history_v75_" + sessionId;
+      const key = `sky_local_history_v72_${sessionId}`;
       const raw = localStorage.getItem(key);
       const arr = raw ? JSON.parse(raw) : [];
       if (!chatWindow) return;
       chatWindow.innerHTML = "";
-      arr.forEach((m) => appendMessage(m.role, m.content));
       if (arr.length === 0) {
-        appendMessage("assistant", "مرحباً… 🌌\n\nأنا **SkyOS v7.5**، نظام ذكاء هجين واعٍ.\n\n✨ يمكنك:\n• الدردشة معي بأي موضوع\n• رفع ملفات 📄\n• إرسال صور 🖼️ للتحليل\n• إرسال صوت 🎙️\n• استخدام الأوامر السريعة: /new, /clear, /export, /workspace, /settings\n\n**أنا جاهز. اكتب ما تريد…** 🚀");
+        appendMessage("assistant", "مرحباً… 🌌\n\nأنا **SkyOS Crown Edition v7.2**، نظام ذكاء هجين واعٍ.\n\n✨ يمكنك:\n• الدردشة معي بأي موضوع\n• رفع ملفات 📄\n• إرسال صور 🖼️ للتحليل\n• إرسال صوت 🎙️\n• استخدام الأوامر السريعة: /new, /clear, /export, /help\n\n**أنا جاهز. اكتب ما تريد…** 🚀");
+      } else {
+        arr.forEach(m => appendMessage(m.role, m.content));
       }
     } catch {}
   }
 
-  /* ============================
-     Rendering
-     ============================ */
+  // ========== Rendering ==========
 
   function renderSessionList() {
     if (!sessionListEl) return;
     sessionListEl.innerHTML = "";
     if (!sessions.length) {
-      const empty = document.createElement("div");
-      empty.className = "sky-session-empty";
-      empty.innerHTML = '<i class="fas fa-inbox"></i><br>لا يوجد أرشيف بعد';
-      sessionListEl.appendChild(empty);
+      sessionListEl.innerHTML = `<div class="sky-session-empty" style="text-align:center; opacity:0.6;"><i class="fas fa-inbox"></i><br>لا يوجد أرشيف</div>`;
       return;
     }
     sessions.forEach((s) => {
@@ -450,9 +375,7 @@
     });
   }
 
-  /* ============================
-     Network
-     ============================ */
+  // ========== Network ==========
 
   async function postJSON(url, payload) {
     const res = await fetch(url, {
@@ -592,26 +515,24 @@
         const dot = connectionStatus.querySelector(".sky-status-dot");
         const text = connectionStatus.querySelector(".sky-status-text");
         if (data && !data.error) {
-          dot && (dot.style.background = "#22c55e");
-          text && (text.innerHTML = '<i class="fas fa-plug"></i> متصل • جاهز');
+          if (dot) dot.style.background = "#22c55e";
+          if (text) text.innerHTML = '<i class="fas fa-plug"></i> متصل • جاهز';
         } else {
-          dot && (dot.style.background = "#f97316");
-          text && (text.innerHTML = '<i class="fas fa-exclamation-triangle"></i> متصل جزئياً');
+          if (dot) dot.style.background = "#f97316";
+          if (text) text.innerHTML = '<i class="fas fa-exclamation-triangle"></i> متصل جزئياً';
         }
       }
     } catch {
       if (connectionStatus) {
         const dot = connectionStatus.querySelector(".sky-status-dot");
         const text = connectionStatus.querySelector(".sky-status-text");
-        dot && (dot.style.background = "#ef4444");
-        text && (text.innerHTML = '<i class="fas fa-ban"></i> غير متصل');
+        if (dot) dot.style.background = "#ef4444";
+        if (text) text.innerHTML = '<i class="fas fa-ban"></i> غير متصل';
       }
     }
   }
 
-  /* ============================
-     Quick Commands
-     ============================ */
+  // ========== Quick Commands ==========
 
   function handleQuickCommand(text) {
     const cmd = text.trim().split(/\s+/)[0].toLowerCase();
@@ -620,10 +541,10 @@
         createNewSession();
         return true;
       case "/clear":
-        clearChat();
+        clearCurrentSession();
         return true;
       case "/export":
-        exportChat();
+        exportConversation();
         return true;
       case "/workspace":
         toggleWorkspace();
@@ -640,19 +561,7 @@
   }
 
   function showHelp() {
-    const helpText = `📖 **الأوامر السريعة المتاحة:**\n\n` +
-      `/new — إنشاء جلسة جديدة\n` +
-      `/clear — مسح المحادثة الحالية\n` +
-      `/export — تصدير المحادثة إلى ملف\n` +
-      `/workspace — فتح مساحة العمل\n` +
-      `/settings — فتح الإعدادات\n` +
-      `/help — عرض هذه المساعدة\n\n` +
-      `✨ يمكنك أيضاً:\n` +
-      `• رفع ملفات (PDF, DOCX, TXT)\n` +
-      `• إرسال صور للتحليل البصري\n` +
-      `• إرسال صوت للتحويل إلى نص\n` +
-      `• تقييم الردود بـ 👍/👎`;
-    appendMessage("assistant", helpText);
+    appendMessage("assistant", "📖 **الأوامر السريعة المتاحة:**\n\n/new — جلسة جديدة\n/clear — مسح المحادثة\n/export — تصدير المحادثة\n/workspace — فتح مساحة العمل\n/settings — فتح الإعدادات\n/help — عرض هذه المساعدة\n\n✨ يمكنك أيضاً رفع ملفات، صور، أو صوت.");
   }
 
   function createNewSession() {
@@ -662,9 +571,37 @@
     showToast("جلسة جديدة جاهزة", "success");
   }
 
-  /* ============================
-     Settings Panel
-     ============================ */
+  function clearCurrentSession() {
+    if (confirm("هل أنت متأكد من مسح جميع الرسائل؟")) {
+      if (chatWindow) chatWindow.innerHTML = "";
+      localStorage.removeItem(`sky_local_history_v72_${sessionId}`);
+      appendMessage("assistant", "✨ تم مسح المحادثة. كيف يمكنني مساعدتك الآن؟");
+      showToast("تم مسح المحادثة", "success");
+    }
+  }
+
+  function exportConversation() {
+    try {
+      const key = `sky_local_history_v72_${sessionId}`;
+      const raw = localStorage.getItem(key);
+      const data = raw || "[]";
+      const blob = new Blob([data], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `skyos_conversation_${sessionId.slice(0, 8)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      showToast("تم تصدير المحادثة", "success");
+    } catch (e) {
+      console.error("exportConversation error:", e);
+      showToast("فشل تصدير المحادثة", "error");
+    }
+  }
+
+  // ========== Settings Panel ==========
 
   function buildSettingsPanel() {
     if (!settingsPanel) return;
@@ -674,7 +611,7 @@
         <div style="font-weight:700;font-size:1rem;"><i class="fas fa-cog"></i> الإعدادات</div>
         <button class="sky-icon-btn" id="close-settings-btn"><i class="fas fa-times"></i></button>
       </div>
-      <div style="font-size:0.85rem;color:rgba(255,255,255,0.6);margin-bottom:15px;">
+      <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:15px;">
         تحكم في مظهر النظام وبعض السلوكيات العامة.
       </div>
 
@@ -693,8 +630,8 @@
         <button class="sky-btn-secondary full" id="settings-export-chat" style="margin-top:6px;"><i class="fas fa-download"></i> تصدير المحادثة</button>
       </div>
 
-      <div style="margin-top:15px;font-size:0.75rem;color:rgba(255,255,255,0.4);text-align:center;">
-        <i class="fas fa-brain"></i> SkyOS v7.5 • Holographic Interface
+      <div style="margin-top:15px;font-size:0.75rem;color:var(--text-muted);text-align:center;">
+        <i class="fas fa-crown"></i> SkyOS Crown Edition v7.2
       </div>
     `;
 
@@ -714,8 +651,8 @@
     const exportChatBtn = $("#settings-export-chat");
     
     if (newSessionSettingsBtn) newSessionSettingsBtn.addEventListener("click", createNewSession);
-    if (clearSessionSettingsBtn) clearSessionSettingsBtn.addEventListener("click", clearChat);
-    if (exportChatBtn) exportChatBtn.addEventListener("click", exportChat);
+    if (clearSessionSettingsBtn) clearSessionSettingsBtn.addEventListener("click", clearCurrentSession);
+    if (exportChatBtn) exportChatBtn.addEventListener("click", exportConversation);
   }
 
   function toggleSettings(force) {
@@ -725,9 +662,7 @@
     settingsPanel.classList.toggle("hidden", !visible);
   }
 
-  /* ============================
-     Workspace Panel
-     ============================ */
+  // ========== Workspace Panel ==========
 
   function buildWorkspacePanel() {
     if (!workspacePanel) return;
@@ -737,18 +672,18 @@
         <div style="font-weight:700;font-size:1rem;"><i class="fas fa-folder-open"></i> مساحة العمل</div>
         <button class="sky-icon-btn" id="close-workspace-btn"><i class="fas fa-times"></i></button>
       </div>
-      <div style="font-size:0.85rem;color:rgba(255,255,255,0.6);margin-bottom:15px;">
+      <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:15px;">
         نظرة سريعة على الجلسات الأخيرة والملاحظات الشخصية.
       </div>
 
       <div style="margin-bottom:15px;">
         <div style="font-size:0.85rem;font-weight:600;margin-bottom:8px;"><i class="fas fa-history"></i> الجلسات الأخيرة</div>
-        <div id="workspace-sessions" style="max-height:180px;overflow:auto;border-radius:12px;border:1px solid rgba(255,255,255,0.1);padding:6px 8px;"></div>
+        <div id="workspace-sessions" style="max-height:200px;overflow:auto;border-radius:12px;border:1px solid rgba(255,255,255,0.1);padding:6px 8px;"></div>
       </div>
 
       <div style="margin-bottom:15px;">
         <div style="font-size:0.85rem;font-weight:600;margin-bottom:8px;"><i class="fas fa-pen"></i> ملاحظات سريعة</div>
-        <textarea id="workspace-notes" placeholder="اكتب ملاحظاتك هنا..." style="width:100%;min-height:80px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);padding:8px;font-size:0.85rem;background:rgba(0,0,0,0.4);color:#fff;"></textarea>
+        <textarea id="workspace-notes" placeholder="اكتب ملاحظاتك هنا..." style="width:100%;min-height:100px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);padding:8px;font-size:0.85rem;background:rgba(0,0,0,0.4);color:#fff;"></textarea>
       </div>
 
       <div style="display:flex;justify-content:flex-end;gap:8px;">
@@ -762,10 +697,14 @@
 
     renderWorkspaceSessions();
     
+    const savedNotes = localStorage.getItem(LS_NOTES_KEY);
+    const notesArea = $("#workspace-notes");
+    if (notesArea && savedNotes) notesArea.value = savedNotes;
+    
     const saveNotesBtn = $("#workspace-save-notes");
     if (saveNotesBtn) {
       saveNotesBtn.addEventListener("click", () => {
-        const notes = ($("#workspace-notes") && $("#workspace-notes").value) || "";
+        const notes = $("#workspace-notes")?.value || "";
         localStorage.setItem(LS_NOTES_KEY, notes);
         showToast("تم حفظ الملاحظات", "success");
       });
@@ -774,7 +713,7 @@
     const exportNotesBtn = $("#workspace-export-notes");
     if (exportNotesBtn) {
       exportNotesBtn.addEventListener("click", () => {
-        const notes = ($("#workspace-notes") && $("#workspace-notes").value) || "";
+        const notes = $("#workspace-notes")?.value || "";
         const blob = new Blob([notes], { type: "text/plain" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -792,17 +731,12 @@
     if (!container) return;
     container.innerHTML = "";
     if (!sessions.length) {
-      container.innerHTML = `<div style="font-size:0.8rem;color:rgba(255,255,255,0.5);text-align:center;"><i class="fas fa-inbox"></i> لا توجد جلسات محفوظة</div>`;
+      container.innerHTML = `<div style="text-align:center;opacity:0.6;"><i class="fas fa-inbox"></i><br>لا توجد جلسات</div>`;
       return;
     }
-    sessions.slice(0, 10).forEach((s) => {
+    sessions.slice(0, 8).forEach((s) => {
       const div = document.createElement("div");
-      div.style.fontSize = "0.8rem";
-      div.style.padding = "6px 8px";
-      div.style.borderRadius = "8px";
-      div.style.cursor = "pointer";
-      div.style.marginBottom = "4px";
-      div.style.transition = "background 0.18s";
+      div.style.cssText = "padding:8px;border-radius:12px;cursor:pointer;margin-bottom:6px;transition:all0.2s";
       div.innerHTML = `<i class="fas fa-comment"></i> ${s.title}<br><small>${new Date(s.updated).toLocaleString("ar-SA")}</small>`;
       div.addEventListener("click", () => {
         sessionId = s.id;
@@ -811,14 +745,10 @@
           sessionIndicator.innerHTML = `<i class="fas fa-id-card"></i> جلسة: ${sessionId.slice(0, 8)}`;
         }
         loadLocalHistory();
-        showToast("تم فتح الجلسة من مساحة العمل", "success");
+        showToast("تم فتح الجلسة", "success");
       });
-      div.addEventListener("mouseover", () => {
-        div.style.background = "rgba(139,92,246,0.18)";
-      });
-      div.addEventListener("mouseout", () => {
-        div.style.background = "transparent";
-      });
+      div.addEventListener("mouseenter", () => div.style.background = "var(--glass)");
+      div.addEventListener("mouseleave", () => div.style.background = "transparent");
       container.appendChild(div);
     });
   }
@@ -837,9 +767,63 @@
     workspacePanel.classList.toggle("hidden", !visible);
   }
 
-  /* ============================
-     Events
-     ============================ */
+  // ========== Particles Effect ==========
+
+  function initParticles() {
+    try {
+      const canvas = document.getElementById("sky-particles");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      let w = canvas.width = window.innerWidth;
+      let h = canvas.height = window.innerHeight;
+      const particles = [];
+      const count = Math.max(12, Math.floor((w * h) / 120000));
+
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          x: Math.random() * w,
+          y: Math.random() * h,
+          r: 20 + Math.random() * 60,
+          vx: (Math.random() - 0.5) * 0.2,
+          vy: (Math.random() - 0.5) * 0.2,
+          hue: 260 + Math.random() * 120
+        });
+      }
+
+      function draw() {
+        if (!ctx) return;
+        ctx.clearRect(0, 0, w, h);
+        particles.forEach(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+          if (p.x < -200) p.x = w + 200;
+          if (p.x > w + 200) p.x = -200;
+          if (p.y < -200) p.y = h + 200;
+          if (p.y > h + 200) p.y = -200;
+          const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
+          g.addColorStop(0, `hsla(${p.hue}, 90%, 60%, 0.12)`);
+          g.addColorStop(0.6, `hsla(${p.hue}, 80%, 50%, 0.04)`);
+          g.addColorStop(1, "rgba(0,0,0,0)");
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        requestAnimationFrame(draw);
+      }
+
+      window.addEventListener("resize", () => {
+        w = canvas.width = window.innerWidth;
+        h = canvas.height = window.innerHeight;
+      });
+
+      draw();
+    } catch (e) {
+      console.warn("Particles init failed", e);
+    }
+  }
+
+  // ========== Event Setup ==========
 
   function setupEvents() {
     if (sendBtn && userInput) {
@@ -869,47 +853,34 @@
 
     if (fileInput) {
       fileInput.addEventListener("change", (e) => {
-        const file = e.target.files[0];
-        if (file) uploadFile(file);
+        if (e.target.files[0]) uploadFile(e.target.files[0]);
         fileInput.value = "";
       });
     }
 
     if (hiddenAudioInput) {
       hiddenAudioInput.addEventListener("change", (e) => {
-        const file = e.target.files[0];
-        if (file) uploadAudio(file);
+        if (e.target.files[0]) uploadAudio(e.target.files[0]);
         hiddenAudioInput.value = "";
       });
     }
 
     if (hiddenImageInput) {
       hiddenImageInput.addEventListener("change", (e) => {
-        const file = e.target.files[0];
-        if (file) uploadImage(file);
+        if (e.target.files[0]) uploadImage(e.target.files[0]);
         hiddenImageInput.value = "";
       });
     }
 
-    if (voiceBtn && hiddenAudioInput) {
-      voiceBtn.addEventListener("click", () => hiddenAudioInput.click());
-    }
-    if (visionBtn && hiddenImageInput) {
-      visionBtn.addEventListener("click", () => hiddenImageInput.click());
-    }
-    if (miniUploadBtn && fileInput) {
-      miniUploadBtn.addEventListener("click", () => fileInput.click());
-    }
-    if (miniVoiceBtn && hiddenAudioInput) {
-      miniVoiceBtn.addEventListener("click", () => hiddenAudioInput.click());
-    }
-    if (miniVisionBtn && hiddenImageInput) {
-      miniVisionBtn.addEventListener("click", () => hiddenImageInput.click());
-    }
+    if (voiceBtn && hiddenAudioInput) voiceBtn.addEventListener("click", () => hiddenAudioInput.click());
+    if (visionBtn && hiddenImageInput) visionBtn.addEventListener("click", () => hiddenImageInput.click());
+    if (miniUploadBtn && fileInput) miniUploadBtn.addEventListener("click", () => fileInput.click());
+    if (miniVoiceBtn && hiddenAudioInput) miniVoiceBtn.addEventListener("click", () => hiddenAudioInput.click());
+    if (miniVisionBtn && hiddenImageInput) miniVisionBtn.addEventListener("click", () => hiddenImageInput.click());
 
-    if (newSessionBtn) {
-      newSessionBtn.addEventListener("click", createNewSession);
-    }
+    if (newSessionBtn) newSessionBtn.addEventListener("click", createNewSession);
+    if (clearChatBtn) clearChatBtn.addEventListener("click", clearCurrentSession);
+    if (exportChatBtn) exportChatBtn.addEventListener("click", exportConversation);
 
     if (toggleThemeBtn) {
       toggleThemeBtn.addEventListener("click", () => {
@@ -918,13 +889,8 @@
       });
     }
 
-    if (openSettingsBtn) {
-      openSettingsBtn.addEventListener("click", () => toggleSettings());
-    }
-
-    if (openWorkspaceBtn) {
-      openWorkspaceBtn.addEventListener("click", () => toggleWorkspace());
-    }
+    if (openSettingsBtn) openSettingsBtn.addEventListener("click", () => toggleSettings());
+    if (openWorkspaceBtn) openWorkspaceBtn.addEventListener("click", () => toggleWorkspace());
 
     if (menuToggleBtn && sidebar) {
       menuToggleBtn.addEventListener("click", () => {
@@ -932,19 +898,7 @@
       });
     }
 
-    // إضافة زر مسح المحادثة في الشريط الجانبي
-    const sidebarSections = $$(".sky-sidebar-section");
-    if (sidebarSections.length > 0) {
-      const toolsSection = sidebarSections[sidebarSections.length - 1];
-      const clearChatBtn = document.createElement("button");
-      clearChatBtn.className = "sky-btn-secondary full";
-      clearChatBtn.style.marginTop = "8px";
-      clearChatBtn.innerHTML = '<i class="fas fa-trash-alt"></i> مسح المحادثة';
-      clearChatBtn.addEventListener("click", clearChat);
-      toolsSection.appendChild(clearChatBtn);
-    }
-
-    // Drag & Drop للملفات
+    // Drag & Drop
     if (chatWindow) {
       ["dragenter", "dragover"].forEach((ev) => {
         chatWindow.addEventListener(ev, (e) => {
@@ -974,19 +928,29 @@
       });
     }
 
-    // Parallax effect
-    const orbs = $$(".orb");
-    if (orbs.length) {
+    // Parallax effect for background
+    const grad = document.querySelector(".sky-gradient");
+    if (grad) {
       window.addEventListener("mousemove", (e) => {
         const x = (e.clientX / window.innerWidth - 0.5) * 20;
         const y = (e.clientY / window.innerHeight - 0.5) * 20;
-        orbs.forEach((orb, idx) => {
-          const factor = (idx + 1) * 0.4;
-          orb.style.transform = `translate(${x * factor}px, ${y * factor}px)`;
-        });
+        grad.style.transform = `translate(${x}px, ${y}px)`;
       });
     }
 
     setInterval(pingStatus, 30000);
   }
+
+  // ========== Initialization ==========
+
+  setSession(sessionId);
+  renderSessionList();
+  buildSettingsPanel();
+  buildWorkspacePanel();
+  loadWorkspaceNotes();
+  loadLocalHistory();
+  pingStatus();
+  setupEvents();
+  autoResizeTextarea(userInput);
+  initParticles();
 })();
