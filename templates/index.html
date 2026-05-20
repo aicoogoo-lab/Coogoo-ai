@@ -2,92 +2,233 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>سماء • Sky AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#6366f1">
+  <title>سماء • الرفيقة الذكية الحية</title>
   
+  <!-- Preconnect للمكتبات الخارجية لتسريع التحميل -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  
+  <!-- الخطوط -->
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome 6 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
-  
-  <link rel="stylesheet" href="/static/style.css">
+  <!-- AOS Library للتمرير -->
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 </head>
 <body>
-
-  <canvas id="neural-net-fluid"></canvas>
-
-  <div class="main-workspace">
-    
-    <aside id="sidebar-archive" class="sidebar-archive">
-      <div class="sidebar-header">
-        <span class="archive-title"><i class="fas fa-box-archive"></i> ذاكرة السحاب</span>
-        <button id="close-archive-btn" class="action-btn"><i class="fas fa-chevron-right"></i></button>
-      </div>
-      <button id="new-chat-sidebar-btn" class="prime-action-btn"><i class="fas fa-plus"></i> جلسة ذكية جديدة</button>
-      <div id="archive-sessions-container" class="archive-sessions-container">
-        </div>
-    </aside>
-
-    <main class="app-core">
-      
-      <header class="top-nav-bar">
-        <div class="identity-block">
-          <button id="menu-toggle-btn" class="action-btn" title="فتح الأرشيف"><i class="fas fa-bars"></i></button>
-          <div class="avatar-intelligence">
-            <i class="fas fa-feather-alt"></i>
-            <span class="pulse-core"></span>
-          </div>
-          <div class="meta-data">
-            <h1 class="core-title">سماء</h1>
-            <span class="system-status-indicator">النظام الإدراكي متصل</span>
-          </div>
-        </div>
-        <div class="control-block">
-          <button id="clear-session-btn" class="action-btn danger-zone" title="مسح الجلسة الحالية"><i class="fas fa-trash-can"></i></button>
-        </div>
-      </header>
-
-      <section class="viewport-stream" id="viewport-stream">
-        
-        <div id="scroll-navigator" class="scroll-navigator">
-          <button onclick="executeQuickScroll('top')" id="scroll-top-btn" class="nav-scroll-btn"><i class="fas fa-arrow-up"></i></button>
-          <button onclick="executeQuickScroll('bottom')" id="scroll-bottom-btn" class="nav-scroll-btn"><i class="fas fa-arrow-down"></i></button>
-        </div>
-
-        <div class="messages-container" id="messages-container">
-          </div>
-        
-        <div id="neural-thinking-indicator" class="neural-thinking-box hidden">
-          <div class="thinking-avatar"><i class="fas fa-brain"></i></div>
-          <div class="thinking-status">
-            <span>سماء تحلل صياغة البيانات</span>
-            <div class="neural-loading-bar"><span></span></div>
-          </div>
-        </div>
-      </section>
-
-      <footer class="input-processing-zone">
-        <div id="attachment-preview-area" class="attachment-preview-area"></div>
-        
-        <div class="input-shell-container">
-          <input type="file" id="system-file-input" style="display: none;" multiple>
-          <button id="trigger-attach-btn" class="input-shell-btn" title="إرفاق مستندات أو صور"><i class="fas fa-paperclip"></i></button>
-          
-          <textarea id="core-message-input" placeholder="أرسل استفسارك العميق، سماء تحلل وتستجيب..." rows="1" autocomplete="off"></textarea>
-          
-          <button id="execute-send-btn" class="send-prime-btn" title="إرسال البيانات"><i class="fas fa-arrow-up-long"></i></button>
-        </div>
-      </footer>
-
-    </main>
+  <!-- Canvas لخلفية Three.js -->
+  <canvas id="bg-canvas" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;"></canvas>
+  
+  <!-- مؤشر تحميل أولي -->
+  <div id="initial-loader" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0a0a1a; z-index: 9999; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 20px;">
+    <div class="loader-spinner" style="width: 50px; height: 50px; border: 3px solid rgba(99,102,241,0.3); border-top-color: #6366f1; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+    <div style="color: white; font-family: 'Cairo';">جاري تشغيل سماء...</div>
+    <style>
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    </style>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
+  <!-- التطبيق الرئيسي -->
+  <div id="app" style="position: relative; z-index: 10; opacity: 0; transition: opacity 0.5s;">
+    
+    <!-- الشريط العلوي -->
+    <header class="app-header">
+      <div class="header-left">
+        <button id="menuBtn" class="icon-btn glass" aria-label="القائمة">
+          <i class="fas fa-bars"></i>
+        </button>
+        <div class="logo-area">
+          <div class="avatar-container" id="avatarContainer">
+            <div class="avatar-core">
+              <div class="avatar-glow"></div>
+              <div class="avatar-face">
+                <div class="eyes">
+                  <div class="eye left"></div>
+                  <div class="eye right"></div>
+                </div>
+                <div class="mouth" id="avatarMouth"></div>
+              </div>
+            </div>
+          </div>
+          <div class="title-area">
+            <h1>سماء <span class="badge-new">v3.0</span></h1>
+            <div class="connection-status" id="connectionStatus">
+              <span class="status-dot online"></span>
+              <span id="statusText">متصل</span>
+              <span id="latencyDisplay" class="latency"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="header-right">
+        <button id="searchBtn" class="icon-btn glass" aria-label="بحث">
+          <i class="fas fa-search"></i>
+        </button>
+        <button id="focusModeBtn" class="icon-btn glass" aria-label="وضع التركيز">
+          <i class="fas fa-expand"></i>
+        </button>
+        <button id="themeToggle" class="icon-btn glass" aria-label="المظهر">
+          <i class="fas fa-moon"></i>
+        </button>
+      </div>
+    </header>
 
+    <!-- القائمة الجانبية (أرشيف المحادثات الكامل) -->
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-header">
+        <h3><i class="fas fa-history"></i> الأرشيف</h3>
+        <div class="sidebar-actions">
+          <button id="exportAllBtn" class="icon-btn-sm" title="تصدير كل المحادثات">
+            <i class="fas fa-download"></i>
+          </button>
+          <button id="closeSidebarBtn" class="icon-btn-sm">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+      
+      <!-- شريط البحث في الأرشيف -->
+      <div class="search-archive">
+        <i class="fas fa-search"></i>
+        <input type="text" id="archiveSearch" placeholder="بحث في المحادثات..." autocomplete="off">
+      </div>
+      
+      <!-- قائمة المحادثات -->
+      <div class="conversations-list" id="conversationsList">
+        <!-- ستتم تعبئتها بواسطة JavaScript -->
+      </div>
+      
+      <!-- أزرار أسفل الأرشيف -->
+      <div class="archive-footer">
+        <button id="newConversationBtn" class="btn-primary-full">
+          <i class="fas fa-plus"></i> محادثة جديدة
+        </button>
+        <button id="clearAllConversationsBtn" class="btn-danger-outline">
+          <i class="fas fa-trash-alt"></i> مسح الكل
+        </button>
+      </div>
+    </aside>
+
+    <!-- منطقة المحادثة الرئيسية -->
+    <main class="chat-main">
+      <div class="messages-container" id="messagesContainer">
+        <div class="messages-wrapper" id="messagesWrapper">
+          <!-- الرسائل ستظهر هنا -->
+        </div>
+        
+        <!-- مؤشر الكتابة الذكي -->
+        <div class="typing-brain-container" id="typingContainer" style="display: none;">
+          <div class="brain-waves">
+            <div class="wave"></div><div class="wave"></div><div class="wave"></div><div class="wave"></div><div class="wave"></div>
+          </div>
+          <span class="typing-text">سماء تفكر</span>
+          <span class="typing-emotion" id="typingEmotion">🤔</span>
+        </div>
+      </div>
+
+      <!-- أزرار التنقل السريع -->
+      <div class="nav-controls" id="navControls">
+        <button id="scrollToTopBtn" class="nav-btn glass" style="display: none;">
+          <i class="fas fa-arrow-up"></i>
+        </button>
+        <button id="scrollToBottomBtn" class="nav-btn glass" style="display: none;">
+          <i class="fas fa-arrow-down"></i>
+          <span class="new-messages-badge" id="newMessagesBadge" style="display: none;">0</span>
+        </button>
+      </div>
+
+      <!-- شريط الإدخال -->
+      <div class="input-area">
+        <div class="input-wrapper glass">
+          <button id="attachFileBtn" class="attach-btn" aria-label="إرفاق ملف">
+            <i class="fas fa-paperclip"></i>
+          </button>
+          <input type="file" id="fileInput" multiple style="display: none;">
+          
+          <div class="input-field">
+            <textarea id="messageInput" rows="1" placeholder="اكتب لسماء... (Enter للإرسال، Shift+Enter لسطر جديد)" autocomplete="off"></textarea>
+            <div class="input-suggestions" id="inputSuggestions"></div>
+          </div>
+          
+          <button id="sendMessageBtn" class="send-btn" aria-label="إرسال">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+        
+        <!-- معاينة الملفات المرفوعة -->
+        <div class="file-preview-area" id="filePreviewArea"></div>
+        
+        <!-- حالة الكتابة والرد -->
+        <div class="input-status" id="inputStatus">
+          <span id="charCount">0</span> حرف
+          <span id="wordCount">0</span> كلمة
+        </div>
+      </div>
+    </main>
+
+    <!-- نافذة منبثقة للبحث في المحادثة الحالية -->
+    <div id="searchModal" class="modal" style="display: none;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>بحث في المحادثة</h3>
+          <button class="close-modal">&times;</button>
+        </div>
+        <input type="text" id="searchInChat" placeholder="كلمة البحث..." autocomplete="off">
+        <div id="searchResults"></div>
+        <div class="search-nav">
+          <button id="searchPrev"><i class="fas fa-chevron-up"></i> السابق</button>
+          <button id="searchNext">التالي <i class="fas fa-chevron-down"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- نافذة إعدادات المحادثة -->
+    <div id="settingsModal" class="modal" style="display: none;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>إعدادات المحادثة</h3>
+          <button class="close-modal">&times;</button>
+        </div>
+        <div class="settings-section">
+          <label>اسم المحادثة الحالية</label>
+          <input type="text" id="convNameInput" placeholder="اسم المحادثة">
+          <button id="renameConvBtn" class="btn-secondary">تغيير الاسم</button>
+        </div>
+        <div class="settings-section">
+          <label>تصدير المحادثة</label>
+          <div class="export-buttons">
+            <button id="exportTxtBtn" class="btn-secondary">TXT</button>
+            <button id="exportJsonBtn" class="btn-secondary">JSON</button>
+            <button id="exportHtmlBtn" class="btn-secondary">HTML</button>
+          </div>
+        </div>
+        <div class="settings-section danger">
+          <label>حذف المحادثة</label>
+          <button id="deleteCurrentConvBtn" class="btn-danger">حذف هذه المحادثة</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- إشعارات Toast -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- المكتبات الخارجية -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  
+  <!-- الكود الرئيسي -->
+  <link rel="stylesheet" href="/static/style.css">
   <script src="/static/script.js"></script>
 </body>
 </html>
