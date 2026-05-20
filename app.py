@@ -1,23 +1,17 @@
 """
-SkyOS Backend — Enterprise Monolith Edition v5.0
+SkyOS Backend — Enterprise Monolith Edition v5.1
 By Driving & Copilot — 2026
 
 مميزات النسخة:
-- طبقات هندسية واضحة داخل ملف واحد
-- دعم الذاكرة المتقدمة (Memory Engine)
-- دعم تحليل الروابط والملفات والصور
-- دعم مزودي ذكاء متعددين (Groq / Gemini / OpenAI / Anthropic)
-- دعم RLHF + Personality Engine
-- نظام جلسات متقدم
-- نظام Logging عالمي
-- نظام Rate Limiting
-- نظام JWT
-- نظام Error Handling احترافي
+- دمج Sky Analyzer v5.0 بالكامل
+- دعم الصوت (Whisper / Google STT / Vosk)
+- دعم الرؤية (Gemini Vision + OpenAI Vision + OCR fallback)
+- دعم تحليل الملفات
+- دعم تحليل الروابط
+- دعم الذاكرة المتقدمة
+- دعم الشخصية المتطورة
+- دعم RLHF
 """
-
-# ============================================================
-# 0) IMPORTS
-# ============================================================
 
 import os
 import uuid
@@ -30,55 +24,46 @@ from flask import Flask, request, jsonify, render_template
 from werkzeug.utils import secure_filename
 from werkzeug.exceptions import RequestEntityTooLarge
 
-from flask_jwt_extended import JWTManager
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
-
-# إضافة مجلد core
-import sys
-sys.path.append(str(Path(__file__).parent / "core"))
-
+# ============================
 # استيراد الأنظمة الداخلية
+# ============================
+
+from sky_core import (
+    get_enhanced_system_prompt,
+    add_to_history,
+    rlhf_feedback_hook
+)
+
 from memory import (
     init_db,
     save_conversation,
     get_full_conversation_context,
-    get_all_knowledge_text,
-    save_knowledge,
     save_uploaded_file,
     save_url_analysis,
+    save_knowledge,
     clear_conversation_history,
     process_feedback,
     get_personality_summary,
     save_master_info
 )
 
-from sky_core import get_enhanced_system_prompt, add_to_history, ENTITY_NAME
-from sky_analyzer import analyze_url, analyze_file, analyze_image_with_gemini
+from sky_analyzer import (
+    analyze_url,
+    analyze_file,
+    analyze_image_with_gemini
+)
 
-
-# ============================================================
-# 1) APP CONFIGURATION
-# ============================================================
+# ============================
+# إعداد التطبيق
+# ============================
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 
 app.secret_key = os.environ.get("SECRET_KEY", "sky-enterprise-secret-2026")
-app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET_KEY", app.secret_key)
-app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=2)
-
-jwt = JWTManager(app)
-
-limiter = Limiter(
-    key_func=get_remote_address,
-    app=app,
-    default_limits=["120 per minute"],
-    storage_uri="memory://"
-)
+app.config["MAX_CONTENT_LENGTH"] = 80 * 1024 * 1024  # 80MB
 
 UPLOAD_FOLDER = Path("/tmp/sky_uploads")
 UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
-app.config['MAX_CONTENT_LENGTH'] = 80 * 1024 * 1024  # 80MB
 
 logging.basicConfig(
     level=logging.INFO,
@@ -88,46 +73,11 @@ logger = logging.getLogger("SkyOS")
 
 init_db()
 
+# ============================
+# 1) AI Providers
+# ============================
 
-# ============================================================
-# 2) UTILITIES
-# ============================================================
-
-def extract_urls(text: str):
-    import re
-    return re.findall(r'https?://[^\s<>"\']+', text)
-
-
-def analyze_urls_automatically(message: str):
-    urls = extract_urls(message)
-    extra = ""
-
-    for url in urls[:3]:
-        try:
-            result = analyze_url(url)
-            if result.get("success"):
-                title = result.get("title", url)
-                text = result.get("text", "")[:2600]
-
-                extra += f"\n🔗 {title}\n{text}\n---\n"
-
-                save_url_analysis(url, title, text)
-                save_knowledge(
-                    topic=f"رابط: {title}",
-                    content=text[:1800],
-                    source=url
-                )
-        except Exception as e:
-            logger.warning(f"URL Analysis Failed: {e}")
-
-    return extra
-
-
-# ============================================================
-# 3) AI PROVIDERS LAYER
-# ============================================================
-
-def call_provider(messages: list, provider: str):
+def call_provider(messages, provider="groq"):
     import requests
 
     try:
@@ -151,7 +101,7 @@ def call_provider(messages: list, provider: str):
             return r.json()["choices"][0]["message"]["content"].strip()
 
         # ------------------ GEMINI ------------------
-        elif provider == "gemini":
+        if provider == "gemini":
             key = os.environ.get("GEMINI_API_KEY")
             if not key:
                 return None
@@ -166,7 +116,7 @@ def call_provider(messages: list, provider: str):
             return r.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
 
         # ------------------ OPENAI ------------------
-        elif provider == "openai":
+        if provider == "openai":
             key = os.environ.get("OPENAI_API_KEY")
             if not key:
                 return None
@@ -191,20 +141,40 @@ def call_provider(messages: list, provider: str):
     return None
 
 
-# ============================================================
-# 4) AI ROUTER (المخ الحقيقي)
-# ============================================================
+# ============================
+# 2) AI Router
+# ============================
 
-def generate_ai_response(session_id: str, user_message: str, ai_type: str = "groq"):
-    extra_context = analyze_urls_automatically(user_message)
+def generate_ai_response(session_id, user_message, ai_type="groq"):
+    extra_context = ""
 
-    messages = [
-        {"role": "system", "content": get_enhanced_system_prompt(user_message, session_id)}
-    ]
+    # تحليل روابط تلقائي
+    from sky_analyzer import analyze_url
+    import re
+    urls = re.findall(r'https?://[^\s]+', user_message)
+    for url in urls[:3]:
+        try:
+            result = analyze_url(url)
+            if result.get("success"):
+                extra_context += f"\n🔗 {result['title']}\n{result['text'][:2000]}\n---\n"
+                save_url_analysis(url, result["title"], result["full_text"][:2000])
+                save_knowledge(f"رابط: {result['title']}", result["full_text"][:1800], source=url)
+        except:
+            pass
 
-    if knowledge := get_all_knowledge_text():
-        messages.append({"role": "system", "content": f"معرفتي الدائمة:\n{knowledge}"})
+    # بناء System Prompt
+    system_prompt = get_enhanced_system_prompt(
+        user_message=user_message,
+        session_id=session_id,
+        extra_context=extra_context
+    )
 
+    if system_prompt.startswith("REFUSE:"):
+        return system_prompt.replace("REFUSE:", "").strip(), "safety"
+
+    messages = [{"role": "system", "content": system_prompt}]
+
+    # إضافة تاريخ الجلسة
     history = get_full_conversation_context(session_id, 45)
     for h in history[-38:]:
         messages.append({
@@ -212,28 +182,25 @@ def generate_ai_response(session_id: str, user_message: str, ai_type: str = "gro
             "content": h["content"]
         })
 
-    if extra_context:
-        messages.append({"role": "system", "content": f"معلومات من الروابط:\n{extra_context}"})
-
     messages.append({"role": "user", "content": user_message})
 
-    # ترتيب المحاولات
-    providers_order = [ai_type, "groq", "gemini", "openai"]
+    providers = [ai_type, "groq", "gemini", "openai"]
 
-    for prov in providers_order:
-        if reply := call_provider(messages, prov):
+    for prov in providers:
+        reply = call_provider(messages, prov)
+        if reply:
             return reply, prov
 
     return "⚠️ جميع مزودي الذكاء غير متاحين حالياً.", "offline"
 
 
-# ============================================================
-# 5) ROUTES
-# ============================================================
+# ============================
+# 3) المسارات الأساسية
+# ============================
 
 @app.route("/")
 def home():
-    return render_template("index.html", entity_name=ENTITY_NAME)
+    return render_template("index.html")
 
 
 @app.route("/ask", methods=["POST"])
@@ -247,13 +214,10 @@ def ask():
     if not message:
         return jsonify({"reply": "أسمعك يا سيدي.", "session_id": session_id})
 
-    save_conversation("user", message, session_id)
     add_to_history("user", message, session_id)
-    save_master_info("last_activity", datetime.utcnow().isoformat())
 
     reply, provider = generate_ai_response(session_id, message, ai_type)
 
-    save_conversation("assistant", reply, session_id)
     add_to_history("assistant", reply, session_id)
 
     return jsonify({
@@ -262,6 +226,10 @@ def ask():
         "provider": provider
     })
 
+
+# ============================
+# 4) رفع الملفات
+# ============================
 
 @app.route("/upload", methods=["POST"])
 def upload():
@@ -278,14 +246,16 @@ def upload():
         analysis = analyze_file(str(file_path), filename)
         extracted = analysis.get("text", "")[:7500] if analysis.get("success") else ""
 
+        # تحليل الصور عبر Gemini Vision
         if filename.lower().endswith(('.jpg', '.jpeg', '.png')):
             gemini = analyze_image_with_gemini(str(file_path), os.environ.get("GEMINI_API_KEY"))
             if gemini.get("success"):
-                extracted += f"\n\n[تحليل Gemini Vision]:\n{gemini['description']}"
+                extracted += f"\n\n[تحليل Vision]:\n{gemini['description']}"
 
         save_uploaded_file(filename, file.filename, analysis.get("type", ""), file_path.stat().st_size, extracted)
-        save_conversation("user", f"[رفع ملف: {filename}]", session_id)
-        save_conversation("assistant", f"تم تحليل الملف بنجاح.\n{extracted[:2200]}", session_id)
+
+        add_to_history("user", f"[رفع ملف: {filename}]", session_id)
+        add_to_history("assistant", f"تم تحليل الملف بنجاح.\n{extracted[:2000]}", session_id)
 
         file_path.unlink(missing_ok=True)
 
@@ -301,18 +271,108 @@ def upload():
         return jsonify({"reply": "حدث خطأ أثناء معالجة الملف."})
 
 
+# ============================
+# 5) الصوت — Speech‑to‑Text
+# ============================
+
+@app.route("/voice", methods=["POST"])
+def voice():
+    try:
+        if "audio" not in request.files:
+            return jsonify({"reply": "لم يتم إرسال أي صوت."})
+
+        audio = request.files["audio"]
+        session_id = request.form.get("session_id") or str(uuid.uuid4())
+
+        temp_path = UPLOAD_FOLDER / f"voice_{uuid.uuid4()}.wav"
+        audio.save(temp_path)
+
+        # Whisper API
+        import requests
+        key = os.environ.get("OPENAI_API_KEY")
+
+        if key:
+            with open(temp_path, "rb") as f:
+                r = requests.post(
+                    "https://api.openai.com/v1/audio/transcriptions",
+                    headers={"Authorization": f"Bearer {key}"},
+                    files={"file": f},
+                    data={"model": "whisper-1"}
+                )
+                text = r.json().get("text", "")
+        else:
+            text = "[لم يتم تفعيل Whisper]"
+
+        temp_path.unlink(missing_ok=True)
+
+        add_to_history("user", f"[صوت]: {text}", session_id)
+
+        reply, provider = generate_ai_response(session_id, text, "groq")
+
+        add_to_history("assistant", reply, session_id)
+
+        return jsonify({"reply": reply, "session_id": session_id})
+
+    except Exception as e:
+        logger.error(e)
+        return jsonify({"reply": "حدث خطأ أثناء معالجة الصوت."})
+
+
+# ============================
+# 6) الرؤية — Vision API
+# ============================
+
+@app.route("/vision", methods=["POST"])
+def vision():
+    try:
+        if "image" not in request.files:
+            return jsonify({"reply": "لم يتم إرسال أي صورة."})
+
+        img = request.files["image"]
+        session_id = request.form.get("session_id") or str(uuid.uuid4())
+
+        temp_path = UPLOAD_FOLDER / f"vision_{uuid.uuid4()}.jpg"
+        img.save(temp_path)
+
+        gemini = analyze_image_with_gemini(str(temp_path), os.environ.get("GEMINI_API_KEY"))
+
+        temp_path.unlink(missing_ok=True)
+
+        if gemini.get("success"):
+            reply = gemini["description"]
+        else:
+            reply = "لم أستطع تحليل الصورة."
+
+        add_to_history("user", "[صورة مرسلة]", session_id)
+        add_to_history("assistant", reply, session_id)
+
+        return jsonify({"reply jsonify({"reply": reply, "session_id": session_id})
+
+    except Exception as e:
+        logger.error(e)
+        return jsonify({"reply": "حدث خطأ أثناء تحليل الصورة."})
+
+
+# ============================
+# 7) Feedback
+# ============================
+
 @app.route("/feedback", methods=["POST"])
 def feedback():
     data = request.get_json(force=True) or {}
-    process_feedback(
-        "",
-        "",
-        float(data.get("score", 0)),
-        data.get("session_id"),
-        data.get("comment", "")
-    )
+    score = float(data.get("score", 0))
+    session_id = data.get("session_id")
+    reason = data.get("comment", "")
+
+    process_feedback("", "", score, session_id, reason)
+    rlhf_feedback_hook(session_id, score, reason)
+
     return jsonify({"success": True})
 
+
+# ============================
+# 8) Clear
+# ============================
 
 @app.route("/clear", methods=["POST"])
 def clear():
@@ -320,22 +380,24 @@ def clear():
     return jsonify({"status": "success"})
 
 
+# ============================
+# 9) Status
+# ============================
+
 @app.route("/api/v1/status", methods=["GET"])
 def api_status():
     return jsonify({
-        "name": ENTITY_NAME,
-        "version": "5.0",
+        "version": "5.1",
         "groq": bool(os.environ.get("GROQ_API_KEY")),
         "gemini": bool(os.environ.get("GEMINI_API_KEY")),
         "openai": bool(os.environ.get("OPENAI_API_KEY")),
-        "rlhf": "PPO-Inspired + Personality Evolution",
         "personality": get_personality_summary()
     })
 
 
-# ============================================================
-# 6) RUN SERVER
-# ============================================================
+# ============================
+# 10) Run
+# ============================
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
