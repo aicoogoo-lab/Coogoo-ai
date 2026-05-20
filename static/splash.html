@@ -1,62 +1,58 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Splash</title>
-
-<style>
 body {
   background: linear-gradient(135deg, #0a0a14, #1a0040);
+  background-size: 200% 200%;
+  animation: bgMove 6s ease-in-out infinite, fadeOut 4.5s ease-in-out forwards;
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
-  animation: fadeOut 4s ease-in-out forwards;
   margin: 0;
 }
 
 .logo {
-  width: 180px;
-  animation: glow 2s ease-in-out infinite alternate;
+  width: 200px;
+  animation: glow 2s ease-in-out infinite alternate,
+             popIn 1.2s ease-out forwards;
+  opacity: 0;
 }
 
 .text {
-  color: #b0a0ff;
+  color: #c7b8ff;
   font-family: 'Arial', sans-serif;
-  margin-top: 20px;
-  animation: slideUp 1s ease-in-out forwards;
+  margin-top: 25px;
+  animation: slideUp 1.4s ease-out forwards;
+  opacity: 0;
   text-align: center;
 }
 
+/* توهج مزدوج */
 @keyframes glow {
-  from { filter: drop-shadow(0 0 10px #00aaff); }
-  to { filter: drop-shadow(0 0 20px #a000ff); }
+  from { filter: drop-shadow(0 0 12px #00aaff); }
+  to   { filter: drop-shadow(0 0 25px #a000ff); }
 }
 
+/* دخول الشعار */
+@keyframes popIn {
+  0%   { transform: scale(0.6); opacity: 0; }
+  60%  { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+/* دخول النص */
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  0%   { opacity: 0; transform: translateY(25px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
+/* حركة الخلفية */
+@keyframes bgMove {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* خروج السبلاتش */
 @keyframes fadeOut {
-  80% { opacity: 1; }
+  85%  { opacity: 1; }
   100% { opacity: 0; }
 }
-</style>
-
-</head>
-<body>
-
-<div class="splash">
-  <img src="/static/icons/icon-512.png" class="logo">
-  <p class="text">SkyOS v9.0 — Hybrid Intelligence System</p>
-</div>
-
-<script>
-  setTimeout(() => {
-    window.location.href = "/";
-  }, 3500);
-</script>
-
-</body>
-</html>
