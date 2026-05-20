@@ -1,4 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Splash</title>
+
+<style>
+body {
+  background: linear-gradient(135deg, #0a0a14, #1a0040);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  animation: fadeOut 4s ease-in-out forwards;
+  margin: 0;
+}
+
+.logo {
+  width: 180px;
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+.text {
+  color: #b0a0ff;
+  font-family: 'Arial', sans-serif;
+  margin-top: 20px;
+  animation: slideUp 1s ease-in-out forwards;
+  text-align: center;
+}
+
+@keyframes glow {
+  from { filter: drop-shadow(0 0 10px #00aaff); }
+  to { filter: drop-shadow(0 0 20px #a000ff); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeOut {
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+</style>
+
+</head>
+<body>
+
 <div class="splash">
-  <img src="/static/icons/icon-512.png" class="logo" alt="SkyOS Logo">
+  <img src="/static/icons/icon-512.png" class="logo">
   <p class="text">SkyOS v9.0 — Hybrid Intelligence System</p>
 </div>
+
+<script>
+  setTimeout(() => {
+    window.location.href = "/";
+  }, 3500);
+</script>
+
+</body>
+</html>
