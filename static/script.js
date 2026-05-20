@@ -1,44 +1,41 @@
 /* ============================================================
    Sky OS • Hybrid Intelligence UI
-   script.js — Part 1 (Core Engine + Sessions + Messages)
+   script.js — Single File Version (Sessions + Messages + Tools + API)
    By Driving & Copilot — 2026
    ============================================================ */
 
 /* ------------------------------
-   1) ELEMENTS
+   1) DOM CACHE
    ------------------------------ */
 
-const messagesEl       = document.getElementById('messages');
-const archiveSectionEl = document.getElementById('archive-section');
-const archiveToggleEl  = document.getElementById('archive-toggle');
-const archiveContentEl = document.getElementById('archive-content');
-const archiveMessagesEl= document.getElementById('archive-messages');
-
-const typingEl         = document.getElementById('typing-indicator');
-
-const scrollUpBtn      = document.getElementById('scroll-up');
-const scrollDownBtn    = document.getElementById('scroll-down');
-
-const inputEl          = document.getElementById('message-input');
-const sendBtn          = document.getElementById('send-btn');
-const attachBtn        = document.getElementById('attach-btn');
-const fileInput        = document.getElementById('file-input');
-const filePreviewEl    = document.getElementById('file-preview');
-
-const contextBarText   = document.getElementById('context-text');
-
-const sessionsPanel    = document.getElementById('sessions-panel');
-const sessionsListEl   = document.getElementById('sessions-list');
-const createSessionBtn = document.getElementById('create-session');
-
-const toolsPanel       = document.getElementById('tools-panel');
-
-const themeToggleBtn   = document.getElementById('theme-toggle');
-const newSessionTopBtn = document.getElementById('new-session');
+const dom = {
+    messages:        document.getElementById('messages'),
+    archiveSection:  document.getElementById('archive-section'),
+    archiveToggle:   document.getElementById('archive-toggle'),
+    archiveContent:  document.getElementById('archive-content'),
+    archiveMessages: document.getElementById('archive-messages'),
+    typing:          document.getElementById('typing-indicator'),
+    scrollUp:        document.getElementById('scroll-up'),
+    scrollDown:      document.getElementById('scroll-down'),
+    input:           document.getElementById('message-input'),
+    send:            document.getElementById('send-btn'),
+    attach:          document.getElementById('attach-btn'),
+    fileInput:       document.getElementById('file-input'),
+    filePreview:     document.getElementById('file-preview'),
+    contextText:     document.getElementById('context-text'),
+    sessionsPanel:   document.getElementById('sessions-panel'),
+    sessionsList:    document.getElementById('sessions-list'),
+    createSession:   document.getElementById('create-session'),
+    toolsPanel:      document.getElementById('tools-panel'),
+    themeToggle:     document.getElementById('theme-toggle'),
+    newSessionTop:   document.getElementById('new-session'),
+    closeSessions:   document.getElementById('close-sessions'),
+    closeTools:      document.getElementById('close-tools')
+};
 
 
 /* ------------------------------
-   2) STATE
+   2) GLOBAL STATE
    ------------------------------ */
 
 let sessions = [];
@@ -49,6 +46,8 @@ const ARCHIVE_THRESHOLD = 70;
 
 let attachedFiles = [];
 
+let systemStateEl = null;
+
 
 /* ------------------------------
    3) UTILITIES
@@ -58,46 +57,81 @@ function generateId() {
     return 's_' + Math.random().toString(36).substring(2, 10);
 }
 
+function escapeHtml(str = '') {
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
 function scrollToBottom() {
-    messagesEl.scrollTo({
-        top: messagesEl.scrollHeight,
+    dom.messages.scrollTo({
+        top: dom.messages.scrollHeight,
         behavior: 'smooth'
     });
 }
 
 function scrollToTop() {
-    messagesEl.scrollTo({
+    dom.messages.scrollTo({
         top: 0,
         behavior: 'smooth'
     });
 }
 
 function updateScrollButtons() {
-    const { scrollTop, scrollHeight, clientHeight } = messagesEl;
+    const { scrollTop, scrollHeight, clientHeight } = dom.messages;
 
     if (scrollTop > 80) {
-        scrollUpBtn.classList.add('visible');
+        dom.scrollUp.classList.add('visible');
     } else {
-        scrollUpBtn.classList.remove('visible');
+        dom.scrollUp.classList.remove('visible');
     }
 
     if (scrollTop + clientHeight < scrollHeight - 80) {
-        scrollDownBtn.classList.add('visible');
+        dom.scrollDown.classList.add('visible');
     } else {
-        scrollDownBtn.classList.remove('visible');
+        dom.scrollDown.classList.remove('visible');
     }
 }
 
 
 /* ------------------------------
-   4) SESSIONS SYSTEM (BASIC)
+   4) SYSTEM STATE
    ------------------------------ */
+
+function createSystemState() {
+    systemStateEl = document.createElement('div');
+    systemStateEl.className = 'system-state connected';
+    systemStateEl.innerHTML = `
+        <i class="fa-solid fa-signal"></i>
+        <span>متصل • جاهز للاستقبال</span>
+    `;
+    document.body.appendChild(systemStateEl);
+}
+
+function setSystemState(state, text) {
+    if (!systemStateEl) return;
+    systemStateEl.className = 'system-state ' + state;
+    systemStateEl.innerHTML = `
+        <i class="fa-solid fa-signal"></i>
+        <span>${text}</span>
+    `;
+}
+
+
+/* ------------------------------
+   5) SESSIONS
+   ------------------------------ */
+
+function getCurrentSession() {
+    return sessions.find(s => s.id === currentSessionId) || null;
+}
 
 function createNewSession(name = null) {
     const id = generateId();
     const session = {
         id,
-        name: name || `جلسة جديدة`,
+        name: name || 'جلسة جديدة',
         messages: [],
         archivedMessages: []
     };
@@ -108,7 +142,7 @@ function createNewSession(name = null) {
 }
 
 function renderSessionsList() {
-    sessionsListEl.innerHTML = '';
+    dom.sessionsList.innerHTML = '';
     sessions.forEach(session => {
         const item = document.createElement('div');
         item.className = 'session-item' + (session.id === currentSessionId ? ' active' : '');
@@ -118,45 +152,74 @@ function renderSessionsList() {
             renderSessionsList();
             loadSession(session.id);
         };
-        sessionsListEl.appendChild(item);
+        dom.sessionsList.appendChild(item);
     });
-}
-
-function getCurrentSession() {
-    return sessions.find(s => s.id === currentSessionId) || null;
 }
 
 function loadSession(sessionId) {
     const session = sessions.find(s => s.id === sessionId);
     if (!session) return;
 
-    messagesEl.innerHTML = '';
-    archiveMessagesEl.innerHTML = '';
+    dom.messages.innerHTML = '';
+    dom.archiveMessages.innerHTML = '';
     messageCountInCurrentSession = session.messages.length;
 
-    // عرض الرسائل العادية
+    const fragMain = document.createDocumentFragment();
     session.messages.forEach(msg => {
-        renderMessage(msg.role, msg.content, false);
+        const el = buildMessageElement(msg.role, msg.content);
+        fragMain.appendChild(el);
     });
+    dom.messages.appendChild(fragMain);
 
-    // عرض الأرشيف
+    const fragArch = document.createDocumentFragment();
     session.archivedMessages.forEach(msg => {
-        renderArchivedMessage(msg.role, msg.content);
+        const el = buildMessageElement(msg.role, msg.content);
+        fragArch.appendChild(el);
     });
+    dom.archiveMessages.appendChild(fragArch);
 
+    updateArchiveToggleLabel();
+    updateScrollButtons();
     scrollToBottom();
+}
+
+function updateSessionNameFromFirstMessage() {
+    const session = getCurrentSession();
+    if (!session) return;
+    if (!session.messages.length) return;
+
+    const first = session.messages[0];
+    const raw = first.content || '';
+    const clean = raw.replace(/\s+/g, ' ').trim();
+    if (!clean) return;
+
+    let title = clean.slice(0, 22);
+    if (clean.length > 22) title += '...';
+
+    session.name = title;
+    renderSessionsList();
 }
 
 
 /* ------------------------------
-   5) MESSAGES
+   6) MESSAGES
    ------------------------------ */
 
-function renderMessage(role, content, pushToState = true) {
+function buildMessageElement(role, content) {
     const msg = document.createElement('div');
     msg.className = 'message ' + (role === 'user' ? 'user' : 'assistant');
     msg.innerHTML = content;
-    messagesEl.appendChild(msg);
+
+    if (role === 'assistant') {
+        enhanceAssistantMessage(msg, content);
+    }
+
+    return msg;
+}
+
+function renderMessage(role, content, pushToState = true) {
+    const msgEl = buildMessageElement(role, content);
+    dom.messages.appendChild(msgEl);
 
     if (pushToState) {
         const session = getCurrentSession();
@@ -165,7 +228,10 @@ function renderMessage(role, content, pushToState = true) {
         session.messages.push({ role, content });
         messageCountInCurrentSession++;
 
-        // إذا تجاوزنا 70 رسالة → ننقل الأقدم للأرشيف
+        if (session.messages.length === 1 && role === 'user') {
+            updateSessionNameFromFirstMessage();
+        }
+
         if (messageCountInCurrentSession > ARCHIVE_THRESHOLD) {
             archiveOldMessages(session);
         }
@@ -176,114 +242,94 @@ function renderMessage(role, content, pushToState = true) {
 }
 
 function renderArchivedMessage(role, content) {
-    const msg = document.createElement('div');
-    msg.className = 'message ' + (role === 'user' ? 'user' : 'assistant');
-    msg.innerHTML = content;
-    archiveMessagesEl.appendChild(msg);
+    const msg = buildMessageElement(role, content);
+    dom.archiveMessages.appendChild(msg);
 }
 
 function archiveOldMessages(session) {
-    // ننقل أول رسالة من messages إلى archivedMessages
     if (session.messages.length === 0) return;
 
     const archived = session.messages.shift();
     session.archivedMessages.push(archived);
 
-    // إعادة بناء المنطقة المرئية
-    messagesEl.innerHTML = '';
+    dom.messages.innerHTML = '';
+    const fragMain = document.createDocumentFragment();
     session.messages.forEach(msg => {
-        renderMessage(msg.role, msg.content, false);
+        fragMain.appendChild(buildMessageElement(msg.role, msg.content));
     });
+    dom.messages.appendChild(fragMain);
 
-    archiveMessagesEl.innerHTML = '';
+    dom.archiveMessages.innerHTML = '';
+    const fragArch = document.createDocumentFragment();
     session.archivedMessages.forEach(msg => {
-        renderArchivedMessage(msg.role, msg.content);
+        fragArch.appendChild(buildMessageElement(msg.role, msg.content));
     });
+    dom.archiveMessages.appendChild(fragArch);
+
+    updateArchiveToggleLabel();
 }
 
 
 /* ------------------------------
-   6) TYPING INDICATOR
+   7) ARCHIVE UX
+   ------------------------------ */
+
+function updateArchiveToggleLabel() {
+    const session = getCurrentSession();
+    if (!session) return;
+
+    const count = session.archivedMessages?.length || 0;
+    const span = dom.archiveToggle.querySelector('span');
+    if (!span) return;
+
+    if (count === 0) {
+        span.textContent = 'لا يوجد أرشيف بعد';
+    } else {
+        span.textContent = `عرض الأرشيف (${count} رسالة)`;
+    }
+}
+
+function toggleArchive() {
+    dom.archiveContent.classList.toggle('open');
+}
+
+
+/* ------------------------------
+   8) TYPING INDICATOR
    ------------------------------ */
 
 function showTyping() {
-    typingEl.classList.remove('hidden');
+    dom.typing.classList.remove('hidden');
     scrollToBottom();
 }
 
 function hideTyping() {
-    typingEl.classList.add('hidden');
+    dom.typing.classList.add('hidden');
 }
 
 
 /* ------------------------------
-   7) SENDING MESSAGE
-   ------------------------------ */
-
-function sendMessage() {
-    const text = inputEl.value.trim();
-    if (!text && attachedFiles.length === 0) return;
-
-    const session = getCurrentSession();
-    if (!session) return;
-
-    // رسالة المستخدم
-    renderMessage('user', escapeHtml(text || '[ملف فقط]'));
-
-    // تنظيف الإدخال والملفات
-    inputEl.value = '';
-    attachedFiles = [];
-    filePreviewEl.innerHTML = '';
-
-    // تحديث السياق
-    detectContext(text);
-
-    // إظهار "سماء تفكر..."
-    showTyping();
-
-    // هنا مكان استدعاء الـ API الحقيقي لاحقًا
-    fakeAssistantReply(text);
-}
-
-
-/* ------------------------------
-   8) FAKE ASSISTANT (PLACEHOLDER)
-   ------------------------------ */
-
-function fakeAssistantReply(userText) {
-    // محاكاة تأخير
-    setTimeout(() => {
-        hideTyping();
-
-        const reply = userText
-            ? `تلقيت رسالتك:\n\n${escapeHtml(userText)}\n\n(هنا سيكون رد سماء الحقيقي من الـ API)`
-            : `تم استلام الملفات. (هنا سيكون تحليل سماء الحقيقي للملفات)`;
-
-        renderMessage('assistant', reply);
-    }, 900);
-}
-
-
-/* ------------------------------
-   9) CONTEXT DETECTION (بسيط مبدئيًا)
+   9) CONTEXT DETECTION
    ------------------------------ */
 
 function detectContext(text) {
     if (!text) {
-        contextBarText.textContent = 'وضع المحادثة';
+        dom.contextText.textContent = 'وضع المحادثة';
         return;
     }
 
     const t = text.toLowerCase();
 
     if (t.includes('كود') || t.includes('code') || t.includes('javascript') || t.includes('html') || t.includes('css')) {
-        contextBarText.textContent = 'وضع البرمجة';
+        dom.contextText.textContent = 'وضع البرمجة';
     } else if (t.includes('حلل') || t.includes('تحليل') || t.includes('analyze')) {
-        contextBarText.textContent = 'وضع التحليل';
+        dom.contextText.textContent = 'وضع التحليل';
     } else if (t.includes('لخص') || t.includes('تلخيص') || t.includes('summary')) {
-        contextBarText.textContent = 'وضع التلخيص';
+        dom.contextText.textContent = 'وضع التلخيص';
+    } else if (t.includes('فكرة') || t.includes('أفكار') || t.includes('ideas')) {
+        dom.contextText.textContent = 'وضع توليد الأفكار';
     } else {
-        contextBarText.textContent = 'وضع المحادثة';
+        dom.contextText.textContent = 'وضع المحادثة';
     }
 }
 
@@ -292,16 +338,16 @@ function detectContext(text) {
    10) FILES
    ------------------------------ */
 
-attachBtn.addEventListener('click', () => {
-    fileInput.click();
-});
+function openFilePicker() {
+    dom.fileInput.click();
+}
 
-fileInput.addEventListener('change', (e) => {
+function handleFiles(e) {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
 
     attachedFiles = files;
-    filePreviewEl.innerHTML = '';
+    dom.filePreview.innerHTML = '';
 
     files.forEach(file => {
         const pill = document.createElement('div');
@@ -316,419 +362,282 @@ fileInput.addEventListener('change', (e) => {
             attachedFiles = attachedFiles.filter(f => f !== file);
             pill.remove();
         };
-        filePreviewEl.appendChild(pill);
+        dom.filePreview.appendChild(pill);
     });
-});
-
-
-/* ------------------------------
-   11) EVENTS
-   ------------------------------ */
-
-sendBtn.addEventListener('click', sendMessage);
-
-inputEl.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
-    }
-});
-
-messagesEl.addEventListener('scroll', updateScrollButtons);
-
-scrollUpBtn.addEventListener('click', scrollToTop);
-scrollDownBtn.addEventListener('click', scrollToBottom);
-
-archiveToggleEl.addEventListener('click', () => {
-    archiveContentEl.classList.toggle('open');
-});
-
-
-/* ------------------------------
-   12) THEME TOGGLE
-   ------------------------------ */
-
-themeToggleBtn.addEventListener('click', () => {
-    document.body.classList.toggle('dark');
-});
-
-
-/* ------------------------------
-   13) INITIALIZATION
-   ------------------------------ */
-
-function escapeHtml(str) {
-    return str
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
 }
+
+
+/* ------------------------------
+   11) TOOLS
+   ------------------------------ */
+
+const toolButtons = document.querySelectorAll('.tool-btn');
+
+function handleTool(tool) {
+    let hint = '';
+
+    switch (tool) {
+        case 'summarize':
+            hint = 'لخص النص التالي بدقة عالية:';
+            dom.contextText.textContent = 'وضع التلخيص';
+            break;
+        case 'analyze':
+            hint = 'حلل هذا المحتوى بعمق، واذكر النقاط القوية والضعيفة:';
+            dom.contextText.textContent = 'وضع التحليل';
+            break;
+        case 'code':
+            hint = 'اكتب كود يقوم بالتالي:';
+            dom.contextText.textContent = 'وضع البرمجة';
+            break;
+        case 'ideas':
+            hint = 'أعطني أفكارًا إبداعية حول:';
+            dom.contextText.textContent = 'وضع توليد الأفكار';
+            break;
+        case 'rewrite':
+            hint = 'أعد صياغة النص التالي بأسلوب أفضل وأكثر وضوحًا:';
+            dom.contextText.textContent = 'وضع إعادة الصياغة';
+            break;
+        case 'file':
+            hint = 'سأرفع لك ملفًا الآن، أريد منك تحليله:';
+            dom.contextText.textContent = 'وضع تحليل الملفات';
+            break;
+        default:
+            dom.contextText.textContent = 'وضع المحادثة';
+    }
+
+    if (hint) {
+        dom.input.value = hint + ' ';
+        dom.input.focus();
+    }
+}
+
+
+/* ------------------------------
+   12) MINI TOC + COLLAPSE + ANCHOR
+   ------------------------------ */
+
+function el(tag, className, html) {
+    const e = document.createElement(tag);
+    if (className) e.className = className;
+    if (html !== undefined) e.innerHTML = html;
+    return e;
+}
+
+function enhanceAssistantMessage(msgEl, rawContent) {
+    if (!msgEl) return;
+    if (msgEl.dataset.enhanced === '1') return;
+
+    const text = rawContent || '';
+    const length = text.length;
+    if (length < 400) return;
+
+    const miniToc = el('div', 'mini-toc');
+    const title = el('div', 'mini-toc-title', 'محتويات الرد:');
+    const list = el('ul');
+
+    const sections = [
+        { key: 'مقدمة' },
+        { key: 'نقاط رئيسية' },
+        { key: 'كود' },
+        { key: 'خلاصة' }
+    ];
+
+    sections.forEach(sec => {
+        const li = el('li', null, sec.key);
+        li.addEventListener('click', () => {
+            msgEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            msgEl.style.transition = 'transform 0.2s ease';
+            msgEl.style.transform = 'scale(1.02)';
+            setTimeout(() => msgEl.style.transform = 'scale(1)', 220);
+        });
+        list.appendChild(li);
+    });
+
+    miniToc.appendChild(title);
+    miniToc.appendChild(list);
+
+    const collapse = el('div', 'collapse-block');
+    const header = el('div', 'collapse-header');
+    header.innerHTML = `
+        <span>تفاصيل موسعة</span>
+        <i class="fa-solid fa-chevron-down"></i>
+    `;
+    const content = el('div', 'collapse-content open', msgEl.innerHTML);
+    header.classList.add('open');
+
+    header.addEventListener('click', () => {
+        const isOpen = content.classList.contains('open');
+        if (isOpen) {
+            content.classList.remove('open');
+            header.classList.remove('open');
+        } else {
+            content.classList.add('open');
+            header.classList.add('open');
+        }
+    });
+
+    collapse.appendChild(header);
+    collapse.appendChild(content);
+
+    msgEl.innerHTML = '';
+    msgEl.appendChild(miniToc);
+    msgEl.appendChild(collapse);
+
+    const anchor = el('div', 'anchor', 'العودة لهذا الرد');
+    anchor.addEventListener('click', () => {
+        msgEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+
+    dom.messages.insertBefore(anchor, msgEl);
+
+    msgEl.dataset.enhanced = '1';
+}
+
+
+/* ------------------------------
+   13) SENDING MESSAGE + BACKEND
+   ------------------------------ */
+
+async function sendMessage() {
+    const text = dom.input.value.trim();
+    if (!text && attachedFiles.length === 0) return;
+
+    const session = getCurrentSession();
+    if (!session) return;
+
+    renderMessage('user', escapeHtml(text || '[ملف فقط]'));
+
+    dom.input.value = '';
+    attachedFiles = [];
+    dom.filePreview.innerHTML = '';
+
+    detectContext(text);
+    showTyping();
+    setSystemState('thinking', 'سماء تفكر في رد مناسب...');
+
+    try {
+        const reply = await callBackend(text, session);
+        hideTyping();
+        setSystemState('connected', 'متصل • جاهز للاستقبال');
+        renderMessage('assistant', reply);
+    } catch (err) {
+        hideTyping();
+        setSystemState('error', 'حدث خطأ في الاتصال • حاول مرة أخرى');
+        renderMessage('assistant', escapeHtml('حدث خطأ أثناء الاتصال بالخادم.\n\nتفاصيل تقنية:\n' + (err.message || err)));
+    }
+}
+
+async function callBackend(userText, session) {
+    // هنا تقدر تغيّر المسار حسب الباك‑إند عندك
+    const endpoint = '/ask';
+
+    const payload = {
+        message: userText,
+        session_id: session.id,
+        context: dom.contextText.textContent || 'وضع المحادثة'
+    };
+
+    const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+        throw new Error('HTTP ' + res.status);
+    }
+
+    const data = await res.json();
+
+    // نتوقع أن الباك‑إند يرجع { reply: "..." }
+    const reply = data.reply || '(لم يتم استلام رد من الخادم)';
+    return escapeHtml(reply);
+}
+
+
+/* ------------------------------
+   14) PANELS + THEME
+   ------------------------------ */
+
+function openSessionsPanel() {
+    dom.sessionsPanel.classList.add('open');
+}
+
+function closeSessionsPanel() {
+    dom.sessionsPanel.classList.remove('open');
+}
+
+function openToolsPanel() {
+    dom.toolsPanel.classList.add('open');
+}
+
+function closeToolsPanel() {
+    dom.toolsPanel.classList.remove('open');
+}
+
+function toggleTheme() {
+    document.body.classList.toggle('dark');
+}
+
+
+/* ------------------------------
+   15) EVENTS BINDING
+   ------------------------------ */
+
+function bindEvents() {
+    dom.send.addEventListener('click', sendMessage);
+
+    dom.input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+
+    dom.messages.addEventListener('scroll', updateScrollButtons);
+    dom.scrollUp.addEventListener('click', scrollToTop);
+    dom.scrollDown.addEventListener('click', scrollToBottom);
+
+    dom.attach.addEventListener('click', openFilePicker);
+    dom.fileInput.addEventListener('change', handleFiles);
+
+    dom.archiveToggle.addEventListener('click', toggleArchive);
+
+    dom.themeToggle.addEventListener('click', toggleTheme);
+
+    dom.newSessionTop.addEventListener('click', () => {
+        openSessionsPanel();
+        createNewSession('جلسة جديدة');
+    });
+
+    dom.createSession.addEventListener('click', () => createNewSession('جلسة جديدة'));
+    dom.closeSessions.addEventListener('click', closeSessionsPanel);
+
+    dom.closeTools.addEventListener('click', closeToolsPanel);
+
+    toolButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tool = btn.dataset.tool;
+            handleTool(tool);
+        });
+    });
+}
+
+
+/* ------------------------------
+   16) INIT
+   ------------------------------ */
 
 function init() {
     createNewSession('الجلسة الأولى');
     updateScrollButtons();
-}
-
-document.addEventListener('DOMContentLoaded', init);/* ============================================================
-   Sky OS • Hybrid Intelligence UI
-   script.js — Part 2 (Tools + System State + Panels + Session Enhancements)
-   ============================================================ */
-
-
-/* ------------------------------
-   14) SYSTEM STATE INDICATOR
-   ------------------------------ */
-
-let systemStateEl = null;
-
-function createSystemState() {
-    systemStateEl = document.createElement('div');
-    systemStateEl.className = 'system-state connected';
-    systemStateEl.innerHTML = `
-        <i class="fa-solid fa-signal"></i>
-        <span>متصل • جاهز للاستقبال</span>
-    `;
-    document.body.appendChild(systemStateEl);
-}
-
-function setSystemState(state, text) {
-    if (!systemStateEl) return;
-    systemStateEl.className = 'system-state ' + state;
-    systemStateEl.innerHTML = `
-        <i class="fa-solid fa-signal"></i>
-        <span>${text}</span>
-    `;
-}
-
-
-/* ------------------------------
-   15) TOOLS SYSTEM
-   ------------------------------ */
-
-const toolButtons = document.querySelectorAll('.tool-btn');
-
-toolButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-        const tool = btn.dataset.tool;
-        handleTool(tool);
-    });
-});
-
-function handleTool(tool) {
-    let hint = '';
-
-    switch (tool) {
-        case 'summarize':
-            hint = 'لخص النص التالي بدقة عالية:';
-            contextBarText.textContent = 'وضع التلخيص';
-            break;
-        case 'analyze':
-            hint = 'حلل هذا المحتوى بعمق، واذكر النقاط القوية والضعيفة:';
-            contextBarText.textContent = 'وضع التحليل';
-            break;
-        case 'code':
-            hint = 'اكتب كود يقوم بالتالي:';
-            contextBarText.textContent = 'وضع البرمجة';
-            break;
-        case 'ideas':
-            hint = 'أعطني أفكارًا إبداعية حول:';
-            contextBarText.textContent = 'وضع توليد الأفكار';
-            break;
-        case 'rewrite':
-            hint = 'أعد صياغة النص التالي بأسلوب أفضل وأكثر وضوحًا:';
-            contextBarText.textContent = 'وضع إعادة الصياغة';
-            break;
-        case 'file':
-            hint = 'سأرفع لك ملفًا الآن، أريد منك تحليله:';
-            contextBarText.textContent = 'وضع تحليل الملفات';
-            break;
-        default:
-            contextBarText.textContent = 'وضع المحادثة';
-    }
-
-    if (hint) {
-        inputEl.value = hint + ' ';
-        inputEl.focus();
-    }
-}
-
-
-/* ------------------------------
-   16) PANELS TOGGLE (SESSIONS + TOOLS)
-   ------------------------------ */
-
-const closeSessionsBtn = document.getElementById('close-sessions');
-const closeToolsBtn    = document.getElementById('close-tools');
-
-newSessionTopBtn.addEventListener('click', () => {
-    // فتح لوحة الجلسات + إنشاء جلسة جديدة
-    sessionsPanel.classList.add('open');
-    createNewSession('جلسة جديدة');
-});
-
-createSessionBtn.addEventListener('click', () => {
-    createNewSession('جلسة جديدة');
-});
-
-closeSessionsBtn.addEventListener('click', () => {
-    sessionsPanel.classList.remove('open');
-});
-
-closeToolsBtn.addEventListener('click', () => {
-    toolsPanel.classList.remove('open');
-});
-
-/* فتح لوحة الأدوات عند الضغط على زر المرفقات مع الضغط المطوّل (مستقبلاً ممكن نغيره) */
- المطوّل (مستقبلاً ممكن نغيره) */
-attachBtn.addEventListener('contextmenu', (e) => {
-    e.preventDefault();
-    toolsPanel.classList.add('open');
-});
-
-
-/* ------------------------------
-   17) ENHANCE SESSIONS (AUTO NAME)
-   ------------------------------ */
-
-function updateSessionNameFromFirstMessage() {
-    const session = getCurrentSession();
-    if (!session) return;
-    if (!session.messages.length) return;
-
-    const first = session.messages[0];
-    const raw = first.content || '';
-    const clean = raw.replace(/\s+/g, ' ').trim();
-
-    if (!clean) return;
-
-    // نأخذ أول 18–22 حرف كعنوان للجلسة
-    let title = clean.slice(0, 22);
-    if (clean.length > 22) title += '...';
-
-    session.name = title;
-    renderSessionsList();
-}
-
-
-/* تعديل renderMessage لندعو تحديث اسم الجلسة بعد أول رسالة من المستخدم */
-const _renderMessageOriginal = renderMessage;
-renderMessage = function(role, content, pushToState = true) {
-    _renderMessageOriginal(role, content, pushToState);
-
-    if (role === 'user') {
-        const session = getCurrentSession();
-        if (session && session.messages.length === 1) {
-            updateSessionNameFromFirstMessage();
-        }
-    }
-};
-
-
-/* ------------------------------
-   18) SYSTEM STATE INTEGRATION
-   ------------------------------ */
-
-/* نعدل fakeAssistantReply ليتفاعل مع حالة النظام */
-const _fakeAssistantReplyOriginal = fakeAssistantReply;
-fakeAssistantReply = function(userText) {
-    setSystemState('thinking', 'سماء تفكر في رد مناسب...');
-    showTyping();
-
-    setTimeout(() => {
-        hideTyping();
-        setSystemState('connected', 'متصل • جاهز للاستقبال');
-        _fakeAssistantReplyOriginal(userText);
-    }, 900);
-};
-
-
-/* ------------------------------
-   19) INIT EXTENSION
-   ------------------------------ */
-
-const _initOriginal = init;
-init = function() {
-    _initOriginal();
     createSystemState();
-};/* ============================================================
-   Sky OS • Hybrid Intelligence UI
-   script.js — Part 2 (Tools + System State + Panels + Session Enhancements)
-   ============================================================ */
-
-
-/* ------------------------------
-   14) SYSTEM STATE INDICATOR
-   ------------------------------ */
-
-let systemStateEl = null;
-
-function createSystemState() {
-    systemStateEl = document.createElement('div');
-    systemStateEl.className = 'system-state connected';
-    systemStateEl.innerHTML = `
-        <i class="fa-solid fa-signal"></i>
-        <span>متصل • جاهز للاستقبال</span>
-    `;
-    document.body.appendChild(systemStateEl);
+    setSystemState('connected', 'متصل • جاهز للاستقبال');
 }
 
-function setSystemState(state, text) {
-    if (!systemStateEl) return;
-    systemStateEl.className = 'system-state ' + state;
-    systemStateEl.innerHTML = `
-        <i class="fa-solid fa-signal"></i>
-        <span>${text}</span>
-    `;
-}
-
-
-/* ------------------------------
-   15) TOOLS SYSTEM
-   ------------------------------ */
-
-const toolButtons = document.querySelectorAll('.tool-btn');
-
-toolButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-        const tool = btn.dataset.tool;
-        handleTool(tool);
-    });
+document.addEventListener('DOMContentLoaded', () => {
+    bindEvents();
+    init();
 });
-
-function handleTool(tool) {
-    let hint = '';
-
-    switch (tool) {
-        case 'summarize':
-            hint = 'لخص النص التالي بدقة عالية:';
-            contextBarText.textContent = 'وضع التلخيص';
-            break;
-        case 'analyze':
-            hint = 'حلل هذا المحتوى بعمق، واذكر النقاط القوية والضعيفة:';
-            contextBarText.textContent = 'وضع التحليل';
-            break;
-        case 'code':
-            hint = 'اكتب كود يقوم بالتالي:';
-            contextBarText.textContent = 'وضع البرمجة';
-            break;
-        case 'ideas':
-            hint = 'أعطني أفكارًا إبداعية حول:';
-            contextBarText.textContent = 'وضع توليد الأفكار';
-            break;
-        case 'rewrite':
-            hint = 'أعد صياغة النص التالي بأسلوب أفضل وأكثر وضوحًا:';
-            contextBarText.textContent = 'وضع إعادة الصياغة';
-            break;
-        case 'file':
-            hint = 'سأرفع لك ملفًا الآن، أريد منك تحليله:';
-            contextBarText.textContent = 'وضع تحليل الملفات';
-            break;
-        default:
-            contextBarText.textContent = 'وضع المحادثة';
-    }
-
-    if (hint) {
-        inputEl.value = hint + ' ';
-        inputEl.focus();
-    }
-}
-
-
-/* ------------------------------
-   16) PANELS TOGGLE (SESSIONS + TOOLS)
-   ------------------------------ */
-
-const closeSessionsBtn = document.getElementById('close-sessions');
-const closeToolsBtn    = document.getElementById('close-tools');
-
-newSessionTopBtn.addEventListener('click', () => {
-    // فتح لوحة الجلسات + إنشاء جلسة جديدة
-    sessionsPanel.classList.add('open');
-    createNewSession('جلسة جديدة');
-});
-
-createSessionBtn.addEventListener('click', () => {
-    createNewSession('جلسة جديدة');
-});
-
-closeSessionsBtn.addEventListener('click', () => {
-    sessionsPanel.classList.remove('open');
-});
-
-closeToolsBtn.addEventListener('click', () => {
-    toolsPanel.classList.remove('open');
-});
-
-/* فتح لوحة الأدوات عند الضغط على زر المرفقات مع الضغط المطوّل (مستقبلاً ممكن نغيره) */
- المطوّل (مستقبلاً ممكن نغيره) */
-attachBtn.addEventListener('contextmenu', (e) => {
-    e.preventDefault();
-    toolsPanel.classList.add('open');
-});
-
-
-/* ------------------------------
-   17) ENHANCE SESSIONS (AUTO NAME)
-   ------------------------------ */
-
-function updateSessionNameFromFirstMessage() {
-    const session = getCurrentSession();
-    if (!session) return;
-    if (!session.messages.length) return;
-
-    const first = session.messages[0];
-    const raw = first.content || '';
-    const clean = raw.replace(/\s+/g, ' ').trim();
-
-    if (!clean) return;
-
-    // نأخذ أول 18–22 حرف كعنوان للجلسة
-    let title = clean.slice(0, 22);
-    if (clean.length > 22) title += '...';
-
-    session.name = title;
-    renderSessionsList();
-}
-
-
-/* تعديل renderMessage لندعو تحديث اسم الجلسة بعد أول رسالة من المستخدم */
-const _renderMessageOriginal = renderMessage;
-renderMessage = function(role, content, pushToState = true) {
-    _renderMessageOriginal(role, content, pushToState);
-
-    if (role === 'user') {
-        const session = getCurrentSession();
-        if (session && session.messages.length === 1) {
-            updateSessionNameFromFirstMessage();
-        }
-    }
-};
-
-
-/* ------------------------------
-   18) SYSTEM STATE INTEGRATION
-   ------------------------------ */
-
-/* نعدل fakeAssistantReply ليتفاعل مع حالة النظام */
-const _fakeAssistantReplyOriginal = fakeAssistantReply;
-fakeAssistantReply = function(userText) {
-    setSystemState('thinking', 'سماء تفكر في رد مناسب...');
-    showTyping();
-
-    setTimeout(() => {
-        hideTyping();
-        setSystemState('connected', 'متصل • جاهز للاستقبال');
-        _fakeAssistantReplyOriginal(userText);
-    }, 900);
-};
-
-
-/* ------------------------------
-   19) INIT EXTENSION
-   ------------------------------ */
-
-const _initOriginal = init;
-init = function() {
-    _initOriginal();
-    createSystemState();
-};
