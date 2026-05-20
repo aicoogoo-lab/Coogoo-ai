@@ -1,643 +1,774 @@
 /* ============================================================
-   Sky OS • Hybrid Intelligence UI
-   script.js — Single File Version (Sessions + Messages + Tools + API)
-   By Driving & Copilot — 2026
+   script.js — SkyOS v5.2 Pro (Ultra)
+   - جلسات ذكية
+   - Workspace
+   - Settings
+   - أوامر سريعة
+   - صوت + رؤية + ملفات
+   - Toasts + Status + Theme
    ============================================================ */
 
-/* ------------------------------
-   1) DOM CACHE
-   ------------------------------ */
+(() => {
+  "use strict";
 
-const dom = {
-    messages:        document.getElementById('messages'),
-    archiveSection:  document.getElementById('archive-section'),
-    archiveToggle:   document.getElementById('archive-toggle'),
-    archiveContent:  document.getElementById('archive-content'),
-    archiveMessages: document.getElementById('archive-messages'),
-    typing:          document.getElementById('typing-indicator'),
-    scrollUp:        document.getElementById('scroll-up'),
-    scrollDown:      document.getElementById('scroll-down'),
-    input:           document.getElementById('message-input'),
-    send:            document.getElementById('send-btn'),
-    attach:          document.getElementById('attach-btn'),
-    fileInput:       document.getElementById('file-input'),
-    filePreview:     document.getElementById('file-preview'),
-    contextText:     document.getElementById('context-text'),
-    sessionsPanel:   document.getElementById('sessions-panel'),
-    sessionsList:    document.getElementById('sessions-list'),
-    createSession:   document.getElementById('create-session'),
-    toolsPanel:      document.getElementById('tools-panel'),
-    themeToggle:     document.getElementById('theme-toggle'),
-    newSessionTop:   document.getElementById('new-session'),
-    closeSessions:   document.getElementById('close-sessions'),
-    closeTools:      document.getElementById('close-tools')
-};
+  /* ============================
+     Helpers & Config
+     ============================ */
 
+  const ENDPOINTS = (window.SKY_CONFIG && window.SKY_CONFIG.endpoints) || {
+    ask: "/ask",
+    upload: "/upload",
+    voice: "/voice",
+    vision: "/vision",
+    feedback: "/feedback",
+    clear: "/clear",
+    status: "/api/v1/status",
+  };
 
-/* ------------------------------
-   2) GLOBAL STATE
-   ------------------------------ */
+  const LS_SESSION_KEY = "sky_session_id_v52";
+  const LS_SESSIONS_LIST = "sky_sessions_list_v52";
+  const LS_THEME_KEY = "sky_theme_v52";
 
-let sessions = [];
-let currentSessionId = null;
+  const $ = (sel) => document.querySelector(sel);
+  const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
-let messageCountInCurrentSession = 0;
-const ARCHIVE_THRESHOLD = 70;
+  /* ============================
+     State
+     ============================ */
 
-let attachedFiles = [];
+  let sessionId = loadOrCreateSessionId();
+  let sessions = loadSessions();
+  let isDark = loadTheme();
+  let isSending = false;
 
-let systemStateEl = null;
+  // UI elements
+  const chatWindow = $("#chat-window");
+  const userInput = $("#user-input");
+  const sendBtn = $("#send-btn");
+  const fileInput = $("#file-input");
+  const hiddenAudioInput = $("#hidden-audio-input");
+  const hiddenImageInput = $("#hidden-image-input");
+  const newSessionBtn = $("#new-session-btn");
+  const sessionListEl = $("#session-list");
+  const voiceBtn = $("#voice-btn");
+  const visionBtn = $("#vision-btn");
+  const miniUploadBtn = $("#mini-upload-btn");
+  const miniVoiceBtn = $("#mini-voice-btn");
+  const miniVisionBtn = $("#mini-vision-btn");
+  const toggleThemeBtn = $("#toggle-theme-btn");
+  const toastContainer = $("#toast-container");
+  const modelIndicator = $("#model-indicator");
+  const sessionIndicator = $("#session-indicator");
+  const connectionStatus = $("#connection-status");
+  const openSettingsBtn = $("#open-settings-btn");
+  const openWorkspaceBtn = $("#open-workspace-btn");
+  const settingsPanel = $("#settings-panel");
+  const workspacePanel = $("#workspace-panel");
 
+  /* ============================
+     Utilities
+     ============================ */
 
-/* ------------------------------
-   3) UTILITIES
-   ------------------------------ */
-
-function generateId() {
-    return 's_' + Math.random().toString(36).substring(2, 10);
-}
-
-function escapeHtml(str = '') {
-    return str
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
-}
-
-function scrollToBottom() {
-    dom.messages.scrollTo({
-        top: dom.messages.scrollHeight,
-        behavior: 'smooth'
-    });
-}
-
-function scrollToTop() {
-    dom.messages.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-    });
-}
-
-function updateScrollButtons() {
-    const { scrollTop, scrollHeight, clientHeight } = dom.messages;
-
-    if (scrollTop > 80) {
-        dom.scrollUp.classList.add('visible');
-    } else {
-        dom.scrollUp.classList.remove('visible');
+  function loadOrCreateSessionId() {
+    let id = localStorage.getItem(LS_SESSION_KEY);
+    if (!id) {
+      id = "s-" + Math.random().toString(36).slice(2, 12);
+      localStorage.setItem(LS_SESSION_KEY, id);
     }
+    return id;
+  }
 
-    if (scrollTop + clientHeight < scrollHeight - 80) {
-        dom.scrollDown.classList.add('visible');
-    } else {
-        dom.scrollDown.classList.remove('visible');
+  function loadSessions() {
+    try {
+      const raw = localStorage.getItem(LS_SESSIONS_LIST);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
     }
-}
+  }
 
+  function saveSessions() {
+    try {
+      localStorage.setItem(LS_SESSIONS_LIST, JSON.stringify(sessions));
+    } catch {}
+  }
 
-/* ------------------------------
-   4) SYSTEM STATE
-   ------------------------------ */
+  function loadTheme() {
+    const saved = localStorage.getItem(LS_THEME_KEY);
+    if (saved === "dark") {
+      document.body.classList.add("dark");
+      return true;
+    }
+    if (saved === "light") {
+      document.body.classList.remove("dark");
+      return false;
+    }
+    return document.body.classList.contains("dark");
+  }
 
-function createSystemState() {
-    systemStateEl = document.createElement('div');
-    systemStateEl.className = 'system-state connected';
-    systemStateEl.innerHTML = `
-        <i class="fa-solid fa-signal"></i>
-        <span>متصل • جاهز للاستقبال</span>
-    `;
-    document.body.appendChild(systemStateEl);
-}
+  function setTheme(dark) {
+    isDark = dark;
+    document.body.classList.toggle("dark", dark);
+    localStorage.setItem(LS_THEME_KEY, dark ? "dark" : "light");
+  }
 
-function setSystemState(state, text) {
-    if (!systemStateEl) return;
-    systemStateEl.className = 'system-state ' + state;
-    systemStateEl.innerHTML = `
-        <i class="fa-solid fa-signal"></i>
-        <span>${text}</span>
-    `;
-}
+  function setSession(id) {
+    sessionId = id;
+    localStorage.setItem(LS_SESSION_KEY, id);
+    sessionIndicator.textContent = `جلسة: ${id.slice(0, 8)}`;
+    addSessionRecord(id, `جلسة ${id.slice(2, 10)}`);
+  }
 
+  function addSessionRecord(id, title = "جلسة جديدة") {
+    sessions = sessions.filter((s) => s.id !== id);
+    sessions.unshift({ id, title, updated: Date.now() });
+    saveSessions();
+    renderSessionList();
+  }
 
-/* ------------------------------
-   5) SESSIONS
-   ------------------------------ */
+  function showToast(text, timeout = 4200) {
+    const t = document.createElement("div");
+    t.className = "toast";
+    t.textContent = text;
+    toastContainer.appendChild(t);
+    setTimeout(() => {
+      t.style.opacity = "0";
+      t.style.transform = "translateY(4px)";
+      setTimeout(() => t.remove(), 260);
+    }, timeout);
+  }
 
-function getCurrentSession() {
-    return sessions.find(s => s.id === currentSessionId) || null;
-}
+  function formatTime(date = new Date()) {
+    return date.toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit" });
+  }
 
-function createNewSession(name = null) {
-    const id = generateId();
-    const session = {
-        id,
-        name: name || 'جلسة جديدة',
-        messages: [],
-        archivedMessages: []
-    };
-    sessions.unshift(session);
-    currentSessionId = id;
-    renderSessionsList();
-    loadSession(id);
-}
-
-function renderSessionsList() {
-    dom.sessionsList.innerHTML = '';
-    sessions.forEach(session => {
-        const item = document.createElement('div');
-        item.className = 'session-item' + (session.id === currentSessionId ? ' active' : '');
-        item.textContent = session.name;
-        item.onclick = () => {
-            currentSessionId = session.id;
-            renderSessionsList();
-            loadSession(session.id);
-        };
-        dom.sessionsList.appendChild(item);
+  function scrollToBottom(smooth = true) {
+    if (!chatWindow) return;
+    chatWindow.scrollTo({
+      top: chatWindow.scrollHeight + 200,
+      behavior: smooth ? "smooth" : "auto",
     });
-}
+  }
 
-function loadSession(sessionId) {
-    const session = sessions.find(s => s.id === sessionId);
-    if (!session) return;
+  function sanitizeAndFormat(text) {
+    if (!text) return "";
+    const div = document.createElement("div");
+    div.textContent = text;
+    let safe = div.innerHTML;
+    safe = safe.replace(
+      /(https?:\/\/[^\s]+)/g,
+      (m) => `<a href="${m}" target="_blank" rel="noopener noreferrer">${m}</a>`
+    );
+    safe = safe.replace(/\n{2,}/g, "</p><p>").replace(/\n/g, "<br/>");
+    return `<p>${safe}</p>`;
+  }
 
-    dom.messages.innerHTML = '';
-    dom.archiveMessages.innerHTML = '';
-    messageCountInCurrentSession = session.messages.length;
+  function createMessageElement({ role = "assistant", text = "", time = null }) {
+    const row = document.createElement("div");
+    row.className = `message-row ${role === "user" ? "user" : "assistant"}`;
 
-    const fragMain = document.createDocumentFragment();
-    session.messages.forEach(msg => {
-        const el = buildMessageElement(msg.role, msg.content);
-        fragMain.appendChild(el);
-    });
-    dom.messages.appendChild(fragMain);
+    const avatar = document.createElement("div");
+    avatar.className = "avatar " + (role === "user" ? "user-avatar" : "assistant-avatar");
+    avatar.textContent = role === "user" ? "أنت" : "س";
 
-    const fragArch = document.createDocumentFragment();
-    session.archivedMessages.forEach(msg => {
-        const el = buildMessageElement(msg.role, msg.content);
-        fragArch.appendChild(el);
-    });
-    dom.archiveMessages.appendChild(fragArch);
+    const bubble = document.createElement("div");
+    bubble.className = "message-bubble";
 
-    updateArchiveToggleLabel();
-    updateScrollButtons();
+    const header = document.createElement("div");
+    header.className = "message-header";
+    const author = document.createElement("span");
+    author.className = "message-author";
+    author.textContent = role === "user" ? "أنت" : "سماء";
+    const timeEl = document.createElement("span");
+    timeEl.className = "message-time";
+    timeEl.style.marginLeft = "8px";
+    timeEl.textContent = time || formatTime();
+
+    header.appendChild(author);
+    header.appendChild(timeEl);
+
+    const content = document.createElement("div");
+    content.className = "message-content";
+    content.innerHTML = sanitizeAndFormat(text);
+
+    bubble.appendChild(header);
+    bubble.appendChild(content);
+
+    row.appendChild(avatar);
+    row.appendChild(bubble);
+
+    return row;
+  }
+
+  function appendMessage(role, text) {
+    const el = createMessageElement({ role, text });
+    chatWindow.appendChild(el);
     scrollToBottom();
-}
+  }
 
-function updateSessionNameFromFirstMessage() {
-    const session = getCurrentSession();
-    if (!session) return;
-    if (!session.messages.length) return;
+  function showTypingIndicator() {
+    if ($("#typing-indicator")) return;
+    const row = document.createElement("div");
+    row.id = "typing-indicator";
+    row.className = "message-row assistant";
+    row.style.opacity = "0.9";
 
-    const first = session.messages[0];
-    const raw = first.content || '';
-    const clean = raw.replace(/\s+/g, ' ').trim();
-    if (!clean) return;
+    const avatar = document.createElement("div");
+    avatar.className = "avatar assistant-avatar";
+    avatar.textContent = "س";
 
-    let title = clean.slice(0, 22);
-    if (clean.length > 22) title += '...';
+    const bubble = document.createElement("div");
+    bubble.className = "message-bubble";
+    bubble.style.maxWidth = "40%";
+    bubble.innerHTML = `<div class="message-header">
+        <span class="message-author">سماء</span>
+        <span class="message-time">${formatTime()}</span>
+      </div>
+      <div class="message-content"><em>يكتب...</em></div>`;
 
-    session.name = title;
-    renderSessionsList();
-}
-
-
-/* ------------------------------
-   6) MESSAGES
-   ------------------------------ */
-
-function buildMessageElement(role, content) {
-    const msg = document.createElement('div');
-    msg.className = 'message ' + (role === 'user' ? 'user' : 'assistant');
-    msg.innerHTML = content;
-
-    if (role === 'assistant') {
-        enhanceAssistantMessage(msg, content);
-    }
-
-    return msg;
-}
-
-function renderMessage(role, content, pushToState = true) {
-    const msgEl = buildMessageElement(role, content);
-    dom.messages.appendChild(msgEl);
-
-    if (pushToState) {
-        const session = getCurrentSession();
-        if (!session) return;
-
-        session.messages.push({ role, content });
-        messageCountInCurrentSession++;
-
-        if (session.messages.length === 1 && role === 'user') {
-            updateSessionNameFromFirstMessage();
-        }
-
-        if (messageCountInCurrentSession > ARCHIVE_THRESHOLD) {
-            archiveOldMessages(session);
-        }
-    }
-
-    updateScrollButtons();
+    row.appendChild(avatar);
+    row.appendChild(bubble);
+    chatWindow.appendChild(row);
     scrollToBottom();
-}
+  }
 
-function renderArchivedMessage(role, content) {
-    const msg = buildMessageElement(role, content);
-    dom.archiveMessages.appendChild(msg);
-}
+  function hideTypingIndicator() {
+    const el = $("#typing-indicator");
+    if (el) el.remove();
+  }
 
-function archiveOldMessages(session) {
-    if (session.messages.length === 0) return;
+  /* ============================
+     Local history mirror
+     ============================ */
 
-    const archived = session.messages.shift();
-    session.archivedMessages.push(archived);
+  function addToHistoryLocal(role, content) {
+    try {
+      const key = "sky_local_history_v52_" + sessionId;
+      const raw = localStorage.getItem(key);
+      const arr = raw ? JSON.parse(raw) : [];
+      arr.push({ role, content, t: Date.now() });
+      const trimmed = arr.slice(-150);
+      localStorage.setItem(key, JSON.stringify(trimmed));
+    } catch {}
+  }
 
-    dom.messages.innerHTML = '';
-    const fragMain = document.createDocumentFragment();
-    session.messages.forEach(msg => {
-        fragMain.appendChild(buildMessageElement(msg.role, msg.content));
-    });
-    dom.messages.appendChild(fragMain);
+  function loadLocalHistory() {
+    try {
+      const key = "sky_local_history_v52_" + sessionId;
+      const raw = localStorage.getItem(key);
+      const arr = raw ? JSON.parse(raw) : [];
+      arr.forEach((m) => appendMessage(m.role, m.content));
+    } catch {}
+  }
 
-    dom.archiveMessages.innerHTML = '';
-    const fragArch = document.createDocumentFragment();
-    session.archivedMessages.forEach(msg => {
-        fragArch.appendChild(buildMessageElement(msg.role, msg.content));
-    });
-    dom.archiveMessages.appendChild(fragArch);
+  /* ============================
+     Rendering
+     ============================ */
 
-    updateArchiveToggleLabel();
-}
-
-
-/* ------------------------------
-   7) ARCHIVE UX
-   ------------------------------ */
-
-function updateArchiveToggleLabel() {
-    const session = getCurrentSession();
-    if (!session) return;
-
-    const count = session.archivedMessages?.length || 0;
-    const span = dom.archiveToggle.querySelector('span');
-    if (!span) return;
-
-    if (count === 0) {
-        span.textContent = 'لا يوجد أرشيف بعد';
-    } else {
-        span.textContent = `عرض الأرشيف (${count} رسالة)`;
+  function renderSessionList() {
+    if (!sessionListEl) return;
+    sessionListEl.innerHTML = "";
+    if (!sessions.length) {
+      const empty = document.createElement("div");
+      empty.className = "sky-session-empty";
+      empty.textContent = "لا يوجد أرشيف بعد";
+      sessionListEl.appendChild(empty);
+      return;
     }
-}
-
-function toggleArchive() {
-    dom.archiveContent.classList.toggle('open');
-}
-
-
-/* ------------------------------
-   8) TYPING INDICATOR
-   ------------------------------ */
-
-function showTyping() {
-    dom.typing.classList.remove('hidden');
-    scrollToBottom();
-}
-
-function hideTyping() {
-    dom.typing.classList.add('hidden');
-}
-
-
-/* ------------------------------
-   9) CONTEXT DETECTION
-   ------------------------------ */
-
-function detectContext(text) {
-    if (!text) {
-        dom.contextText.textContent = 'وضع المحادثة';
-        return;
-    }
-
-    const t = text.toLowerCase();
-
-    if (t.includes('كود') || t.includes('code') || t.includes('javascript') || t.includes('html') || t.includes('css')) {
-        dom.contextText.textContent = 'وضع البرمجة';
-    } else if (t.includes('حلل') || t.includes('تحليل') || t.includes('analyze')) {
-        dom.contextText.textContent = 'وضع التحليل';
-    } else if (t.includes('لخص') || t.includes('تلخيص') || t.includes('summary')) {
-        dom.contextText.textContent = 'وضع التلخيص';
-    } else if (t.includes('فكرة') || t.includes('أفكار') || t.includes('ideas')) {
-        dom.contextText.textContent = 'وضع توليد الأفكار';
-    } else {
-        dom.contextText.textContent = 'وضع المحادثة';
-    }
-}
-
-
-/* ------------------------------
-   10) FILES
-   ------------------------------ */
-
-function openFilePicker() {
-    dom.fileInput.click();
-}
-
-function handleFiles(e) {
-    const files = Array.from(e.target.files || []);
-    if (!files.length) return;
-
-    attachedFiles = files;
-    dom.filePreview.innerHTML = '';
-
-    files.forEach(file => {
-        const pill = document.createElement('div');
-        pill.className = 'file-pill';
-        pill.innerHTML = `
-            <i class="fa-solid fa-file"></i>
-            <span>${file.name}</span>
-            <button type="button"><i class="fa-solid fa-xmark"></i></button>
-        `;
-        const btn = pill.querySelector('button');
-        btn.onclick = () => {
-            attachedFiles = attachedFiles.filter(f => f !== file);
-            pill.remove();
-        };
-        dom.filePreview.appendChild(pill);
+    sessions.forEach((s) => {
+      const item = document.createElement("div");
+      item.className = "session-item";
+      item.textContent = `${s.title} • ${new Date(s.updated).toLocaleString("ar-SA")}`;
+      item.dataset.id = s.id;
+      item.addEventListener("click", () => {
+        if (s.id === sessionId) return;
+        sessionId = s.id;
+        localStorage.setItem(LS_SESSION_KEY, sessionId);
+        sessionIndicator.textContent = `جلسة: ${sessionId.slice(0, 8)}`;
+        chatWindow.innerHTML = "";
+        loadLocalHistory();
+        showToast("تم تبديل الجلسة");
+      });
+      sessionListEl.appendChild(item);
     });
-}
+  }
 
+  /* ============================
+     Network: ask / upload / voice / vision
+     ============================ */
 
-/* ------------------------------
-   11) TOOLS
-   ------------------------------ */
-
-const toolButtons = document.querySelectorAll('.tool-btn');
-
-function handleTool(tool) {
-    let hint = '';
-
-    switch (tool) {
-        case 'summarize':
-            hint = 'لخص النص التالي بدقة عالية:';
-            dom.contextText.textContent = 'وضع التلخيص';
-            break;
-        case 'analyze':
-            hint = 'حلل هذا المحتوى بعمق، واذكر النقاط القوية والضعيفة:';
-            dom.contextText.textContent = 'وضع التحليل';
-            break;
-        case 'code':
-            hint = 'اكتب كود يقوم بالتالي:';
-            dom.contextText.textContent = 'وضع البرمجة';
-            break;
-        case 'ideas':
-            hint = 'أعطني أفكارًا إبداعية حول:';
-            dom.contextText.textContent = 'وضع توليد الأفكار';
-            break;
-        case 'rewrite':
-            hint = 'أعد صياغة النص التالي بأسلوب أفضل وأكثر وضوحًا:';
-            dom.contextText.textContent = 'وضع إعادة الصياغة';
-            break;
-        case 'file':
-            hint = 'سأرفع لك ملفًا الآن، أريد منك تحليله:';
-            dom.contextText.textContent = 'وضع تحليل الملفات';
-            break;
-        default:
-            dom.contextText.textContent = 'وضع المحادثة';
-    }
-
-    if (hint) {
-        dom.input.value = hint + ' ';
-        dom.input.focus();
-    }
-}
-
-
-/* ------------------------------
-   12) MINI TOC + COLLAPSE + ANCHOR
-   ------------------------------ */
-
-function el(tag, className, html) {
-    const e = document.createElement(tag);
-    if (className) e.className = className;
-    if (html !== undefined) e.innerHTML = html;
-    return e;
-}
-
-function enhanceAssistantMessage(msgEl, rawContent) {
-    if (!msgEl) return;
-    if (msgEl.dataset.enhanced === '1') return;
-
-    const text = rawContent || '';
-    const length = text.length;
-    if (length < 400) return;
-
-    const miniToc = el('div', 'mini-toc');
-    const title = el('div', 'mini-toc-title', 'محتويات الرد:');
-    const list = el('ul');
-
-    const sections = [
-        { key: 'مقدمة' },
-        { key: 'نقاط رئيسية' },
-        { key: 'كود' },
-        { key: 'خلاصة' }
-    ];
-
-    sections.forEach(sec => {
-        const li = el('li', null, sec.key);
-        li.addEventListener('click', () => {
-            msgEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            msgEl.style.transition = 'transform 0.2s ease';
-            msgEl.style.transform = 'scale(1.02)';
-            setTimeout(() => msgEl.style.transform = 'scale(1)', 220);
-        });
-        list.appendChild(li);
+  async function postJSON(url, payload) {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
     });
+    return res.json();
+  }
 
-    miniToc.appendChild(title);
-    miniToc.appendChild(list);
+  async function sendMessage(text) {
+    if (!text || isSending) return;
+    isSending = true;
+    userInput.value = "";
+    appendMessage("user", text);
+    addSessionRecord(sessionId, `جلسة ${sessionId.slice(2, 10)}`);
+    addToHistoryLocal("user", text);
 
-    const collapse = el('div', 'collapse-block');
-    const header = el('div', 'collapse-header');
-    header.innerHTML = `
-        <span>تفاصيل موسعة</span>
-        <i class="fa-solid fa-chevron-down"></i>
-    `;
-    const content = el('div', 'collapse-content open', msgEl.innerHTML);
-    header.classList.add('open');
-
-    header.addEventListener('click', () => {
-        const isOpen = content.classList.contains('open');
-        if (isOpen) {
-            content.classList.remove('open');
-            header.classList.remove('open');
-        } else {
-            content.classList.add('open');
-            header.classList.add('open');
-        }
-    });
-
-    collapse.appendChild(header);
-    collapse.appendChild(content);
-
-    msgEl.innerHTML = '';
-    msgEl.appendChild(miniToc);
-    msgEl.appendChild(collapse);
-
-    const anchor = el('div', 'anchor', 'العودة لهذا الرد');
-    anchor.addEventListener('click', () => {
-        msgEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    });
-
-    dom.messages.insertBefore(anchor, msgEl);
-
-    msgEl.dataset.enhanced = '1';
-}
-
-
-/* ------------------------------
-   13) SENDING MESSAGE + BACKEND
-   ------------------------------ */
-
-async function sendMessage() {
-    const text = dom.input.value.trim();
-    if (!text && attachedFiles.length === 0) return;
-
-    const session = getCurrentSession();
-    if (!session) return;
-
-    renderMessage('user', escapeHtml(text || '[ملف فقط]'));
-
-    dom.input.value = '';
-    attachedFiles = [];
-    dom.filePreview.innerHTML = '';
-
-    detectContext(text);
-    showTyping();
-    setSystemState('thinking', 'سماء تفكر في رد مناسب...');
+    showTypingIndicator();
 
     try {
-        const reply = await callBackend(text, session);
-        hideTyping();
-        setSystemState('connected', 'متصل • جاهز للاستقبال');
-        renderMessage('assistant', reply);
+      const resp = await postJSON(ENDPOINTS.ask, {
+        message: text,
+        session_id: sessionId,
+        ai_type: "groq",
+      });
+
+      hideTypingIndicator();
+
+      if (!resp) {
+        appendMessage("assistant", "حدث خطأ: لم يتم استلام رد من الخادم.");
+        showToast("خطأ في الاتصال بالمزود");
+        isSending = false;
+        return;
+      }
+
+      if (typeof resp.reply === "string" && resp.reply.startsWith("REFUSE:")) {
+        appendMessage("assistant", resp.reply.replace(/^REFUSE:\s*/i, ""));
+        isSending = false;
+        return;
+      }
+
+      const reply = resp.reply || resp;
+      appendMessage("assistant", reply);
+      addSessionRecord(sessionId, `جلسة ${sessionId.slice(2, 10)}`);
+      addToHistoryLocal("assistant", reply);
+
+      if (resp.provider) {
+        modelIndicator.textContent = `النموذج: ${resp.provider}`;
+      }
     } catch (err) {
-        hideTyping();
-        setSystemState('error', 'حدث خطأ في الاتصال • حاول مرة أخرى');
-        renderMessage('assistant', escapeHtml('حدث خطأ أثناء الاتصال بالخادم.\n\nتفاصيل تقنية:\n' + (err.message || err)));
+      hideTypingIndicator();
+      appendMessage("assistant", "عذراً، حدث خطأ أثناء معالجة الطلب.");
+      console.error("sendMessage error:", err);
+      showToast("فشل إرسال الرسالة");
+    } finally {
+      isSending = false;
     }
-}
+  }
 
-async function callBackend(userText, session) {
-    // هنا تقدر تغيّر المسار حسب الباك‑إند عندك
-    const endpoint = '/ask';
+  async function uploadFile(file) {
+    if (!file) return;
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("session_id", sessionId);
 
-    const payload = {
-        message: userText,
-        session_id: session.id,
-        context: dom.contextText.textContent || 'وضع المحادثة'
-    };
+    showToast("جارٍ رفع الملف وتحليله...");
+    try {
+      const res = await fetch(ENDPOINTS.upload, { method: "POST", body: fd });
+      const data = await res.json();
+      if (data && data.reply) {
+        appendMessage("assistant", data.reply);
+        addToHistoryLocal("assistant", data.reply);
+        showToast("تم تحليل الملف");
+      } else {
+        showToast("لم يتم تحليل الملف بنجاح");
+      }
+    } catch (e) {
+      console.error("uploadFile error:", e);
+      showToast("فشل رفع الملف");
+    }
+  }
 
-    const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
+  async function uploadAudio(file) {
+    if (!file) return;
+    const fd = new FormData();
+    fd.append("audio", file);
+    fd.append("session_id", sessionId);
+
+    showToast("جارٍ رفع الصوت وتحويله إلى نص...");
+    try {
+      const res = await fetch(ENDPOINTS.voice, { method: "POST", body: fd });
+      const data = await res.json();
+      if (data && data.reply) {
+        appendMessage("assistant", data.reply);
+        addToHistoryLocal("assistant", data.reply);
+        showToast("تم تحويل الصوت والرد");
+      } else {
+        showToast("لم يتم تحويل الصوت بنجاح");
+      }
+    } catch (e) {
+      console.error("uploadAudio error:", e);
+      showToast("فشل رفع الصوت");
+    }
+  }
+
+  async function uploadImage(file) {
+    if (!file) return;
+    const fd = new FormData();
+    fd.append("image", file);
+    fd.append("session_id", sessionId);
+
+    showToast("جارٍ رفع الصورة وتحليلها...");
+    try {
+      const res = await fetch(ENDPOINTS.vision, { method: "POST", body: fd });
+      const data = await res.json();
+      if (data && data.reply) {
+        appendMessage("assistant", data.reply);
+        addToHistoryLocal("assistant", data.reply);
+        showToast("تم تحليل الصورة");
+      } else {
+        showToast("لم يتم تحليل الصورة بنجاح");
+      }
+    } catch (e) {
+      console.error("uploadImage error:", e);
+      showToast("فشل رفع الصورة");
+    }
+  }
+
+  /* ============================
+     Quick Commands
+     ============================ */
+
+  function handleQuickCommand(text) {
+    const cmd = text.trim().split(/\s+/)[0].toLowerCase();
+    switch (cmd) {
+      case "/new":
+       ===========
+     Quick Commands
+     ============================ */
+
+  function handleQuickCommand(text) {
+    const cmd = text.trim().split(/\s+/)[0].toLowerCase();
+    switch (cmd) {
+      case "/new":
+        createNewSession();
+        return true;
+      case "/clear":
+        clearCurrentSession();
+        return true;
+      case "/workspace":
+        toggleWorkspace();
+        return true;
+      case "/settings":
+        toggleSettings();
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  function createNewSession() {
+    const id = "s-" + Math.random().toString(36).slice(2, 12);
+    setSession(id);
+    chatWindow.innerHTML = "";
+    appendMessage("assistant", "تم إنشاء جلسة جديدة. مرحباً بك يا سيدي.");
+    showToast("جلسة جديدة جاهزة");
+  }
+
+  function clearCurrentSession() {
+    chatWindow.innerHTML = "";
+    localStorage.removeItem("sky_local_history_v52_" + sessionId);
+    appendMessage("assistant", "تم مسح محتوى الجلسة الحالية محلياً.");
+    showToast("تم مسح الجلسة محلياً");
+  }
+
+  /* ============================
+     Settings Panel
+     ============================ */
+
+  function buildSettingsPanel() {
+    if (!settingsPanel) return;
+    settingsPanel.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div style="font-weight:700;font-size:0.95rem;">الإعدادات</div>
+        <button class="sky-icon-btn" id="close-settings-btn">✕</button>
+      </div>
+      <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:10px;">
+        تحكم في مظهر النظام وبعض السلوكيات العامة.
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <div style="font-size:0.85rem;font-weight:600;margin-bottom:4px;">المظهر</div>
+        <div style="display:flex;gap:8px;">
+          <button class="sky-btn-secondary" data-theme="light">وضع فاتح</button>
+          <button class="sky-btn-secondary" data-theme="dark">وضع داكن</button>
+        </div>
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <div style="font-size:0.85rem;font-weight:600;margin-bottom:4px;">جلسة العمل</div>
+        <button class="sky-btn-secondary full" id="settings-new-session">جلسة جديدة</button>
+        <button class="sky-btn-secondary full" id="settings-clear-session" style="margin-top:6px;">مسح محتوى الجلسة الحالية</button>
+      </div>
+
+      <div style="margin-top:auto;font-size:0.75rem;color:var(--text-muted);">
+        SkyOS v5.2 • واجهة تجريبية متقدمة
+      </div>
+    `;
+
+    const closeBtn = $("#close-settings-btn");
+    if (closeBtn) closeBtn.addEventListener("click", () => toggleSettings(false));
+
+    $$("#settings-panel [data-theme]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const theme = btn.getAttribute("data-theme");
+        setTheme(theme === "dark");
+        showToast(theme === "dark" ? "تم تفعيل الوضع الداكن" : "تم تفعيل الوضع الفاتح");
+      });
     });
 
-    if (!res.ok) {
-        throw new Error('HTTP ' + res.status);
+    const newSessionSettingsBtn = $("#settings-new-session");
+    const clearSessionSettingsBtn = $("#settings-clear-session");
+    if (newSessionSettingsBtn) newSessionSettingsBtn.addEventListener("click", createNewSession);
+    if (clearSessionSettingsBtn) clearSessionSettingsBtn.addEventListener("click", clearCurrentSession);
+  }
+
+  function toggleSettings(force) {
+    if (!settingsPanel) return;
+    const visible = typeof force === "boolean" ? force : !settingsPanel.classList.contains("visible");
+    settingsPanel.classList.toggle("visible", visible);
+    settingsPanel.classList.toggle("hidden", !visible);
+  }
+
+  /* ============================
+     Workspace Panel
+     ============================ */
+
+  function buildWorkspacePanel() {
+    if (!workspacePanel) return;
+    workspacePanel.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div style="font-weight:700;font-size:0.95rem;">مساحة العمل</div>
+        <button class="sky-icon-btn" id="close-workspace-btn">✕</button>
+      </div>
+      <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:10px;">
+        نظرة سريعة على الجلسات الأخيرة وبعض المعلومات المحلية.
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <div style="font-size:0.85rem;font-weight:600;margin-bottom:4px;">الجلسات الأخيرة</div>
+        <div id="workspace-sessions" style="max-height:180px;overflow:auto;border-radius:12px;border:1px solid var(--border);padding:6px 8px;"></div>
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <div style="font-size:0.85rem;font-weight:600;margin-bottom:4px;">ملاحظات</div>
+        <textarea id="workspace-notes" style="width:100%;min-height:80px;border-radius:12px;border:1px solid var(--border);padding:8px;font-size:0.85rem;background:var(--bg);color:var(--text);"></textarea>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px;">
+        <button class="sky-btn-secondary" id="workspace-save-notes">حفظ الملاحظات</button>
+      </div>
+    `;
+
+    const closeBtn = $("#close-workspace-btn");
+    if (closeBtn) closeBtn.addEventListener("click", () => toggleWorkspace(false));
+
+    renderWorkspaceSessions();
+    loadWorkspaceNotes();
+
+    const saveNotesBtn = $("#workspace-save-notes");
+    if (saveNotesBtn) {
+      saveNotesBtn.addEventListener("click", () => {
+        const notes = $("#workspace-notes").value || "";
+        localStorage.setItem("sky_workspace_notes_v52", notes);
+        showToast("تم حفظ الملاحظات");
+      });
     }
+  }
 
-    const data = await res.json();
+  function renderWorkspaceSessions() {
+    const container = $("#workspace-sessions");
+    if (!container) return;
+    container.innerHTML = "";
+    if (!sessions.length) {
+      container.innerHTML = `<div style="font-size:0.8rem;color:var(--text-muted);">لا توجد جلسات محفوظة بعد.</div>`;
+      return;
+    }
+    sessions.slice(0, 10).forEach((s) => {
+      const div = document.createElement("div");
+      div.style.fontSize = "0.8rem";
+      div.style.padding = "4px 6px";
+      div.style.borderRadius = "8px";
+      div.style.cursor = "pointer";
+      div.style.marginBottom = "4px";
+      div.style.transition = "background 0.18s";
+      div.textContent = `${s.title} • ${new Date(s.updated).toLocaleString("ar-SA")}`;
+      div.addEventListener("click", () => {
+        sessionId = s.id;
+        localStorage.setItem(LS_SESSION_KEY, sessionId);
+        sessionIndicator.textContent = `جلسة: ${sessionId.slice(0, 8)}`;
+        chatWindow.innerHTML = "";
+        loadLocalHistory();
+        showToast("تم فتح الجلسة من مساحة العمل");
+      });
+      div.addEventListener("mouseover", () => {
+        div.style.background = "var(--primary-soft)";
+      });
+      div.addEventListener("mouseout", () => {
+        div.style.background = "transparent";
+      });
+      container.appendChild(div);
+    });
+  }
 
-    // نتوقع أن الباك‑إند يرجع { reply: "..." }
-    const reply = data.reply || '(لم يتم استلام رد من الخادم)';
-    return escapeHtml(reply);
-}
+  function loadWorkspaceNotes() {
+    const notesEl = $("#workspace-notes");
+    if (!notesEl) return;
+    const saved = localStorage.getItem("sky_workspace_notes_v52");
+    if (saved) notesEl.value = saved;
+  }
 
+  function toggleWorkspace(force) {
+    if (!workspacePanel) return;
+    const visible = typeof force === "boolean" ? force : !workspacePanel.classList.contains("visible");
+    workspacePanel.classList.toggle("visible", visible);
+    workspacePanel.classList.toggle("hidden", !visible);
+    if (visible) renderWorkspaceSessions();
+  }
 
-/* ------------------------------
-   14) PANELS + THEME
-   ------------------------------ */
+  /* ============================
+     Status Polling
+     ============================ */
 
-function openSessionsPanel() {
-    dom.sessionsPanel.classList.add('open');
-}
-
-function closeSessionsPanel() {
-    dom.sessionsPanel.classList.remove('open');
-}
-
-function openToolsPanel() {
-    dom.toolsPanel.classList.add('open');
-}
-
-function closeToolsPanel() {
-    dom.toolsPanel.classList.remove('open');
-}
-
-function toggleTheme() {
-    document.body.classList.toggle('dark');
-}
-
-
-/* ------------------------------
-   15) EVENTS BINDING
-   ------------------------------ */
-
-function bindEvents() {
-    dom.send.addEventListener('click', sendMessage);
-
-    dom.input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
+  async function pollStatus() {
+    try {
+      const res = await fetch(ENDPOINTS.status);
+      const data = await res.json();
+      if (data) {
+        const online = data.groq || data.gemini || data.openai;
+        const dot = connectionStatus.querySelector(".sky-status-dot");
+        const text = connectionStatus.querySelector(".sky-status-text");
+        if (online) {
+          dot.classList.remove("offline");
+          dot.classList.add("online");
+          text.textContent = "متصل • جاهز";
+        } else {
+          dot.classList.remove("online");
+          dot.classList.add("offline");
+          text.textContent = "غير متصل • في وضع الانتظار";
         }
-    });
+      }
+    } catch (e) {
+      // silent
+    } finally {
+      setTimeout(pollStatus, 8000);
+    }
+  }
 
-    dom.messages.addEventListener('scroll', updateScrollButtons);
-    dom.scrollUp.addEventListener('click', scrollToTop);
-    dom.scrollDown.addEventListener('click', scrollToBottom);
+  /* ============================
+     Event Listeners
+     ============================ */
 
-    dom.attach.addEventListener('click', openFilePicker);
-    dom.fileInput.addEventListener('change', handleFiles);
+  sendBtn.addEventListener("click", () => {
+    const text = userInput.value.trim();
+    if (!text) return;
+    if (text.startsWith("/")) {
+      if (handleQuickCommand(text)) {
+        userInput.value = "";
+        return;
+      }
+    }
+    sendMessage(text);
+  });
 
-    dom.archiveToggle.addEventListener('click', toggleArchive);
+  userInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      const text = userInput.value.trim();
+      if (!text) return;
+      if (text.startsWith("/")) {
+        if (handleQuickCommand(text)) {
+          userInput.value = "";
+          return;
+        }
+      }
+      sendMessage(text);
+    }
+  });
 
-    dom.themeToggle.addEventListener('click', toggleTheme);
+  userInput.addEventListener("input", () => {
+    userInput.style.height = "auto";
+    userInput.style.height = Math.min(220, userInput.scrollHeight) + "px";
+  });
 
-    dom.newSessionTop.addEventListener('click', () => {
-        openSessionsPanel();
-        createNewSession('جلسة جديدة');
-    });
+  newSessionBtn.addEventListener("click", createNewSession);
 
-    dom.createSession.addEventListener('click', () => createNewSession('جلسة جديدة'));
-    dom.closeSessions.addEventListener('click', closeSessionsPanel);
+  fileInput.addEventListener("change", (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (f) uploadFile(f);
+    fileInput.value = "";
+  });
 
-    dom.closeTools.addEventListener('click', closeToolsPanel);
+  miniUploadBtn.addEventListener("click", () => fileInput.click());
+  miniVoiceBtn.addEventListener("click", () => hiddenAudioInput.click());
+  miniVisionBtn.addEventListener("click", () => hiddenImageInput.click());
 
-    toolButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const tool = btn.dataset.tool;
-            handleTool(tool);
-        });
-    });
-}
+  hiddenAudioInput.addEventListener("change", (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (f) uploadAudio(f);
+    hiddenAudioInput.value = "";
+  });
 
+  hiddenImageInput.addEventListener("change", (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (f) uploadImage(f);
+    hiddenImageInput.value = "";
+  });
 
-/* ------------------------------
-   16) INIT
-   ------------------------------ */
+  voiceBtn.addEventListener("click", () => hiddenAudioInput.click());
+  visionBtn.addEventListener("click", () => hiddenImageInput.click());
 
-function init() {
-    createNewSession('الجلسة الأولى');
-    updateScrollButtons();
-    createSystemState();
-    setSystemState('connected', 'متصل • جاهز للاستقبال');
-}
+  toggleThemeBtn.addEventListener("click", () => {
+    setTheme(!isDark);
+    showToast(isDark ? "الوضع الداكن مفعل" : "الوضع الفاتح مفعل");
+  });
 
-document.addEventListener('DOMContentLoaded', () => {
-    bindEvents();
-    init();
-});
+  openSettingsBtn.addEventListener("click", () => toggleSettings());
+  openWorkspaceBtn.addEventListener("click", () => toggleWorkspace());
+
+  chatWindow.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+  });
+  chatWindow.addEventListener("drop", (e) => {
+    e.preventDefault();
+    const f = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) {
+      if (f.type.startsWith("image/")) uploadImage(f);
+      else if (f.type.startsWith("audio/")) uploadAudio(f);
+      else uploadFile(f);
+    }
+  });
+
+  /* ============================
+     Initialization
+     ============================ */
+
+  function init() {
+    setSession(sessionId);
+    renderSessionList();
+    loadLocalHistory();
+
+    if (!chatWindow.children.length) {
+      appendMessage(
+        "assistant",
+        "مرحباً سيدي، هنا سماء — جاهزة للعمل. اكتب ما تريد، أو استخدم الأوامر السريعة مثل /new أو /clear أو /workspace."
+      );
+    }
+
+    buildSettingsPanel();
+    buildWorkspacePanel();
+    pollStatus();
+    userInput.focus();
+    scrollToBottom(false);
+  }
+
+  window.SkyUI = {
+    setSession,
+    appendMessage,
+    showToast,
+    getSessionId: () => sessionId,
+  };
+
+  init();
+})();
