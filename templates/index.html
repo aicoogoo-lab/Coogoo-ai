@@ -2,15 +2,22 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=yes" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <meta name="theme-color" content="#0a0a14" />
-  <meta name="description" content="SkyOS v9.0 — Ultimate Hybrid Intelligence System" />
-  <title>SkyOS v9.0 — الذكاء الهجين النهائي</title>
+  <meta name="description" content="SkyOS v9.0 — PWA Hybrid Intelligence System" />
+  <title>SkyOS v9.0 — PWA Edition</title>
 
-  <!-- Performance Boost (من نسختك) -->
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/static/manifest.json" />
+
+  <!-- iOS Support -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <link rel="apple-touch-icon" href="/static/icons/icon-192.png" />
+
+  <!-- Performance Boost -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com" />
 
   <!-- Cairo Font -->
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -21,24 +28,23 @@
   <!-- Main CSS -->
   <link rel="stylesheet" href="/static/css/style.css" />
 
-  <!-- Preload JS (من نسختك - تحسين أداء) -->
+  <!-- Preload JS -->
   <link rel="preload" href="/static/js/script.js" as="script" />
-  <link rel="preload" href="/static/css/style.css" as="style" />
 </head>
 
 <body class="dark">
 
-  <!-- Background Layers -->
-  <div class="sky-background" aria-hidden="true">
+  <!-- Background -->
+  <div class="sky-background">
     <div class="sky-gradient"></div>
     <div class="sky-glow-layer"></div>
     <canvas id="sky-particles" class="sky-canvas"></canvas>
   </div>
 
-  <!-- Root Container -->
+  <!-- Root -->
   <div id="sky-root">
 
-    <!-- Topbar (دمج الأفضل) -->
+    <!-- Topbar -->
     <header class="sky-topbar glass-layer">
       <div class="sky-topbar-left">
         <div class="sky-brand">
@@ -47,12 +53,11 @@
           </div>
           <div class="sky-brand-text">
             <div class="sky-brand-title">SkyOS v9.0</div>
-            <div class="sky-brand-subtitle">Ultimate Hybrid Intelligence</div>
+            <div class="sky-brand-subtitle">PWA Hybrid Intelligence</div>
           </div>
         </div>
       </div>
 
-      <!-- حالة الاتصال (من النسخة الكاملة) -->
       <div class="sky-topbar-center">
         <div class="sky-status" id="connection-status">
           <span class="sky-status-dot"></span>
@@ -60,80 +65,61 @@
         </div>
       </div>
 
-      <!-- أزرار topbar (دمج) -->
       <div class="sky-topbar-right">
-        <button class="sky-icon-btn" id="menu-toggle" title="القائمة الجانبية">
-          <i class="fas fa-bars"></i>
-        </button>
-        <button class="sky-icon-btn" id="toggle-theme-btn" title="تبديل الثيم">
-          <i class="fas fa-moon"></i>
-        </button>
-        <button class="sky-icon-btn" id="open-settings-btn" title="الإعدادات المتقدمة">
-          <i class="fas fa-cog"></i>
-        </button>
+        <button class="sky-icon-btn" id="menu-toggle"><i class="fas fa-bars"></i></button>
+        <button class="sky-icon-btn" id="toggle-theme-btn"><i class="fas fa-moon"></i></button>
+        <button class="sky-icon-btn" id="open-settings-btn"><i class="fas fa-cog"></i></button>
       </div>
     </header>
 
-    <!-- Main Layout -->
+    <!-- Layout -->
     <div class="sky-layout">
 
-      <!-- Sidebar (دمج - أخف وزناً مع الاحتفاظ بالميزات) -->
-      <aside class="sky-sidebar glass-layer" id="sidebar" aria-label="القائمة الجانبية">
+      <!-- Sidebar -->
+      <aside class="sky-sidebar glass-layer" id="sidebar">
 
         <div class="sky-sidebar-section">
           <div class="sky-sidebar-title"><i class="fas fa-plus-circle"></i> الجلسات</div>
-          <button class="sky-btn-primary full" id="new-session-btn" title="جلسة جديدة">
+          <button class="sky-btn-primary full" id="new-session-btn">
             <i class="fas fa-plus"></i> جلسة جديدة
           </button>
         </div>
 
         <div class="sky-sidebar-section">
           <div class="sky-sidebar-title"><i class="fas fa-archive"></i> الأرشيف</div>
-          <div class="sky-session-list" id="session-list" aria-label="قائمة الجلسات">
+          <div class="sky-session-list" id="session-list">
             <div class="sky-session-empty">
-              <i class="fas fa-inbox"></i><br />لا يوجد أرشيف بعد
+              <i class="fas fa-inbox"></i><br>لا يوجد أرشيف بعد
             </div>
           </div>
         </div>
 
         <div class="sky-sidebar-section">
           <div class="sky-sidebar-title"><i class="fas fa-paperclip"></i> الملفات</div>
-          <label class="sky-btn-secondary full" style="display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;" title="رفع ملف">
+          <label class="sky-btn-secondary full" style="display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;">
             <i class="fas fa-upload"></i> رفع ملف
             <input type="file" id="file-input" hidden />
           </label>
-          <!-- أزرار إضافية (من النسخة الكاملة) -->
-          <button class="sky-btn-secondary full" id="clear-chat-btn" title="مسح المحادثة">
-            <i class="fas fa-trash-alt"></i> مسح المحادثة
-          </button>
-          <button class="sky-btn-secondary full" id="export-chat-btn" title="تصدير المحادثة">
-            <i class="fas fa-file-export"></i> تصدير المحادثة
-          </button>
+          <button class="sky-btn-secondary full" id="clear-chat-btn"><i class="fas fa-trash-alt"></i> مسح المحادثة</button>
+          <button class="sky-btn-secondary full" id="export-chat-btn"><i class="fas fa-file-export"></i> تصدير المحادثة</button>
         </div>
 
         <div class="sky-sidebar-section">
           <div class="sky-sidebar-title"><i class="fas fa-microphone"></i> الصوت والرؤية</div>
-          <button class="sky-btn-secondary full" id="voice-btn" title="إرسال صوت">
-            <i class="fas fa-microphone"></i> إرسال صوت
-          </button>
-          <button class="sky-btn-secondary full" id="vision-btn" title="إرسال صورة">
-            <i class="fas fa-image"></i> إرسال صورة
-          </button>
+          <button class="sky-btn-secondary full" id="voice-btn"><i class="fas fa-microphone"></i> إرسال صوت</button>
+          <button class="sky-btn-secondary full" id="vision-btn"><i class="fas fa-image"></i> إرسال صورة</button>
         </div>
 
         <div class="sky-sidebar-section">
           <div class="sky-sidebar-title"><i class="fas fa-folder-open"></i> Workspace</div>
-          <button class="sky-btn-secondary full" id="open-workspace-btn" title="مساحة العمل">
-            <i class="fas fa-brain"></i> مساحة العمل
-          </button>
+          <button class="sky-btn-secondary full" id="open-workspace-btn"><i class="fas fa-brain"></i> مساحة العمل</button>
         </div>
 
       </aside>
 
-      <!-- Main Chat Area -->
+      <!-- Main Chat -->
       <main class="sky-main">
 
-        <!-- Chat Header (من النسخة الكاملة) -->
         <div class="sky-chat-header glass-layer">
           <div>
             <div class="sky-chat-title"><i class="fas fa-comments"></i> جلسة مع SkyOS</div>
@@ -152,32 +138,18 @@
           </div>
         </div>
 
-        <!-- Chat Window -->
-        <section class="sky-chat-window" id="chat-window" aria-live="polite"></section>
+        <section class="sky-chat-window" id="chat-window"></section>
 
-        <!-- Input Bar (دمج - مع تحسينات) -->
         <footer class="sky-input-bar glass-layer">
           <div class="sky-input-tools">
-            <button class="sky-icon-btn" id="mini-upload-btn" title="رفع ملف">
-              <i class="fas fa-paperclip"></i>
-            </button>
-            <button class="sky-icon-btn" id="mini-voice-btn" title="إرسال صوت">
-              <i class="fas fa-microphone"></i>
-            </button>
-            <button class="sky-icon-btn" id="mini-vision-btn" title="إرسال صورة">
-              <i class="fas fa-camera"></i>
-            </button>
+            <button class="sky-icon-btn" id="mini-upload-btn"><i class="fas fa-paperclip"></i></button>
+            <button class="sky-icon-btn" id="mini-voice-btn"><i class="fas fa-microphone"></i></button>
+            <button class="sky-icon-btn" id="mini-vision-btn"><i class="fas fa-camera"></i></button>
           </div>
 
-          <textarea 
-            id="user-input" 
-            class="sky-input" 
-            placeholder="اكتب لـ SkyOS... /help للأوامر السريعة"
-            rows="1"
-            aria-label="حقل الإدخال"
-          ></textarea>
+          <textarea id="user-input" class="sky-input" placeholder="اكتب لـ SkyOS..." rows="1"></textarea>
 
-          <button class="sky-send-btn" id="send-btn" title="إرسال">
+          <button class="sky-send-btn" id="send-btn">
             <i class="fas fa-paper-plane"></i> <span>إرسال</span>
           </button>
         </footer>
@@ -190,15 +162,15 @@
     <input type="file" id="hidden-image-input" accept="image/*" hidden />
 
     <!-- Toasts -->
-    <div id="toast-container" aria-live="polite"></div>
+    <div id="toast-container"></div>
 
     <!-- Panels -->
-    <div id="settings-panel" class="sky-settings hidden" aria-label="لوحة الإعدادات"></div>
-    <div id="workspace-panel" class="sky-workspace hidden" aria-label="لوحة مساحة العمل"></div>
+    <div id="settings-panel" class="sky-settings hidden"></div>
+    <div id="workspace-panel" class="sky-workspace hidden"></div>
 
   </div>
 
-  <!-- Global Configuration -->
+  <!-- Config -->
   <script>
     const SKY_CONFIG = {
       endpoints: {
@@ -213,20 +185,15 @@
     };
   </script>
 
-  <!-- Main JavaScript (مع preload من نسختك) -->
+  <!-- Main JS -->
   <script src="/static/js/script.js" defer></script>
 
-  <!-- بديل احتياطي في حال فشل تحميل الـ CSS -->
-  <noscript>
-    <style>
-      body { background: #0a0a14; color: white; padding: 20px; font-family: sans-serif; }
-      .no-script-message { text-align: center; margin-top: 50px; }
-    </style>
-    <div class="no-script-message">
-      <h1>⚠️ يرجى تفعيل JavaScript</h1>
-      <p>SkyOS يحتاج إلى JavaScript ليعمل بشكل صحيح</p>
-    </div>
-  </noscript>
+  <!-- Register Service Worker -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/static/service-worker.js");
+    }
+  </script>
 
 </body>
 </html>
