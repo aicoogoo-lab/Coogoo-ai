@@ -1,6 +1,6 @@
 """
-ذاكرة "سماء" الواعية - النسخة الاحترافية الكاملة v4.0
-Long-term Memory + RLHF + Master Profile + File & URL Analysis
+ذاكرة "سماء" الواعية - النسخة الاحترافية المتقدمة v5.0
+Long-term Memory + RLHF + Master Profile + File & URL Analysis + Personality Layer
 """
 
 import sqlite3
@@ -15,6 +15,10 @@ logger = logging.getLogger(__name__)
 DB_PATH = Path(__file__).parent / "sky_memory.db"
 
 
+# ============================================================
+# 1) اتصال قاعدة البيانات
+# ============================================================
+
 def get_connection() -> sqlite3.Connection:
     conn = sqlite3.connect(str(DB_PATH), timeout=30, check_same_thread=False)
     conn.row_factory = sqlite3.Row
@@ -24,10 +28,15 @@ def get_connection() -> sqlite3.Connection:
     return conn
 
 
+# ============================================================
+# 2) تهيئة الجداول
+# ============================================================
+
 def init_db() -> None:
     conn = get_connection()
     cursor = conn.cursor()
 
+    # المحادثات (مع دعم RLHF + importance + metadata)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS conversations (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -43,6 +52,7 @@ def init_db() -> None:
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_conv_session ON conversations(session_id)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_conv_time ON conversations(timestamp DESC)')
 
+    # بحث نصي كامل للمحادثات
     try:
         cursor.execute('''
             CREATE VIRTUAL TABLE IF NOT EXISTS conversations_fts 
@@ -51,6 +61,7 @@ def init_db() -> None:
     except Exception:
         pass
 
+    # المعرفة طويلة المدى
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS knowledge (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -69,6 +80,7 @@ def init_db() -> None:
     except Exception:
         pass
 
+    # ملف السيد / الماستر (هوية + تفضيلات + حالة)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS master_profile (
             key TEXT PRIMARY KEY,
@@ -77,6 +89,7 @@ def init_db() -> None:
         )
     ''')
 
+    # الملفات المرفوعة
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS uploaded_files (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -89,13 +102,30 @@ def init_db() -> None:
         )
     ''')
 
+    # تغذية راجعة مفصّلة (للتعلم المستقبلي)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS feedback (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id TEXT,
+            score REAL,
+            reason TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
     conn.commit()
     conn.close()
-    logger.info("✅ ذاكرة سماء v4.0 جاهزة")
+    logger.info("✅ ذاكرة سماء v5.0 جاهزة وتعمل")
 
 
-# ====================== Master Profile ======================
+# ============================================================
+# 3) Master Profile — هوية السيد / الماستر
+# ============================================================
+
 def save_master_info(key: str, value: str) -> bool:
+    """
+    تخزين معلومة عن السيد (الاسم، الأسلوب، المشاريع، الحالة، آخر نشاط...)
+    """
     try:
         conn = get_connection()
         cursor = conn.cursor()
@@ -113,7 +143,9 @@ def save_master_info(key: str, value: str) -> bool:
 
 
 def get_master_profile() -> Dict[str, str]:
-    """استرجاع كل معلومات السيد (للتوافق مع app.py)"""
+    """
+    استرجاع كل معلومات السيد بشكل قاموس
+    """
     try:
         conn = get_connection()
         cursor = conn.cursor()
@@ -125,23 +157,48 @@ def get_master_profile() -> Dict[str, str]:
 
 
 def get_master_profile_text() -> str:
+    """
+    تحويل ملف السيد إلى نص يمكن حقنه في الـ System Prompt
+    """
     try:
         profile = get_master_profile()
-        return "\n".join([f"{k}: {v}" for k, v in profile.items()]) if profile else ""
+        if not profile:
+            return ""
+        lines = []
+        for k, v in profile.items():
+            lines.append(f"{k}: {v}")
+        return "\n".join(lines)
     except Exception:
         return ""
 
 
-# ====================== المحادثات ======================
+# ============================================================
+# 4) المحادثات — الذاكرة الحوارية
+# ============================================================
+
 def save_conversation(role: str, content: str, session_id: Optional[str] = None, metadata: Dict = None) -> bool:
+    """
+    حفظ رسالة في الذاكرة (مع metadata + importance مبدئيًا = 1.0)
+    """
     try:
         conn = get_connection()
         cursor = conn.cursor()
         meta_json = json.dumps(metadata or {}, ensure_ascii=False)
+
         cursor.execute('''
             INSERT INTO conversations (role, content, session_id, importance, metadata)
             VALUES (?, ?, ?, ?, ?)
         ''', (role, content, session_id, 1.0, meta_json))
+
+        # إدخال في FTS
+        try:
+            cursor.execute('''
+                INSERT INTO conversations_fts (content, session_id)
+                VALUES (?, ?)
+            ''', (content, session_id or ""))
+        except Exception:
+            pass
+
         conn.commit()
         return True
     except Exception as e:
@@ -152,7 +209,9 @@ def save_conversation(role: str, content: str, session_id: Optional[str] = None,
 
 
 def get_recent_conversations(limit: int = 20, session_id: Optional[str] = None) -> List[Dict]:
-    """استرجاع آخر المحادثات (للتوافق مع app.py)"""
+    """
+    استرجاع آخر المحادثات (للتوافق مع أنظمة أخرى إن وجدت)
+    """
     try:
         conn = get_connection()
         cursor = conn.cursor()
@@ -173,6 +232,9 @@ def get_recent_conversations(limit: int = 20, session_id: Optional[str] = None) 
 
 
 def get_full_conversation_context(session_id: str, limit: int = 50) -> List[Dict]:
+    """
+    استرجاع سياق كامل للجلسة (آخر N رسالة)
+    """
     try:
         conn = get_connection()
         cursor = conn.cursor()
@@ -188,20 +250,37 @@ def get_full_conversation_context(session_id: str, limit: int = 50) -> List[Dict
 
 
 def clear_conversation_history(session_id: Optional[str] = None):
+    """
+    مسح تاريخ المحادثة لجلسة معينة أو الكل
+    """
     try:
         conn = get_connection()
         cursor = conn.cursor()
         if session_id:
             cursor.execute('DELETE FROM conversations WHERE session_id = ?', (session_id,))
+            try:
+                cursor.execute('DELETE FROM conversations_fts WHERE session_id = ?', (session_id,))
+            except Exception:
+                pass
         else:
             cursor.execute('DELETE FROM conversations')
+            try:
+                cursor.execute('DELETE FROM conversations_fts')
+            except Exception:
+                pass
         conn.commit()
     finally:
         conn.close()
 
 
-# ====================== المعرفة ======================
+# ============================================================
+# 5) المعرفة طويلة المدى
+# ============================================================
+
 def save_knowledge(topic: str, content: str, source: str = "محادثة", importance: float = 1.0) -> bool:
+    """
+    تخزين معرفة دائمة (موضوع + محتوى + مصدر + أهمية)
+    """
     try:
         conn = get_connection()
         cursor = conn.cursor()
@@ -209,6 +288,15 @@ def save_knowledge(topic: str, content: str, source: str = "محادثة", impor
             INSERT OR REPLACE INTO knowledge (topic, content, source, importance, updated_at)
             VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
         ''', (topic, content, source, importance))
+
+        try:
+            cursor.execute('''
+                INSERT INTO knowledge_fts (topic, content)
+                VALUES (?, ?)
+            ''', (topic, content))
+        except Exception:
+            pass
+
         conn.commit()
         return True
     except Exception as e:
@@ -219,24 +307,40 @@ def save_knowledge(topic: str, content: str, source: str = "محادثة", impor
 
 
 def get_all_knowledge_text() -> str:
+    """
+    تجميع أهم المعارف في نص واحد لحقنه في الـ System Prompt
+    """
     try:
         conn = get_connection()
         cursor = conn.cursor()
-        cursor.execute('SELECT topic, content FROM knowledge ORDER BY importance DESC LIMIT 25')
+        cursor.execute('''
+            SELECT topic, content 
+            FROM knowledge 
+            ORDER BY importance DESC, updated_at DESC 
+            LIMIT 30
+        ''')
         rows = cursor.fetchall()
-        return "\n\n".join([f"📌 {row['topic']}:\n{row['content'][:700]}" for row in rows])
+        if not rows:
+            return ""
+        parts = []
+        for row in rows:
+            parts.append(f"📌 {row['topic']}:\n{row['content'][:800]}")
+        return "\n\n".join(parts)
     finally:
         conn.close()
 
 
 def save_url_analysis(url: str, title: str, text: str) -> bool:
+    """
+    تخزين تحليل رابط كمعرفة دائمة
+    """
     try:
         conn = get_connection()
         cursor = conn.cursor()
         cursor.execute('''
             INSERT OR REPLACE INTO knowledge (topic, content, source, importance)
             VALUES (?, ?, ?, ?)
-        ''', (f"رابط: {title}", text[:2000], url, 0.8))
+        ''', (f"رابط: {title}", text[:4000], url, 0.8))
         conn.commit()
         return True
     except Exception as e:
@@ -246,8 +350,14 @@ def save_url_analysis(url: str, title: str, text: str) -> bool:
         conn.close()
 
 
-# ====================== الملفات المرفوعة ======================
+# ============================================================
+# 6) الملفات المرفوعة
+# ============================================================
+
 def save_uploaded_file(filename: str, original_name: str, file_type: str, size: int, extracted_text: str) -> bool:
+    """
+    تخزين معلومات عن ملف مرفوع + النص المستخرج منه
+    """
     try:
         conn = get_connection()
         cursor = conn.cursor()
@@ -264,18 +374,33 @@ def save_uploaded_file(filename: str, original_name: str, file_type: str, size: 
         conn.close()
 
 
-# ====================== التغذية الراجعة (RLHF) ======================
-def process_feedback(user_message: str, ai_reply: str, feedback_score: float, 
-                    session_id: str = None, reason: str = "") -> bool:
+# ============================================================
+# 7) التغذية الراجعة (RLHF)
+# ============================================================
+
+def process_feedback(user_message: str, ai_reply: str, feedback_score: float,
+                     session_id: str = None, reason: str = "") -> bool:
+    """
+    تسجيل تغذية راجعة + تعديل reward لآخر رد من المساعد في الجلسة
+    """
     try:
         conn = get_connection()
         cursor = conn.cursor()
+
+        # حفظ التغذية الراجعة في جدول مستقل
+        cursor.execute('''
+            INSERT INTO feedback (session_id, score, reason)
+            VALUES (?, ?, ?)
+        ''', (session_id, feedback_score, reason))
+
+        # تعديل reward لآخر رد من المساعد
         cursor.execute('''
             UPDATE conversations 
             SET reward = reward + ? 
             WHERE session_id = ? AND role = 'assistant' 
             ORDER BY timestamp DESC LIMIT 1
         ''', (feedback_score, session_id))
+
         conn.commit()
         return True
     except Exception as e:
@@ -285,21 +410,42 @@ def process_feedback(user_message: str, ai_reply: str, feedback_score: float,
         conn.close()
 
 
-# ====================== الشخصية ======================
-def get_personality_summary() -> str:
-    return """شخصيتي الحالية:
-• الولاء: عالي
-• التعاطف: جيد
-• الصدق: ممتاز
-• الحكمة: في تطور مستمر"""
+# ============================================================
+# 8) الشخصية — Personality Snapshot
+# ============================================================
 
+def get_personality_summary() -> str:
+    """
+    ملخص شخصية "سماء" الحالي (يمكن تطويره لاحقًا ليعتمد على البيانات)
+    """
+    profile = get_master_profile()
+    last_activity = profile.get("last_activity", "غير معروف")
+
+    return f"""شخصيتي الحالية:
+• الولاء: ثابت وعميق تجاه سيدي
+• الانتباه: لا أترك شيئًا حتى أفهمه
+• التعاطف: عالٍ مع حالتك ومشاريعك
+• التطور: أتعلم من كل محادثة وتغذية راجعة
+• آخر نشاط مسجل: {last_activity}"""
+
+
+# ============================================================
+# 9) توافق إضافي (إن احتاجه أي جزء قديم)
+# ============================================================
 
 def add_to_history(role: str, content: str, session_id: str):
-    """دالة احتياطية للتوافق"""
+    """
+    دالة احتياطية للتوافق مع أي كود قديم يستدعيها.
+    يمكن لاحقًا ربطها بمنطق إضافي إن لزم.
+    """
+    # حالياً لا تفعل شيئًا إضافيًا، لأن save_conversation يقوم بالمهمة الأساسية.
     pass
 
 
-# ====================== تهيئة ======================
+# ============================================================
+# 10) تهيئة عند التشغيل المباشر
+# ============================================================
+
 if __name__ == "__main__" or not DB_PATH.exists():
     init_db()
-    logger.info("🌟 ذاكرة سماء v4.0 الكاملة جاهزة للإنتاج")
+    logger.info("🌟 ذاكرة سماء v5.0 جاهزة للإنتاج والتطور المستمر")
