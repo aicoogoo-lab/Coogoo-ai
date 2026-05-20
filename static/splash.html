@@ -1,40 +1,75 @@
 body {
   background: linear-gradient(135deg, #0a0a14, #1a0040);
   background-size: 200% 200%;
-  animation: bgMove 6s ease-in-out infinite, fadeOut 4.5s ease-in-out forwards;
+  animation: bgMove 6s ease-in-out infinite, fadeOut 4.8s ease-in-out forwards;
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
   margin: 0;
+  position: relative;
+  overflow: hidden;
 }
 
+/* الشعار */
 .logo {
   width: 200px;
-  animation: glow 2s ease-in-out infinite alternate,
-             popIn 1.2s ease-out forwards;
   opacity: 0;
+  animation: 
+    popIn 1.2s ease-out forwards,
+    glow 2s ease-in-out infinite alternate,
+    pulse 2.4s ease-in-out infinite;
+  position: relative;
+  z-index: 2;
 }
 
+/* النص */
 .text {
   color: #c7b8ff;
   font-family: 'Arial', sans-serif;
   margin-top: 25px;
-  animation: slideUp 1.4s ease-out forwards;
-  opacity: 0;
   text-align: center;
+  opacity: 0;
+  animation: slideUp 1.4s ease-out forwards;
+  z-index: 2;
+}
+
+/* موجة ضوئية */
+.wave {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(160,0,255,0.6), rgba(0,0,0,0));
+  animation: wavePulse 2.8s ease-out infinite;
+  z-index: 1;
+  opacity: 0.7;
+}
+
+/* حركة الموجة */
+@keyframes wavePulse {
+  0%   { transform: scale(1); opacity: 0.6; }
+  70%  { transform: scale(6); opacity: 0; }
+  100% { transform: scale(6); opacity: 0; }
 }
 
 /* توهج مزدوج */
 @keyframes glow {
   from { filter: drop-shadow(0 0 12px #00aaff); }
-  to   { filter: drop-shadow(0 0 25px #a000ff); }
+  to   { filter: drop-shadow(0 0 28px #a000ff); }
+}
+
+/* نبض ضوئي */
+@keyframes pulse {
+  0%   { transform: scale(1); filter: drop-shadow(0 0 12px #00aaff); }
+  50%  { transform: scale(1.08); filter: drop-shadow(0 0 32px #a000ff); }
+  100% { transform: scale(1); filter: drop-shadow(0 0 12px #00aaff); }
 }
 
 /* دخول الشعار */
 @keyframes popIn {
   0%   { transform: scale(0.6); opacity: 0; }
-  60%  { transform: scale(1.1); opacity: 1; }
+  60%  { transform: scale(1.15); opacity: 1; }
   100% { transform: scale(1); }
 }
 
