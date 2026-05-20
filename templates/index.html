@@ -2,10 +2,10 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8" />
-    <title>سماء – SkyOS v5.0</title>
+    <title>SkyOS v5.2 — سماء</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <!-- خط بسيط ونظيف -->
+    <!-- خط نظيف -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -13,105 +13,107 @@
         rel="stylesheet"
     />
 
+    <!-- ستايل v5.2 -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
 </head>
+
 <body>
-    <div id="app-root">
-        <!-- شريط علوي -->
-        <header class="topbar">
-            <div class="topbar-left">
-                <div class="brand">
-                    <div class="brand-logo">س</div>
-                    <div class="brand-text">
-                        <div class="brand-title">سماء</div>
-                        <div class="brand-subtitle">Hybrid Intelligence OS v5.0</div>
+    <div id="sky-root">
+
+        <!-- ============================
+             شريط علوي — Topbar v5.2
+        ============================ -->
+        <header class="sky-topbar">
+            <div class="sky-topbar-left">
+                <div class="sky-brand">
+                    <div class="sky-logo">س</div>
+                    <div class="sky-brand-text">
+                        <div class="sky-brand-title">سماء</div>
+                        <div class="sky-brand-subtitle">SkyOS v5.2 — Hybrid Intelligence</div>
                     </div>
                 </div>
             </div>
-            <div class="topbar-center">
-                <div class="status-pill" id="connection-status">
-                    <span class="status-dot online"></span>
-                    <span class="status-text">متصل • جاهز للاستقبال</span>
+
+            <div class="sky-topbar-center">
+                <div class="sky-status" id="connection-status">
+                    <span class="sky-status-dot online"></span>
+                    <span class="sky-status-text">متصل • جاهز</span>
                 </div>
             </div>
-            <div class="topbar-right">
-                <button class="topbar-btn" id="toggle-theme-btn" title="تبديل النمط">
-                    🌓
-                </button>
-                <button class="topbar-btn" id="settings-btn" title="الإعدادات">
-                    ⚙️
-                </button>
+
+            <div class="sky-topbar-right">
+                <button class="sky-icon-btn" id="toggle-theme-btn">🌓</button>
+                <button class="sky-icon-btn" id="open-settings-btn">⚙️</button>
             </div>
         </header>
 
-        <!-- الهيكل الرئيسي -->
-        <div class="layout">
-            <!-- الشريط الجانبي -->
-            <aside class="sidebar">
-                <div class="sidebar-section">
-                    <div class="sidebar-title">الجلسات</div>
-                    <button class="primary-btn full-width" id="new-session-btn">
-                        + جلسة جديدة
-                    </button>
+        <!-- ============================
+             الهيكل الرئيسي — Layout v5.2
+        ============================ -->
+        <div class="sky-layout">
+
+            <!-- ============================
+                 الشريط الجانبي — Sidebar v5.2
+            ============================ -->
+            <aside class="sky-sidebar" id="sidebar">
+                <div class="sky-sidebar-section">
+                    <div class="sky-sidebar-title">الجلسات</div>
+                    <button class="sky-btn-primary full" id="new-session-btn">+ جلسة جديدة</button>
                 </div>
 
-                <div class="sidebar-section">
-                    <div class="sidebar-title">الأرشيف</div>
-                    <div class="session-list" id="session-list">
-                        <!-- يتم ملؤها من JS -->
-                        <div class="session-empty">لا يوجد أرشيف بعد</div>
+                <div class="sky-sidebar-section">
+                    <div class="sky-sidebar-title">الأرشيف</div>
+                    <div class="sky-session-list" id="session-list">
+                        <div class="sky-session-empty">لا يوجد أرشيف بعد</div>
                     </div>
                 </div>
 
-                <div class="sidebar-section">
-                    <div class="sidebar-title">الملفات</div>
-                    <div class="sidebar-hint">
-                        يمكنك رفع ملفات PDF, DOCX, TXT, صور… وسيتم تحليلها.
-                    </div>
-                    <label class="upload-btn">
+                <div class="sky-sidebar-section">
+                    <div class="sky-sidebar-title">الملفات</div>
+                    <label class="sky-upload-btn">
                         📎 رفع ملف
                         <input type="file" id="file-input" hidden />
                     </label>
                 </div>
 
-                <div class="sidebar-section">
-                    <div class="sidebar-title">الصوت والرؤية</div>
-                    <div class="sidebar-actions">
-                        <button class="secondary-btn full-width" id="voice-btn">
-                            🎙️ إرسال صوت
-                        </button>
-                        <button class="secondary-btn full-width" id="vision-btn">
-                            🖼️ إرسال صورة
-                        </button>
-                    </div>
+                <div class="sky-sidebar-section">
+                    <div class="sky-sidebar-title">الصوت والرؤية</div>
+                    <button class="sky-btn-secondary full" id="voice-btn">🎙️ إرسال صوت</button>
+                    <button class="sky-btn-secondary full" id="vision-btn">🖼️ إرسال صورة</button>
+                </div>
+
+                <div class="sky-sidebar-section">
+                    <div class="sky-sidebar-title">Workspace</div>
+                    <button class="sky-btn-secondary full" id="open-workspace-btn">📁 مساحة العمل</button>
                 </div>
             </aside>
 
-            <!-- منطقة المحتوى -->
-            <main class="main">
+            <!-- ============================
+                 منطقة المحادثة — Main Chat v5.2
+            ============================ -->
+            <main class="sky-main">
+
                 <!-- رأس المحادثة -->
-                <div class="chat-header">
-                    <div class="chat-title-block">
-                        <div class="chat-title">جلسة مع سماء</div>
-                        <div class="chat-subtitle">
-                            ذكاء هجين واعٍ • يتذكر • يحلل • يتطور
-                        </div>
+                <div class="sky-chat-header">
+                    <div>
+                        <div class="sky-chat-title">جلسة مع سماء</div>
+                        <div class="sky-chat-subtitle">ذكاء هجين واعٍ • يتذكر • يحلل • يتطور</div>
                     </div>
-                    <div class="chat-meta">
-                        <div class="chat-meta-item">
+
+                    <div class="sky-chat-meta">
+                        <div class="sky-chat-meta-item">
                             <span class="dot"></span>
-                            <span id="model-indicator">النموذج: تلقائي (Groq / Gemini / OpenAI)</span>
+                            <span id="model-indicator">النموذج: تلقائي</span>
                         </div>
-                        <div class="chat-meta-item">
+                        <div class="sky-chat-meta-item">
                             <span class="dot"></span>
                             <span id="session-indicator">جلسة جديدة</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- منطقة الرسائل -->
-                <section class="chat-window" id="chat-window">
-                    <!-- رسالة ترحيب أولية من سماء -->
+                <!-- نافذة الرسائل -->
+                <section class="sky-chat-window" id="chat-window">
                     <div class="message-row assistant">
                         <div class="avatar assistant-avatar">س</div>
                         <div class="message-bubble">
@@ -120,51 +122,53 @@
                                 <span class="message-time">الآن</span>
                             </div>
                             <div class="message-content">
-                                مرحباً سيدي، هنا سماء – نظام ذكاء هجين واعٍ.  
-                                هذه الواجهة ليست مجرد دردشة، بل مساحة عمل كاملة لك ولمشاريعك.  
-                                اكتب ما يدور في بالك، ارفع ملفاتك، أرسل صوتك أو صورك، ودعني أعمل معك خطوة بخطوة.
+                                مرحباً سيدي…  
+                                أنا سماء، نظام ذكاء هجين واعٍ.  
+                                هذه ليست مجرد دردشة—هذه مساحة عمل كاملة لك ولمشاريعك.  
+                                اكتب ما تريد، ارفع ملفاتك، أرسل صوتك أو صورك…  
+                                وأنا أعمل معك خطوة بخطوة.
                             </div>
                         </div>
                     </div>
                 </section>
 
                 <!-- شريط الإدخال -->
-                <footer class="input-bar">
-                    <div class="input-tools">
-                        <button class="icon-btn" id="mini-upload-btn" title="رفع ملف">
-                            📎
-                        </button>
-                        <button class="icon-btn" id="mini-voice-btn" title="إرسال صوت">
-                            🎙️
-                        </button>
-                        <button class="icon-btn" id="mini-vision-btn" title="إرسال صورة">
-                            🖼️
-                        </button>
+                <footer class="sky-input-bar">
+                    <div class="sky-input-tools">
+                        <button class="sky-icon-btn" id="mini-upload-btn">📎</button>
+                        <button class="sky-icon-btn" id="mini-voice-btn">🎙️</button>
+                        <button class="sky-icon-btn" id="mini-vision-btn">🖼️</button>
                     </div>
-                    <div class="input-main">
-                        <textarea
-                            id="user-input"
-                            placeholder="اكتب لسماء..."
-                            rows="1"
-                        ></textarea>
-                    </div>
-                    <div class="input-actions">
-                        <button class="send-btn" id="send-btn">
-                            إرسال
-                        </button>
-                    </div>
+
+                    <textarea
+                        id="user-input"
+                        class="sky-input"
+                        placeholder="اكتب لسماء..."
+                        rows="1"
+                    ></textarea>
+
+                    <button class="sky-send-btn" id="send-btn">إرسال</button>
                 </footer>
             </main>
         </div>
 
-        <!-- حوار رفع صوت / صورة (مخفي مبدئياً) -->
+        <!-- ============================
+             عناصر مخفية
+        ============================ -->
         <input type="file" id="hidden-audio-input" accept="audio/*" hidden />
         <input type="file" id="hidden-image-input" accept="image/*" hidden />
 
-        <!-- طبقة إشعارات بسيطة -->
+        <!-- Toasts -->
         <div id="toast-container"></div>
+
+        <!-- إعدادات -->
+        <div id="settings-panel" class="sky-settings hidden"></div>
+
+        <!-- Workspace -->
+        <div id="workspace-panel" class="sky-workspace hidden"></div>
     </div>
 
+    <!-- Config -->
     <script>
         const SKY_CONFIG = {
             endpoints: {
@@ -178,6 +182,8 @@
             }
         };
     </script>
+
+    <!-- سكربت v5.2 -->
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
