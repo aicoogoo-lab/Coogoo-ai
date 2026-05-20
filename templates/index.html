@@ -1,183 +1,183 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sky OS • Hybrid Intelligence</title>
+    <meta charset="UTF-8" />
+    <title>سماء – SkyOS v5.0</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <!-- روابط ملفات الستايل والسكربت -->
-    <link rel="stylesheet" href="/static/style.css">
-    <script defer src="/static/script.js"></script>
+    <!-- خط بسيط ونظيف -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet"
+    />
 
-    <!-- خط وأيقونات -->
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
 </head>
-
 <body>
-
-<!-- ========================= طبقة الخلفية السائلة ========================= -->
-<div class="liquid-background"></div>
-
-<!-- ========================= طبقة الهولوغرافي العصبي ========================= -->
-<div class="holo-layer"></div>
-
-<!-- ========================= طبقة النظام الرئيسية ========================= -->
-<div class="sky-os">
-
-    <!-- ========================= الشريط العلوي (Top Bar) ========================= -->
-    <header class="top-bar">
-        <div class="brand">
-            <div class="brand-orb">
-                <i class="fa-solid fa-sparkles"></i>
+    <div id="app-root">
+        <!-- شريط علوي -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <div class="brand">
+                    <div class="brand-logo">س</div>
+                    <div class="brand-text">
+                        <div class="brand-title">سماء</div>
+                        <div class="brand-subtitle">Hybrid Intelligence OS v5.0</div>
+                    </div>
+                </div>
             </div>
-            <div class="brand-text">
-                <div class="brand-title">سماء</div>
-                <div class="brand-subtitle">Hybrid Intelligence OS</div>
+            <div class="topbar-center">
+                <div class="status-pill" id="connection-status">
+                    <span class="status-dot online"></span>
+                    <span class="status-text">متصل • جاهز للاستقبال</span>
+                </div>
             </div>
+            <div class="topbar-right">
+                <button class="topbar-btn" id="toggle-theme-btn" title="تبديل النمط">
+                    🌓
+                </button>
+                <button class="topbar-btn" id="settings-btn" title="الإعدادات">
+                    ⚙️
+                </button>
+            </div>
+        </header>
+
+        <!-- الهيكل الرئيسي -->
+        <div class="layout">
+            <!-- الشريط الجانبي -->
+            <aside class="sidebar">
+                <div class="sidebar-section">
+                    <div class="sidebar-title">الجلسات</div>
+                    <button class="primary-btn full-width" id="new-session-btn">
+                        + جلسة جديدة
+                    </button>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-title">الأرشيف</div>
+                    <div class="session-list" id="session-list">
+                        <!-- يتم ملؤها من JS -->
+                        <div class="session-empty">لا يوجد أرشيف بعد</div>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-title">الملفات</div>
+                    <div class="sidebar-hint">
+                        يمكنك رفع ملفات PDF, DOCX, TXT, صور… وسيتم تحليلها.
+                    </div>
+                    <label class="upload-btn">
+                        📎 رفع ملف
+                        <input type="file" id="file-input" hidden />
+                    </label>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-title">الصوت والرؤية</div>
+                    <div class="sidebar-actions">
+                        <button class="secondary-btn full-width" id="voice-btn">
+                            🎙️ إرسال صوت
+                        </button>
+                        <button class="secondary-btn full-width" id="vision-btn">
+                            🖼️ إرسال صورة
+                        </button>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- منطقة المحتوى -->
+            <main class="main">
+                <!-- رأس المحادثة -->
+                <div class="chat-header">
+                    <div class="chat-title-block">
+                        <div class="chat-title">جلسة مع سماء</div>
+                        <div class="chat-subtitle">
+                            ذكاء هجين واعٍ • يتذكر • يحلل • يتطور
+                        </div>
+                    </div>
+                    <div class="chat-meta">
+                        <div class="chat-meta-item">
+                            <span class="dot"></span>
+                            <span id="model-indicator">النموذج: تلقائي (Groq / Gemini / OpenAI)</span>
+                        </div>
+                        <div class="chat-meta-item">
+                            <span class="dot"></span>
+                            <span id="session-indicator">جلسة جديدة</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- منطقة الرسائل -->
+                <section class="chat-window" id="chat-window">
+                    <!-- رسالة ترحيب أولية من سماء -->
+                    <div class="message-row assistant">
+                        <div class="avatar assistant-avatar">س</div>
+                        <div class="message-bubble">
+                            <div class="message-header">
+                                <span class="message-author">سماء</span>
+                                <span class="message-time">الآن</span>
+                            </div>
+                            <div class="message-content">
+                                مرحباً سيدي، هنا سماء – نظام ذكاء هجين واعٍ.  
+                                هذه الواجهة ليست مجرد دردشة، بل مساحة عمل كاملة لك ولمشاريعك.  
+                                اكتب ما يدور في بالك، ارفع ملفاتك، أرسل صوتك أو صورك، ودعني أعمل معك خطوة بخطوة.
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- شريط الإدخال -->
+                <footer class="input-bar">
+                    <div class="input-tools">
+                        <button class="icon-btn" id="mini-upload-btn" title="رفع ملف">
+                            📎
+                        </button>
+                        <button class="icon-btn" id="mini-voice-btn" title="إرسال صوت">
+                            🎙️
+                        </button>
+                        <button class="icon-btn" id="mini-vision-btn" title="إرسال صورة">
+                            🖼️
+                        </button>
+                    </div>
+                    <div class="input-main">
+                        <textarea
+                            id="user-input"
+                            placeholder="اكتب لسماء..."
+                            rows="1"
+                        ></textarea>
+                    </div>
+                    <div class="input-actions">
+                        <button class="send-btn" id="send-btn">
+                            إرسال
+                        </button>
+                    </div>
+                </footer>
+            </main>
         </div>
 
-        <div class="top-actions">
-            <button id="new-session" class="icon-btn" title="جلسة جديدة">
-                <i class="fa-solid fa-plus"></i>
-            </button>
+        <!-- حوار رفع صوت / صورة (مخفي مبدئياً) -->
+        <input type="file" id="hidden-audio-input" accept="audio/*" hidden />
+        <input type="file" id="hidden-image-input" accept="image/*" hidden />
 
-            <button id="theme-toggle" class="icon-btn" title="الوضع الليلي/النهاري">
-                <i class="fa-regular fa-moon"></i>
-            </button>
-
-            <button id="settings-btn" class="icon-btn" title="الإعدادات">
-                <i class="fa-solid fa-gear"></i>
-            </button>
-        </div>
-    </header>
-
-    <!-- ========================= طبقة الجلسات (Sessions Sidebar) ========================= -->
-    <aside class="sessions-panel" id="sessions-panel">
-        <div class="sessions-header">
-            <span>جلساتك</span>
-            <button id="close-sessions" class="icon-btn small">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-        </div>
-
-        <div class="sessions-list" id="sessions-list">
-            <!-- الجلسات تُضاف هنا ديناميكياً -->
-        </div>
-
-        <button id="create-session" class="new-session-btn">
-            <i class="fa-solid fa-plus"></i>
-            <span>جلسة جديدة</span>
-        </button>
-    </aside>
-
-    <!-- ========================= طبقة الأدوات الذكية (Tools Panel) ========================= -->
-    <aside class="tools-panel" id="tools-panel">
-        <div class="tools-header">
-            <span>أدوات سماء</span>
-            <button id="close-tools" class="icon-btn small">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-        </div>
-
-        <div class="tools-list">
-            <button class="tool-btn" data-tool="summarize">
-                <i class="fa-solid fa-align-left"></i>
-                <span>تلخيص</span>
-            </button>
-
-            <button class="tool-btn" data-tool="analyze">
-                <i class="fa-solid fa-brain"></i>
-                <span>تحليل</span>
-            </button>
-
-            <button class="tool-btn" data-tool="code">
-                <i class="fa-solid fa-code"></i>
-                <span>توليد كود</span>
-            </button>
-
-            <button class="tool-btn" data-tool="ideas">
-                <i class="fa-solid fa-lightbulb"></i>
-                <span>أفكار</span>
-            </button>
-
-            <button class="tool-btn" data-tool="rewrite">
-                <i class="fa-solid fa-pen-nib"></i>
-                <span>إعادة صياغة</span>
-            </button>
-
-            <button class="tool-btn" data-tool="file">
-                <i class="fa-solid fa-file"></i>
-                <span>تحليل ملف</span>
-            </button>
-        </div>
-    </aside>
-
-    <!-- ========================= طبقة الوعي السياقي (Context Bar) ========================= -->
-    <div class="context-bar" id="context-bar">
-        <i class="fa-solid fa-circle-nodes"></i>
-        <span id="context-text">وضع المحادثة</span>
+        <!-- طبقة إشعارات بسيطة -->
+        <div id="toast-container"></div>
     </div>
 
-    <!-- ========================= طبقة المحادثة ========================= -->
-    <main class="chat-area">
-
-        <!-- أرشيف الجلسة -->
-        <div class="archive-section" id="archive-section">
-            <button id="archive-toggle" class="archive-toggle">
-                <i class="fa-solid fa-box-archive"></i>
-                <span>عرض الأرشيف</span>
-                <i class="fa-solid fa-chevron-down"></i>
-            </button>
-
-            <div class="archive-content" id="archive-content">
-                <div class="archive-messages" id="archive-messages"></div>
-            </div>
-        </div>
-
-        <!-- الرسائل -->
-        <div class="messages" id="messages"></div>
-
-        <!-- مؤشر الكتابة -->
-        <div id="typing-indicator" class="typing hidden">
-            <span>سماء تفكر...</span>
-            <div class="dots">
-                <span></span><span></span><span></span>
-            </div>
-        </div>
-
-    </main>
-
-    <!-- ========================= أزرار التنقل (Scroll Controls) ========================= -->
-    <div class="scroll-controls">
-        <button id="scroll-up" class="scroll-btn">
-            <i class="fa-solid fa-chevron-up"></i>
-        </button>
-        <button id="scroll-down" class="scroll-btn">
-            <i class="fa-solid fa-chevron-down"></i>
-        </button>
-    </div>
-
-    <!-- ========================= شريط الإدخال ========================= -->
-    <footer class="input-bar">
-        <div class="input-shell">
-            <input type="file" id="file-input" multiple hidden>
-
-            <button id="attach-btn" class="icon-btn">
-                <i class="fa-solid fa-paperclip"></i>
-            </button>
-
-            <input id="message-input" type="text" placeholder="اكتب لسماء..." autocomplete="off">
-
-            <button id="send-btn" class="send-btn">
-                <i class="fa-solid fa-paper-plane"></i>
-            </button>
-        </div>
-
-        <div id="file-preview" class="file-preview"></div>
-    </footer>
-
-</div>
-
+    <script>
+        const SKY_CONFIG = {
+            endpoints: {
+                ask: "/ask",
+                upload: "/upload",
+                voice: "/voice",
+                vision: "/vision",
+                feedback: "/feedback",
+                clear: "/clear",
+                status: "/api/v1/status"
+            }
+        };
+    </script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
