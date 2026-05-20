@@ -3,7 +3,7 @@
   "short_name": "SkyOS",
   "lang": "ar",
   "dir": "rtl",
-  "start_url": "/",
+  "start_url": "/static/splash.html",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
