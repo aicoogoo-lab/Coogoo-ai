@@ -1,1502 +1,227 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8" />
-    <title>SkyOS Crown Edition — الذكاء الهجين النهائي</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-    <meta name="theme-color" content="#0a0a14" />
-
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-    
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-
-    <style>
-        /* ============================================================
-           SkyOS v7.2 — Crown Edition
-           Holographic • Liquid • Alive • Intelligent
-           ============================================================ */
-
-        /* ------------------------------
-           ROOT VARIABLES — Dynamic Theme
-           ------------------------------ */
-
-        :root {
-          --bg: #0a0a14;
-          --bg-2: #0f0f1f;
-          --bg-3: #141428;
-          --glass: rgba(255, 255, 255, 0.06);
-          --glass-strong: rgba(255, 255, 255, 0.12);
-          --border: rgba(255, 255, 255, 0.12);
-          --border-strong: rgba(255, 255, 255, 0.22);
-          --text: #ffffff;
-          --text-soft: #d1d5db;
-          --text-muted: #9ca3af;
-          --primary: #7c3aed;
-          --primary-2: #a855f7;
-          --primary-3: #c084fc;
-          --accent: #00eaff;
-          --radius: 16px;
-          --radius-lg: 22px;
-          --shadow: 0 0 40px rgba(0, 0, 0, 0.4);
-          --transition: 0.25s ease;
-          --transition-fast: 0.15s ease;
-        }
-
-        /* Light Mode */
-        body.light {
-          --bg: #f5f6ff;
-          --bg-2: #ffffff;
-          --bg-3: #eef1ff;
-          --glass: rgba(0, 0, 0, 0.06);
-          --glass-strong: rgba(0, 0, 0, 0.12);
-          --border: rgba(0, 0, 0, 0.12);
-          --border-strong: rgba(0, 0, 0, 0.22);
-          --text: #111827;
-          --text-soft: #374151;
-          --text-muted: #6b7280;
-          --primary: #4f46e5;
-          --primary-2: #6366f1;
-          --primary-3: #818cf8;
-          --accent: #06b6d4;
-        }
-
-        /* ------------------------------
-           GLOBAL RESET
-           ------------------------------ */
-
-        * {
-          margin: 0;
-          padding: 0;
-          box-sizing: border-box;
-        }
-
-        html, body {
-          height: 100%;
-          overflow: hidden;
-          font-family: "Cairo", sans-serif;
-          background: var(--bg);
-          color: var(--text);
-        }
-
-        /* ------------------------------
-           BACKGROUND — Holographic Layers
-           ------------------------------ */
-
-        .sky-background {
-          position: fixed;
-          inset: 0;
-          overflow: hidden;
-          z-index: 0;
-        }
-
-        .sky-gradient {
-          position: absolute;
-          inset: 0;
-          background: radial-gradient(circle at 20% 30%, rgba(124, 58, 237, 0.35), transparent 60%),
-                      radial-gradient(circle at 80% 70%, rgba(0, 234, 255, 0.25), transparent 60%);
-          filter: blur(80px);
-          animation: gradientMove 18s infinite alternate ease-in-out;
-        }
-
-        @keyframes gradientMove {
-          0% { transform: translate(0, 0) scale(1); }
-          100% { transform: translate(-40px, 40px) scale(1.2); }
-        }
-
-        .sky-glow-layer {
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0));
-          mix-blend-mode: overlay;
-        }
-
-        canvas#sky-particles {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-        }
-
-        /* ------------------------------
-           GLASS EFFECT
-           ------------------------------ */
-
-        .glass-layer {
-          background: var(--glass);
-          backdrop-filter: blur(18px);
-          border: 1px solid var(--border);
-          box-shadow: var(--shadow);
-        }
-
-        /* ------------------------------
-           TOPBAR
-           ------------------------------ */
-
-        .sky-topbar {
-          height: 70px;
-          padding: 0 26px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          background: var(--glass-strong);
-          border-bottom: 1px solid var(--border-strong);
-          backdrop-filter: blur(22px);
-          z-index: 20;
-          position: relative;
-        }
-
-        .sky-brand {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-
-        .sky-logo {
-          width: 48px;
-          height: 48px;
-          border-radius: var(--radius-lg);
-          background: linear-gradient(135deg, var(--primary), var(--primary-3));
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 1.6rem;
-          color: #fff;
-          box-shadow: 0 0 20px var(--primary-3);
-          animation: logoPulse 3s infinite ease-in-out;
-        }
-
-        @keyframes logoPulse {
-          0%, 100% { transform: scale(1); box-shadow: 0 0 20px var(--primary-3); }
-          50% { transform: scale(1.08); box-shadow: 0 0 40px var(--primary-2); }
-        }
-
-        .sky-brand-title {
-          font-size: 1.4rem;
-          font-weight: 700;
-          background: linear-gradient(135deg, #fff, var(--primary-3));
-          -webkit-background-clip: text;
-          background-clip: text;
-          color: transparent;
-        }
-
-        .sky-brand-subtitle {
-          font-size: 0.7rem;
-          color: var(--text-muted);
-        }
-
-        .sky-status {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          background: var(--glass);
-          padding: 6px 16px;
-          border-radius: 100px;
-          border: 1px solid var(--border);
-        }
-
-        .sky-status-dot {
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          background: #22c55e;
-          animation: pulseDot 2s infinite;
-        }
-
-        @keyframes pulseDot {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.5; transform: scale(1.2); }
-        }
-
-        .sky-topbar-actions {
-          display: flex;
-          gap: 8px;
-        }
-
-        .sky-icon-btn {
-          background: var(--glass);
-          border: 1px solid var(--border);
-          padding: 8px 12px;
-          border-radius: 12px;
-          cursor: pointer;
-          font-size: 1.1rem;
-          transition: var(--transition-fast);
-          color: var(--text);
-        }
-
-        .sky-icon-btn:hover {
-          background: var(--primary);
-          border-color: var(--primary-3);
-          transform: scale(1.05);
-        }
-
-        /* ------------------------------
-           LAYOUT
-           ------------------------------ */
-
-        .sky-layout {
-          display: flex;
-          height: calc(100vh - 70px);
-          position: relative;
-          z-index: 5;
-        }
-
-        /* ------------------------------
-           SIDEBAR
-           ------------------------------ */
-
-        .sky-sidebar {
-          width: 300px;
-          background: var(--glass);
-          border-inline-end: 1px solid var(--border);
-          padding: 24px;
-          overflow-y: auto;
-          backdrop-filter: blur(20px);
-          z-index: 10;
-          transition: transform 0.3s ease;
-        }
-
-        @media (max-width: 768px) {
-          .sky-sidebar {
-            position: fixed;
-            right: -300px;
-            top: 70px;
-            height: calc(100vh - 70px);
-            z-index: 100;
-          }
-          .sky-sidebar.open {
-            right: 0;
-          }
-        }
-
-        .sky-sidebar-section {
-          margin-bottom: 28px;
-        }
-
-        .sky-sidebar-title {
-          font-size: 0.75rem;
-          color: var(--text-muted);
-          margin-bottom: 12px;
-          letter-spacing: 1px;
-          text-transform: uppercase;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-        }
-
-        .sky-btn-primary {
-          width: 100%;
-          padding: 12px;
-          border-radius: var(--radius);
-          background: linear-gradient(135deg, var(--primary), var(--primary-3));
-          border: none;
-          color: white;
-          font-weight: 600;
-          cursor: pointer;
-          transition: var(--transition-fast);
-        }
-
-        .sky-btn-primary:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 10px 30px rgba(124, 58, 237, 0.4);
-        }
-
-        .sky-btn-secondary {
-          width: 100%;
-          padding: 10px;
-          border-radius: var(--radius);
-          background: var(--glass-strong);
-          border: 1px solid var(--border);
-          color: var(--text);
-          cursor: pointer;
-          transition: var(--transition-fast);
-          margin-bottom: 8px;
-        }
-
-        .sky-btn-secondary:hover {
-          background: var(--glass);
-          border-color: var(--primary-3);
-        }
-
-        .session-item {
-          padding: 10px 14px;
-          border-radius: var(--radius);
-          background: transparent;
-          border: 1px solid transparent;
-          color: var(--text-soft);
-          cursor: pointer;
-          transition: var(--transition);
-          margin-bottom: 6px;
-        }
-
-        .session-item:hover {
-          background: var(--glass-strong);
-          border-color: var(--primary-3);
-          transform: translateY(-2px);
-        }
-
-        /* ------------------------------
-           MAIN CHAT AREA
-           ------------------------------ */
-
-        .sky-main {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          background: transparent;
-          position: relative;
-          z-index: 5;
-        }
-
-        .sky-chat-header {
-          padding: 20px 26px;
-          background: var(--glass);
-          border-bottom: 1px solid var(--border);
-          backdrop-filter: blur(20px);
-        }
-
-        .sky-chat-title {
-          font-size: 1.3rem;
-          font-weight: 700;
-          background: linear-gradient(135deg, var(--text), var(--primary-3));
-          -webkit-background-clip: text;
-          background-clip: text;
-          color: transparent;
-        }
-
-        .sky-chat-subtitle {
-          font-size: 0.75rem;
-          color: var(--text-muted);
-          margin-top: 4px;
-        }
-
-        .sky-chat-meta {
-          display: flex;
-          gap: 20px;
-          margin-top: 12px;
-        }
-
-        .sky-chat-meta-item {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 0.7rem;
-          color: var(--text-muted);
-        }
-
-        .dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          background: var(--primary-3);
-        }
-
-        /* ------------------------------
-           CHAT WINDOW
-           ------------------------------ */
-
-        .sky-chat-window {
-          flex: 1;
-          padding: 26px;
-          overflow-y: auto;
-          position: relative;
-        }
-
-        .sky-chat-window::-webkit-scrollbar {
-          width: 6px;
-        }
-
-        .sky-chat-window::-webkit-scrollbar-track {
-          background: var(--glass);
-          border-radius: 10px;
-        }
-
-        .sky-chat-window::-webkit-scrollbar-thumb {
-          background: var(--primary);
-          border-radius: 10px;
-        }
-
-        /* Message Rows */
-        .message-row {
-          display: flex;
-          gap: 14px;
-          margin-bottom: 22px;
-          animation: fadeIn 0.25s ease-out;
-        }
-
-        .message-row.user {
-          flex-direction: row-reverse;
-        }
-
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(6px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-
-        .avatar {
-          width: 46px;
-          height: 46px;
-          border-radius: var(--radius-lg);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 1.3rem;
-          color: #fff;
-          box-shadow: 0 0 20px rgba(124, 58, 237, 0.4);
-          flex-shrink: 0;
-        }
-
-        .assistant-avatar {
-          background: linear-gradient(135deg, var(--primary), var(--primary-3));
-        }
-
-        .user-avatar {
-          background: linear-gradient(135deg, #374151, #111827);
-        }
-
-        /* Message Bubble */
-        .message-bubble {
-          max-width: 75%;
-          padding: 16px 20px;
-          border-radius: var(--radius-lg);
-          background: var(--glass);
-          border: 1px solid var(--border);
-          backdrop-filter: blur(14px);
-          box-shadow: var(--shadow);
-          animation: bubbleAppear 0.25s ease-out;
-        }
-
-        .message-row.user .message-bubble {
-          background: linear-gradient(135deg, var(--primary), var(--primary-2));
-          border: none;
-        }
-
-        .message-row.user .message-bubble .message-header .message-author {
-          color: rgba(255,255,255,0.9);
-        }
-
-        .message-row.user .message-content {
-          color: white;
-        }
-
-        @keyframes bubbleAppear {
-          from { transform: scale(0.96); opacity: 0; }
-          to { transform: scale(1); opacity: 1; }
-        }
-
-        .message-header {
-          display: flex;
-          justify-content: space-between;
-          margin-bottom: 8px;
-          font-size: 0.7rem;
-          color: var(--text-muted);
-        }
-
-        .message-author {
-          font-weight: 600;
-          color: var(--primary-3);
-        }
-
-        .message-content {
-          line-height: 1.6;
-          font-size: 0.9rem;
-        }
-
-        /* Typing Indicator */
-        .typing-indicator {
-          display: flex;
-          gap: 6px;
-          align-items: center;
-        }
-
-        .typing-indicator span {
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          background: var(--primary-3);
-          animation: typingBounce 1.4s infinite;
-        }
-
-        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
-        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
-
-        @keyframes typingBounce {
-          0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-          30% { transform: translateY(-10px); opacity: 1; }
-        }
-
-        /* Feedback Buttons */
-        .message-feedback {
-          display: flex;
-          gap: 12px;
-          margin-top: 12px;
-          padding-top: 8px;
-          border-top: 1px solid var(--border);
-        }
-
-        .feedback-btn {
-          background: none;
-          border: none;
-          cursor: pointer;
-          color: var(--text-muted);
-          transition: var(--transition-fast);
-          font-size: 0.9rem;
-        }
-
-        .feedback-btn:hover {
-          color: var(--primary-3);
-          transform: scale(1.1);
-        }
-
-        /* ------------------------------
-           INPUT BAR
-           ------------------------------ */
-
-        .sky-input-bar {
-          padding: 16px 26px;
-          background: var(--glass-strong);
-          border-top: 1px solid var(--border);
-          backdrop-filter: blur(20px);
-          display: flex;
-          gap: 12px;
-          align-items: flex-end;
-        }
-
-        .sky-input-tools {
-          display: flex;
-          gap: 8px;
-        }
-
-        .sky-input {
-          flex: 1;
-          padding: 14px 20px;
-          border-radius: 999px;
-          border: 1px solid var(--border);
-          background: var(--bg-2);
-          color: var(--text);
-          resize: none;
-          transition: var(--transition-fast);
-          font-family: inherit;
-          font-size: 0.9rem;
-        }
-
-        .sky-input:focus {
-          outline: none;
-          border-color: var(--primary-3);
-          box-shadow: 0 0 12px var(--primary-2);
-        }
-
-        .sky-send-btn {
-          padding: 14px 26px;
-          border-radius: 999px;
-          background: linear-gradient(135deg, var(--primary), var(--primary-3));
-          color: #fff;
-          border: none;
-          cursor: pointer;
-          font-weight: 700;
-          transition: var(--transition-fast);
-          box-shadow: 0 0 20px rgba(124, 58, 237, 0.4);
-        }
-
-        .sky-send-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 0 30px rgba(124, 58, 237, 0.6);
-        }
-
-        /* ------------------------------
-           TOASTS
-           ------------------------------ */
-
-        #toast-container {
-          position: fixed;
-          bottom: 20px;
-          right: 20px;
-          z-index: 1000;
-        }
-
-        .toast {
-          background: var(--glass-strong);
-          border: 1px solid var(--border);
-          padding: 12px 20px;
-          border-radius: var(--radius);
-          backdrop-filter: blur(14px);
-          box-shadow: var(--shadow);
-          color: var(--text-soft);
-          animation: toastIn 0.25s ease-out;
-          margin-top: 10px;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-
-        @keyframes toastIn {
-          from { opacity: 0; transform: translateX(20px); }
-          to { opacity: 1; transform: translateX(0); }
-        }
-
-        /* ------------------------------
-           PANELS
-           ------------------------------ */
-
-        .sky-settings,
-        .sky-workspace {
-          position: fixed;
-          top: 80px;
-          right: 20px;
-          width: 360px;
-          max-height: calc(100vh - 100px);
-          background: var(--glass-strong);
-          border: 1px solid var(--border);
-          border-radius: var(--radius-lg);
-          padding: 20px;
-          backdrop-filter: blur(20px);
-          box-shadow: var(--shadow);
-          opacity: 0;
-          transform: translateY(20px);
-          pointer-events: none;
-          transition: var(--transition);
-          z-index: 200;
-          overflow-y: auto;
-        }
-
-        .sky-settings.visible,
-        .sky-workspace.visible {
-          opacity: 1;
-          transform: translateY(0);
-          pointer-events: auto;
-        }
-
-        .sky-settings.hidden,
-        .sky-workspace.hidden {
-          display: none;
-        }
-
-        /* Drag Over Effect */
-        .sky-chat-window.drag-over {
-          border: 2px dashed var(--primary-3);
-          background: var(--glass);
-        }
-
-        /* Responsive */
-        @media (max-width: 600px) {
-          .sky-topbar { padding: 0 16px; }
-          .sky-chat-window { padding: 16px; }
-          .message-bubble { max-width: 85%; }
-          .sky-settings, .sky-workspace { width: calc(100% - 40px); right: 20px; }
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <meta name="theme-color" content="#0a0a14" />
+  <meta name="description" content="SkyOS Crown Edition — نظام ذكاء هجين متطور مع واجهة هولوغرامية" />
+  <title>SkyOS v7.2 — Crown Edition | الذكاء الهجين النهائي</title>
+
+  <!-- Cairo Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Font Awesome 6 (CDN) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <!-- Main CSS -->
+  <link rel="stylesheet" href="static/css/style.css" />
 </head>
 
-<body>
-    <!-- Background -->
-    <div class="sky-background">
-        <canvas id="sky-particles"></canvas>
-        <div class="sky-gradient"></div>
-        <div class="sky-glow-layer"></div>
-    </div>
+<body class="dark">
 
-    <div id="sky-root">
-        <!-- Topbar -->
-        <header class="sky-topbar">
-            <div class="sky-brand">
-                <div class="sky-logo">
-                    <i class="fas fa-brain"></i>
-                </div>
-                <div class="sky-brand-text">
-                    <div class="sky-brand-title">SkyOS Crown</div>
-                    <div class="sky-brand-subtitle">Hybrid Intelligence • v7.2</div>
-                </div>
-            </div>
+  <!-- Background Layers -->
+  <div class="sky-background" aria-hidden="true">
+    <div class="sky-gradient"></div>
+    <div class="sky-glow-layer"></div>
+    <canvas id="sky-particles" class="sky-canvas"></canvas>
+  </div>
 
-            <div class="sky-status" id="connection-status">
-                <div class="sky-status-dot"></div>
-                <span class="sky-status-text"><i class="fas fa-plug"></i> متصل • جاهز</span>
-            </div>
+  <!-- Root Container -->
+  <div id="sky-root">
 
-            <div class="sky-topbar-actions">
-                <button class="sky-icon-btn" id="toggle-theme-btn" title="الوضع"><i class="fas fa-moon"></i></button>
-                <button class="sky-icon-btn" id="open-settings-btn" title="الإعدادات"><i class="fas fa-cog"></i></button>
-                <button class="sky-icon-btn" id="menu-toggle" title="القائمة"><i class="fas fa-bars"></i></button>
-            </div>
-        </header>
+    <!-- Topbar -->
+    <header class="sky-topbar glass-layer">
+      <div class="sky-topbar-left">
+        <div class="sky-brand">
+          <div class="sky-logo hologram">
+            <i class="fas fa-brain"></i>
+          </div>
+          <div class="sky-brand-text">
+            <div class="sky-brand-title">SkyOS v7.2</div>
+            <div class="sky-brand-subtitle">Crown Edition — Hybrid Intelligence</div>
+          </div>
+        </div>
+      </div>
 
-        <div class="sky-layout">
-            <!-- Sidebar -->
-            <aside class="sky-sidebar" id="sidebar">
-                <div class="sky-sidebar-section">
-                    <div class="sky-sidebar-title"><i class="fas fa-plus-circle"></i> الجلسات</div>
-                    <button class="sky-btn-primary" id="new-session-btn"><i class="fas fa-plus"></i> جلسة جديدة</button>
-                </div>
+      <div class="sky-topbar-center">
+        <div class="sky-status" id="connection-status">
+          <span class="sky-status-dot"></span>
+          <span class="sky-status-text"><i class="fas fa-plug"></i> متصل • جاهز</span>
+        </div>
+      </div>
 
-                <div class="sky-sidebar-section">
-                    <div class="sky-sidebar-title"><i class="fas fa-history"></i> الأرشيف</div>
-                    <div id="session-list"></div>
-                </div>
+      <div class="sky-topbar-right">
+        <button class="sky-icon-btn" id="menu-toggle" title="القائمة الجانبية">
+          <i class="fas fa-bars"></i>
+        </button>
+        <button class="sky-icon-btn" id="toggle-theme-btn" title="تبديل الثيم (ليلي/نهاري)">
+          <i class="fas fa-moon"></i>
+        </button>
+        <button class="sky-icon-btn" id="open-settings-btn" title="الإعدادات المتقدمة">
+          <i class="fas fa-cog"></i>
+        </button>
+      </div>
+    </header>
 
-                <div class="sky-sidebar-section">
-                    <div class="sky-sidebar-title"><i class="fas fa-paperclip"></i> الملفات</div>
-                    <label class="sky-btn-secondary" style="display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;">
-                        <i class="fas fa-upload"></i> رفع ملف
-                        <input type="file" id="file-input" hidden />
-                    </label>
-                </div>
+    <!-- Main Layout -->
+    <div class="sky-layout">
 
-                <div class="sky-sidebar-section">
-                    <div class="sky-sidebar-title"><i class="fas fa-microphone"></i> الصوت والرؤية</div>
-                    <button class="sky-btn-secondary" id="voice-btn"><i class="fas fa-microphone"></i> إرسال صوت</button>
-                    <button class="sky-btn-secondary" id="vision-btn"><i class="fas fa-image"></i> إرسال صورة</button>
-                    <button class="sky-btn-secondary" id="clear-chat-btn"><i class="fas fa-trash-alt"></i> مسح المحادثة</button>
-                </div>
-            </aside>
-
-            <!-- Main Chat -->
-            <main class="sky-main">
-                <div class="sky-chat-header">
-                    <div>
-                        <div class="sky-chat-title"><i class="fas fa-comments"></i> جلسة مع SkyOS</div>
-                        <div class="sky-chat-subtitle">ذكاء هجين واعٍ • يتذكر • يحلل • يتطور</div>
-                    </div>
-                    <div class="sky-chat-meta">
-                        <div class="sky-chat-meta-item">
-                            <div class="dot"></div>
-                            <span id="model-indicator"><i class="fas fa-microchip"></i> النموذج: تلقائي</span>
-                        </div>
-                        <div class="sky-chat-meta-item">
-                            <div class="dot"></div>
-                            <span id="session-indicator"><i class="fas fa-id-card"></i> جلسة جديدة</span>
-                        </div>
-                    </div>
-                </div>
-
-                <section class="sky-chat-window" id="chat-window"></section>
-
-                <footer class="sky-input-bar">
-                    <div class="sky-input-tools">
-                        <button class="sky-icon-btn" id="mini-upload-btn" title="رفع ملف"><i class="fas fa-paperclip"></i></button>
-                        <button class="sky-icon-btn" id="mini-voice-btn" title="إرسال صوت"><i class="fas fa-microphone"></i></button>
-                        <button class="sky-icon-btn" id="mini-vision-btn" title="إرسال صورة"><i class="fas fa-camera"></i></button>
-                    </div>
-
-                    <textarea id="user-input" class="sky-input" placeholder="اكتب لـ SkyOS..." rows="1"></textarea>
-
-                    <button class="sky-send-btn" id="send-btn"><i class="fas fa-paper-plane"></i> إرسال</button>
-                </footer>
-            </main>
+      <!-- Sidebar -->
+      <aside class="sky-sidebar glass-layer" id="sidebar">
+        
+        <div class="sky-sidebar-section">
+          <div class="sky-sidebar-title">
+            <i class="fas fa-plus-circle"></i> الجلسات
+          </div>
+          <button class="sky-btn-primary full" id="new-session-btn">
+            <i class="fas fa-plus"></i> جلسة جديدة
+          </button>
         </div>
 
-        <!-- Hidden Inputs -->
-        <input type="file" id="hidden-audio-input" accept="audio/*" hidden />
-        <input type="file" id="hidden-image-input" accept="image/*" hidden />
+        <div class="sky-sidebar-section">
+          <div class="sky-sidebar-title">
+            <i class="fas fa-archive"></i> الأرشيف
+          </div>
+          <div class="sky-session-list" id="session-list">
+            <div class="sky-session-empty">
+              <i class="fas fa-inbox"></i><br />لا يوجد أرشيف بعد
+            </div>
+          </div>
+        </div>
 
-        <!-- Panels -->
-        <div id="toast-container"></div>
-        <div id="settings-panel" class="sky-settings hidden"></div>
-        <div id="workspace-panel" class="sky-workspace hidden"></div>
+        <div class="sky-sidebar-section">
+          <div class="sky-sidebar-title">
+            <i class="fas fa-paperclip"></i> الملفات
+          </div>
+          <label class="sky-upload-btn sky-btn-secondary full" style="display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;">
+            <i class="fas fa-upload"></i> رفع ملف
+            <input type="file" id="file-input" hidden />
+          </label>
+          <button class="sky-btn-secondary full" id="clear-chat-btn">
+            <i class="fas fa-trash-alt"></i> مسح المحادثة
+          </button>
+          <button class="sky-btn-secondary full" id="export-chat-btn">
+            <i class="fas fa-file-export"></i> تصدير المحادثة
+          </button>
+        </div>
+
+        <div class="sky-sidebar-section">
+          <div class="sky-sidebar-title">
+            <i class="fas fa-microphone"></i> الصوت والرؤية
+          </div>
+          <button class="sky-btn-secondary full" id="voice-btn">
+            <i class="fas fa-microphone"></i> إرسال صوت
+          </button>
+          <button class="sky-btn-secondary full" id="vision-btn">
+            <i class="fas fa-image"></i> إرسال صورة
+          </button>
+        </div>
+
+        <div class="sky-sidebar-section">
+          <div class="sky-sidebar-title">
+            <i class="fas fa-folder-open"></i> Workspace
+          </div>
+          <button class="sky-btn-secondary full" id="open-workspace-btn">
+            <i class="fas fa-brain"></i> مساحة العمل
+          </button>
+        </div>
+
+      </aside>
+
+      <!-- Main Chat Area -->
+      <main class="sky-main">
+
+        <!-- Chat Header -->
+        <div class="sky-chat-header glass-layer">
+          <div>
+            <div class="sky-chat-title">
+              <i class="fas fa-comments"></i> جلسة مع SkyOS
+            </div>
+            <div class="sky-chat-subtitle">
+              ذكاء هجين واعٍ • يتذكر • يحلل • يتطور
+            </div>
+          </div>
+
+          <div class="sky-chat-meta">
+            <div class="sky-chat-meta-item">
+              <span class="dot"></span>
+              <span id="model-indicator">
+                <i class="fas fa-microchip"></i> النموذج: تلقائي
+              </span>
+            </div>
+            <div class="sky-chat-meta-item">
+              <span class="dot"></span>
+              <span id="session-indicator">
+                <i class="fas fa-id-card"></i> جلسة جديدة
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat Window -->
+        <section class="sky-chat-window" id="chat-window" aria-live="polite"></section>
+
+        <!-- Input Bar -->
+        <footer class="sky-input-bar glass-layer">
+          <div class="sky-input-tools">
+            <button class="sky-icon-btn" id="mini-upload-btn" title="رفع ملف">
+              <i class="fas fa-paperclip"></i>
+            </button>
+            <button class="sky-icon-btn" id="mini-voice-btn" title="إرسال صوت">
+              <i class="fas fa-microphone"></i>
+            </button>
+            <button class="sky-icon-btn" id="mini-vision-btn" title="إرسال صورة">
+              <i class="fas fa-camera"></i>
+            </button>
+          </div>
+
+          <textarea 
+            id="user-input" 
+            class="sky-input" 
+            placeholder="اكتب لـ SkyOS... (يمكنك استخدام /help للأوامر السريعة)"
+            rows="1"
+            aria-label="حقل إدخال النص"
+          ></textarea>
+
+          <button class="sky-send-btn" id="send-btn" title="إرسال">
+            <i class="fas fa-paper-plane"></i> <span>إرسال</span>
+          </button>
+        </footer>
+
+      </main>
     </div>
 
-    <script>
-        // Configuration
-        const SKY_CONFIG = {
-            endpoints: {
-                ask: "/ask",
-                upload: "/upload",
-                voice: "/voice",
-                vision: "/vision",
-                feedback: "/feedback",
-                clear: "/clear",
-                status: "/api/v1/status"
-            }
-        };
+    <!-- Hidden Inputs for File Uploads -->
+    <input type="file" id="hidden-audio-input" accept="audio/*" hidden />
+    <input type="file" id="hidden-image-input" accept="image/*" hidden />
 
-        // ============================================================
-        // SkyOS Crown Edition — Complete JavaScript
-        // ============================================================
+    <!-- Toast Notifications Container -->
+    <div id="toast-container"></div>
 
-        (() => {
-            "use strict";
+    <!-- Panels (Settings & Workspace) -->
+    <div id="settings-panel" class="sky-settings hidden"></div>
+    <div id="workspace-panel" class="sky-workspace hidden"></div>
 
-            const ENDPOINTS = SKY_CONFIG.endpoints;
-            const LS_SESSION_KEY = "sky_session_id_crown";
-            const LS_SESSIONS_LIST = "sky_sessions_list_crown";
-            const LS_THEME_KEY = "sky_theme_crown";
-            const LS_NOTES_KEY = "sky_workspace_notes_crown";
+  </div>
 
-            const $ = (sel) => document.querySelector(sel);
-            const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+  <!-- Global Configuration -->
+  <script>
+    const SKY_CONFIG = {
+      endpoints: {
+        ask: "/ask",
+        upload: "/upload",
+        voice: "/voice",
+        vision: "/vision",
+        feedback: "/feedback",
+        clear: "/clear",
+        status: "/api/v1/status"
+      }
+    };
+  </script>
 
-            // State
-            let sessionId = loadOrCreateSessionId();
-            let sessions = loadSessions();
-            let isDark = loadTheme();
-            let isSending = false;
-
-            // DOM Elements
-            const chatWindow = $("#chat-window");
-            const userInput = $("#user-input");
-            const sendBtn = $("#send-btn");
-            const fileInput = $("#file-input");
-            const hiddenAudioInput = $("#hidden-audio-input");
-            const hiddenImageInput = $("#hidden-image-input");
-            const newSessionBtn = $("#new-session-btn");
-            const sessionListEl = $("#session-list");
-            const voiceBtn = $("#voice-btn");
-            const visionBtn = $("#vision-btn");
-            const miniUploadBtn = $("#mini-upload-btn");
-            const miniVoiceBtn = $("#mini-voice-btn");
-            const miniVisionBtn = $("#mini-vision-btn");
-            const toggleThemeBtn = $("#toggle-theme-btn");
-            const toastContainer = $("#toast-container");
-            const modelIndicator = $("#model-indicator");
-            const sessionIndicator = $("#session-indicator");
-            const connectionStatus = $("#connection-status");
-            const openSettingsBtn = $("#open-settings-btn");
-            const openWorkspaceBtn = $("#open-workspace-btn");
-            const settingsPanel = $("#settings-panel");
-            const workspacePanel = $("#workspace-panel");
-            const menuToggleBtn = $("#menu-toggle");
-            const sidebar = $("#sidebar");
-            const clearChatBtn = $("#clear-chat-btn");
-
-            // Canvas Particles
-            const canvas = document.getElementById("sky-particles");
-            let ctx = canvas?.getContext("2d");
-            let particles = [];
-
-            function resizeCanvas() {
-                if (canvas) {
-                    canvas.width = window.innerWidth;
-                    canvas.height = window.innerHeight;
-                }
-            }
-
-            class Particle {
-                constructor() {
-                    this.x = Math.random() * (canvas?.width || window.innerWidth);
-                    this.y = Math.random() * (canvas?.height || window.innerHeight);
-                    this.size = Math.random() * 2 + 0.5;
-                    this.speedX = (Math.random() - 0.5) * 0.3;
-                    this.speedY = (Math.random() - 0.5) * 0.3;
-                    this.opacity = Math.random() * 0.3 + 0.1;
-                }
-                update() {
-                    this.x += this.speedX;
-                    this.y += this.speedY;
-                    if (this.x < 0) this.x = canvas?.width || window.innerWidth;
-                    if (this.x > (canvas?.width || window.innerWidth)) this.x = 0;
-                    if (this.y < 0) this.y = canvas?.height || window.innerHeight;
-                    if (this.y > (canvas?.height || window.innerHeight)) this.y = 0;
-                }
-                draw() {
-                    if (!ctx) return;
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(124, 58, 237, ${this.opacity})`;
-                    ctx.fill();
-                }
-            }
-
-            function initParticles() {
-                if (!canvas || !ctx) return;
-                particles = [];
-                const count = Math.min(80, Math.floor((canvas.width * canvas.height) / 20000));
-                for (let i = 0; i < count; i++) {
-                    particles.push(new Particle());
-                }
-            }
-
-            function animateParticles() {
-                if (!ctx) return;
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                particles.forEach(p => {
-                    p.update();
-                    p.draw();
-                });
-                requestAnimationFrame(animateParticles);
-            }
-
-            if (canvas && ctx) {
-                resizeCanvas();
-                initParticles();
-                animateParticles();
-                window.addEventListener("resize", () => {
-                    resizeCanvas();
-                    initParticles();
-                });
-            }
-
-            // Utilities
-            function loadOrCreateSessionId() {
-                let id = localStorage.getItem(LS_SESSION_KEY);
-                if (!id) {
-                    id = "s-" + Math.random().toString(36).slice(2, 12);
-                    localStorage.setItem(LS_SESSION_KEY, id);
-                }
-                return id;
-            }
-
-            function loadSessions() {
-                try {
-                    const raw = localStorage.getItem(LS_SESSIONS_LIST);
-                    return raw ? JSON.parse(raw) : [];
-                } catch { return []; }
-            }
-
-            function saveSessions() {
-                try {
-                    localStorage.setItem(LS_SESSIONS_LIST, JSON.stringify(sessions));
-                } catch {}
-            }
-
-            function loadTheme() {
-                const saved = localStorage.getItem(LS_THEME_KEY);
-                if (saved === "light") {
-                    document.body.classList.remove("dark");
-                    document.body.classList.add("light");
-                    return false;
-                }
-                document.body.classList.add("dark");
-                document.body.classList.remove("light");
-                return true;
-            }
-
-            function setTheme(dark) {
-                isDark = dark;
-                if (dark) {
-                    document.body.classList.add("dark");
-                    document.body.classList.remove("light");
-                } else {
-                    document.body.classList.add("light");
-                    document.body.classList.remove("dark");
-                }
-                localStorage.setItem(LS_THEME_KEY, dark ? "dark" : "light");
-            }
-
-            function setSession(id) {
-                sessionId = id;
-                localStorage.setItem(LS_SESSION_KEY, id);
-                if (sessionIndicator) {
-                    sessionIndicator.innerHTML = `<i class="fas fa-id-card"></i> جلسة: ${id.slice(0, 8)}`;
-                }
-                addSessionRecord(id, `جلسة ${id.slice(2, 10)}`);
-            }
-
-            function addSessionRecord(id, title = "جلسة جديدة") {
-                sessions = sessions.filter(s => s.id !== id);
-                sessions.unshift({ id, title, updated: Date.now() });
-                saveSessions();
-                renderSessionList();
-                renderWorkspaceSessions();
-            }
-
-            function showToast(text, type = "info", timeout = 4000) {
-                if (!toastContainer) return;
-                const t = document.createElement("div");
-                t.className = "toast";
-                const icon = type === "error" ? "fa-exclamation-circle" : type === "success" ? "fa-check-circle" : "fa-info-circle";
-                t.innerHTML = `<i class="fas ${icon}"></i> ${text}`;
-                toastContainer.appendChild(t);
-                setTimeout(() => {
-                    t.style.opacity = "0";
-                    setTimeout(() => t.remove(), 300);
-                }, timeout);
-            }
-
-            function formatTime(date = new Date()) {
-                return date.toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit" });
-            }
-
-            function scrollToBottom(smooth = true) {
-                if (!chatWindow) return;
-                chatWindow.scrollTo({ top: chatWindow.scrollHeight + 200, behavior: smooth ? "smooth" : "auto" });
-            }
-
-            function sanitizeAndFormat(text) {
-                if (!text) return "";
-                const div = document.createElement("div");
-                div.textContent = text;
-                let safe = div.innerHTML;
-                safe = safe.replace(/(https?:\/\/[^\s]+)/g, m => `<a href="${m}" target="_blank" style="color: var(--primary-3);">${m}</a>`);
-                safe = safe.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-                safe = safe.replace(/\*(.*?)\*/g, "<em>$1</em>");
-                safe = safe.replace(/\n{2,}/g, "</p><p>").replace(/\n/g, "<br/>");
-                return `<p>${safe}</p>`;
-            }
-
-            function appendMessage(role, text, messageId = null) {
-                if (!chatWindow) return;
-                const id = messageId || Date.now().toString();
-                const row = document.createElement("div");
-                row.className = `message-row ${role === "user" ? "user" : "assistant"}`;
-                
-                const avatar = document.createElement("div");
-                avatar.className = `avatar ${role === "user" ? "user-avatar" : "assistant-avatar"}`;
-                avatar.innerHTML = role === "user" ? '<i class="fas fa-user"></i>' : '<i class="fas fa-robot"></i>';
-                
-                const bubble = document.createElement("div");
-                bubble.className = "message-bubble";
-                
-                const header = document.createElement("div");
-                header.className = "message-header";
-                header.innerHTML = `
-                    <span class="message-author">${role === "user" ? '<i class="fas fa-user-circle"></i> أنت' : '<i class="fas fa-star-of-life"></i> SkyOS'}</span>
-                    <span class="message-time"><i class="far fa-clock"></i> ${formatTime()}</span>
-                `;
-                
-                const content = document.createElement("div");
-                content.className = "message-content";
-                content.innerHTML = sanitizeAndFormat(text);
-                
-                bubble.appendChild(header);
-                bubble.appendChild(content);
-                
-                if (role === "assistant" && messageId) {
-                    const feedbackDiv = document.createElement("div");
-                    feedbackDiv.className = "message-feedback";
-                    feedbackDiv.innerHTML = `
-                        <button class="feedback-btn good" data-score="1" data-id="${id}"><i class="fas fa-thumbs-up"></i></button>
-                        <button class="feedback-btn bad" data-score="-1" data-id="${id}"><i class="fas fa-thumbs-down"></i></button>
-                    `;
-                    bubble.appendChild(feedbackDiv);
-                    
-                    const goodBtn = feedbackDiv.querySelector(".good");
-                    const badBtn = feedbackDiv.querySelector(".bad");
-                    goodBtn?.addEventListener("click", () => sendFeedback(1, id, goodBtn, badBtn));
-                    badBtn?.addEventListener("click", () => sendFeedback(-1, id, goodBtn, badBtn));
-                }
-                
-                row.appendChild(avatar);
-                row.appendChild(bubble);
-                chatWindow.appendChild(row);
-                scrollToBottom();
-                return id;
-            }
-
-            async function sendFeedback(score, messageId, goodBtn, badBtn) {
-                try {
-                    await fetch(ENDPOINTS.feedback, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ score: score === 1 ? 1 : 0, session_id: sessionId, comment: `Message: ${messageId}` })
-                    });
-                    if (goodBtn && badBtn) {
-                        if (score === 1) {
-                            goodBtn.style.color = "#22c55e";
-                            badBtn.style.color = "var(--text-muted)";
-                            showToast("شكراً على تقييمك الإيجابي! 🤍", "success");
-                        } else {
-                            badBtn.style.color = "#ef4444";
-                            goodBtn.style.color = "var(--text-muted)";
-                            showToast("شكراً على ملاحظاتك، سأتحسن! 🌱", "info");
-                        }
-                    }
-                } catch (e) { console.error("Feedback error:", e); }
-            }
-
-            function showTypingIndicator() {
-                if ($("#typing-indicator")) return;
-                const row = document.createElement("div");
-                row.id = "typing-indicator";
-                row.className = "message-row assistant";
-                row.innerHTML = `
-                    <div class="avatar assistant-avatar"><i class="fas fa-robot"></i></div>
-                    <div class="message-bubble">
-                        <div class="message-header">
-                            <span class="message-author"><i class="fas fa-star-of-life"></i> SkyOS</span>
-                            <span class="message-time"><i class="far fa-clock"></i> ${formatTime()}</span>
-                        </div>
-                        <div class="message-content">
-                            <div class="typing-indicator"><span></span><span></span><span></span> <span style="margin-right: 8px;">يكتب</span></div>
-                        </div>
-                    </div>
-                `;
-                chatWindow?.appendChild(row);
-                scrollToBottom();
-            }
-
-            function hideTypingIndicator() { $("#typing-indicator")?.remove(); }
-
-            function autoResizeTextarea(el) {
-                if (!el) return;
-                el.addEventListener("input", () => {
-                    el.style.height = "auto";
-                    el.style.height = Math.min(el.scrollHeight, 180) + "px";
-                });
-            }
-
-            function addToHistoryLocal(role, content) {
-                try {
-                    const key = "sky_local_history_crown_" + sessionId;
-                    const raw = localStorage.getItem(key);
-                    const arr = raw ? JSON.parse(raw) : [];
-                    arr.push({ role, content, t: Date.now() });
-                    localStorage.setItem(key, JSON.stringify(arr.slice(-200)));
-                } catch {}
-            }
-
-            function loadLocalHistory() {
-                try {
-                    const key = "sky_local_history_crown_" + sessionId;
-                    const raw = localStorage.getItem(key);
-                    const arr = raw ? JSON.parse(raw) : [];
-                    if (!chatWindow) return;
-                    chatWindow.innerHTML = "";
-                    if (arr.length === 0) {
-                        appendMessage("assistant", "مرحباً… 🌌\n\nأنا **SkyOS Crown Edition v7.2**، نظام ذكاء هجين واعٍ.\n\n✨ يمكنك:\n• الدردشة معي بأي موضوع\n• رفع ملفات 📄\n• إرسال صور 🖼️ للتحليل\n• إرسال صوت 🎙️\n• استخدام الأوامر السريعة: /new, /clear, /export, /help\n\n**أنا جاهز. اكتب ما تريد…** 🚀");
-                    } else {
-                        arr.forEach(m => appendMessage(m.role, m.content));
-                    }
-                } catch {}
-            }
-
-            function renderSessionList() {
-                if (!sessionListEl) return;
-                sessionListEl.innerHTML = "";
-                if (!sessions.length) {
-                    sessionListEl.innerHTML = `<div class="session-item" style="text-align:center; opacity:0.5;"><i class="fas fa-inbox"></i><br>لا يوجد أرشيف</div>`;
-                    return;
-                }
-                sessions.forEach(s => {
-                    const item = document.createElement("div");
-                    item.className = "session-item";
-                    item.innerHTML = `<i class="fas fa-comment"></i> ${s.title}<br><small>${new Date(s.updated).toLocaleString("ar-SA")}</small>`;
-                    item.addEventListener("click", () => {
-                        if (s.id === sessionId) return;
-                        sessionId = s.id;
-                        localStorage.setItem(LS_SESSION_KEY, sessionId);
-                        if (sessionIndicator) sessionIndicator.innerHTML = `<i class="fas fa-id-card"></i> جلسة: ${sessionId.slice(0, 8)}`;
-                        loadLocalHistory();
-                        showToast("تم تبديل الجلسة", "success");
-                    });
-                    sessionListEl.appendChild(item);
-                });
-            }
-
-            // Network Functions
-            async function postJSON(url, payload) {
-                const res = await fetch(url, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                });
-                return res.json();
-            }
-
-            async function sendMessage(text) {
-                if (!text || isSending) return;
-                isSending = true;
-                if (userInput) userInput.value = "";
-                appendMessage("user", text);
-                addSessionRecord(sessionId, `جلسة ${sessionId.slice(2, 10)}`);
-                addToHistoryLocal("user", text);
-                showTypingIndicator();
-                try {
-                    const resp = await postJSON(ENDPOINTS.ask, { message: text, session_id: sessionId, ai_type: "groq" });
-                    hideTypingIndicator();
-                    if (!resp) throw new Error("No response");
-                    const reply = resp.reply || resp;
-                    appendMessage("assistant", reply);
-                    addToHistoryLocal("assistant", reply);
-                    if (resp.provider && modelIndicator) modelIndicator.innerHTML = `<i class="fas fa-microchip"></i> النموذج: ${resp.provider}`;
-                } catch (err) {
-                    hideTypingIndicator();
-                    appendMessage("assistant", "عذراً، حدث خطأ أثناء معالجة الطلب.");
-                    showToast("فشل إرسال الرسالة", "error");
-                } finally { isSending = false; }
-            }
-
-            async function uploadFile(file) {
-                if (!file) return;
-                const fd = new FormData();
-                fd.append("file", file);
-                fd.append("session_id", sessionId);
-                showToast("جارٍ رفع الملف...", "info");
-                try {
-                    const res = await fetch(ENDPOINTS.upload, { method: "POST", body: fd });
-                    const data = await res.json();
-                    if (data?.reply) {
-                        appendMessage("assistant", data.reply);
-                        addToHistoryLocal("assistant", data.reply);
-                        showToast("تم تحليل الملف", "success");
-                    }
-                } catch { showToast("فشل رفع الملف", "error"); }
-            }
-
-            async function uploadAudio(file) {
-                if (!file) return;
-                const fd = new FormData();
-                fd.append("audio", file);
-                fd.append("session_id", sessionId);
-                showToast("جارٍ تحويل الصوت...", "info");
-                try {
-                    const res = await fetch(ENDPOINTS.voice, { method: "POST", body: fd });
-                    const data = await res.json();
-                    if (data?.reply) {
-                        appendMessage("assistant", data.reply);
-                        addToHistoryLocal("assistant", data.reply);
-                        showToast("تم تحويل الصوت", "success");
-                    }
-                } catch { showToast("فشل تحويل الصوت", "error"); }
-            }
-
-            async function uploadImage(file) {
-                if (!file) return;
-                const fd = new FormData();
-                fd.append("image", file);
-                fd.append("session_id", sessionId);
-                showToast("جارٍ تحليل الصورة...", "info");
-                try {
-                    const res = await fetch(ENDPOINTS.vision, { method: "POST", body: fd });
-                    const data = await res.json();
-                    if (data?.reply) {
-                        appendMessage("assistant", data.reply);
-                        addToHistoryLocal("assistant", data.reply);
-                        showToast("تم تحليل الصورة", "success");
-                    }
-                } catch { showToast("فشل تحليل الصورة", "error"); }
-            }
-
-            function clearChat() {
-                if (confirm("هل أنت متأكد من مسح جميع الرسائل؟")) {
-                    if (chatWindow) chatWindow.innerHTML = "";
-                    localStorage.removeItem("sky_local_history_crown_" + sessionId);
-                    appendMessage("assistant", "✨ تم مسح المحادثة. كيف يمكنني مساعدتك الآن؟");
-                    showToast("تم مسح المحادثة", "success");
-                }
-            }
-
-            function createNewSession() {
-                const id = "s-" + Math.random().toString(36).slice(2, 12);
-                setSession(id);
-                loadLocalHistory();
-                showToast("جلسة جديدة جاهزة", "success");
-            }
-
-            function exportChat() {
-                const messages = $$("#chat-window .message-row");
-                if (!messages.length) { showToast("لا توجد رسائل لتصديرها", "error"); return; }
-                let exportText = `SkyOS Chat Export\nSession: ${sessionId}\nDate: ${new Date().toLocaleString("ar-SA")}\n${"=".repeat(50)}\n\n`;
-                messages.forEach(msg => {
-                    const isUser = msg.classList.contains("user");
-                    const content = msg.querySelector(".message-content")?.innerText || "";
-                    const time = msg.querySelector(".message-time")?.innerText || "";
-                    exportText += `[${isUser ? "أنت" : "SkyOS"}] ${time}\n${content}\n${"-".repeat(40)}\n`;
-                });
-                const blob = new Blob([exportText], { type: "text/plain" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = `skyos_chat_${sessionId.slice(0, 8)}.txt`;
-                a.click();
-                URL.revokeObjectURL(url);
-                showToast("تم تصدير المحادثة", "success");
-            }
-
-            function showHelp() {
-                appendMessage("assistant", "📖 **الأوامر السريعة:**\n\n/new — جلسة جديدة\n/clear — مسح المحادثة\n/export — تصدير المحادثة\n/help — هذه المساعدة\n\n✨ يمكنك أيضاً رفع ملفات، صور، أو صوت.");
-            }
-
-            function handleQuickCommand(text) {
-                const cmd = text.trim().split(/\s+/)[0].toLowerCase();
-                switch (cmd) {
-                    case "/new": createNewSession(); return true;
-                    case "/clear": clearChat(); return true;
-                    case "/export": exportChat(); return true;
-                    case "/help": showHelp(); return true;
-                    default: return false;
-                }
-            }
-
-            async function pingStatus() {
-                try {
-                    const res = await fetch(ENDPOINTS.status);
-                    const data = await res.json();
-                    if (connectionStatus) {
-                        const dot = connectionStatus.querySelector(".sky-status-dot");
-                        const text = connectionStatus.querySelector(".sky-status-text");
-                        if (data && !data.error) {
-                            if (dot) dot.style.background = "#22c55e";
-                            if (text) text.innerHTML = '<i class="fas fa-plug"></i> متصل • جاهز';
-                        } else {
-                            if (dot) dot.style.background = "#f97316";
-                            if (text) text.innerHTML = '<i class="fas fa-exclamation-triangle"></i> متصل جزئياً';
-                        }
-                    }
-                } catch {
-                    if (connectionStatus) {
-                        const dot = connectionStatus.querySelector(".sky-status-dot");
-                        const text = connectionStatus.querySelector(".sky-status-text");
-                        if (dot) dot.style.background = "#ef4444";
-                        if (text) text.innerHTML = '<i class="fas fa-ban"></i> غير متصل';
-                    }
-                }
-            }
-
-            // Panels
-            function buildSettingsPanel() {
-                if (!settingsPanel) return;
-                settingsPanel.innerHTML = `
-                    <div style="display:flex;justify-content:space-between;margin-bottom:15px;">
-                        <div style="font-weight:700;"><i class="fas fa-cog"></i> الإعدادات</div>
-                        <button class="sky-icon-btn" id="close-settings-btn"><i class="fas fa-times"></i></button>
-                    </div>
-                    <div style="margin-bottom:15px;">
-                        <div style="margin-bottom:8px;"><i class="fas fa-palette"></i> المظهر</div>
-                        <div style="display:flex;gap:8px;">
-                            <button class="sky-btn-secondary" data-theme="light"><i class="fas fa-sun"></i> فاتح</button>
-                            <button class="sky-btn-secondary" data-theme="dark"><i class="fas fa-moon"></i> داكن</button>
-                        </div>
-                    </div>
-                    <div style="margin-bottom:15px;">
-                        <div style="margin-bottom:8px;"><i class="fas fa-comments"></i> الجلسة</div>
-                        <button class="sky-btn-secondary" id="settings-new-session"><i class="fas fa-plus"></i> جلسة جديدة</button>
-                        <button class="sky-btn-secondary" id="settings-clear-session"><i class="fas fa-trash"></i> مسح المحادثة</button>
-                        <button class="sky-btn-secondary" id="settings-export-chat"><i class="fas fa-download"></i> تصدير المحادثة</button>
-                    </div>
-                    <div style="text-align:center; font-size:0.7rem; opacity:0.5;"><i class="fas fa-crown"></i> SkyOS Crown v7.2</div>
-                `;
-                $("#close-settings-btn")?.addEventListener("click", () => toggleSettings(false));
-                $$("#settings-panel [data-theme]").forEach(btn => btn.addEventListener("click", () => setTheme(btn.dataset.theme === "dark")));
-                $("#settings-new-session")?.addEventListener("click", createNewSession);
-                $("#settings-clear-session")?.addEventListener("click", clearChat);
-                $("#settings-export-chat")?.addEventListener("click", exportChat);
-            }
-
-            function toggleSettings(force) {
-                if (!settingsPanel) return;
-                const visible = typeof force === "boolean" ? force : !settingsPanel.classList.contains("visible");
-                settingsPanel.classList.toggle("visible", visible);
-                if (visible) settingsPanel.classList.remove("hidden");
-                else settingsPanel.classList.add("hidden");
-            }
-
-            function buildWorkspacePanel() {
-                if (!workspacePanel) return;
-                workspacePanel.innerHTML = `
-                    <div style="display:flex;justify-content:space-between;margin-bottom:15px;">
-                        <div style="font-weight:700;"><i class="fas fa-folder-open"></i> مساحة العمل</div>
-                        <button class="sky-icon-btn" id="close-workspace-btn"><i class="fas fa-times"></i></button>
-                    </div>
-                    <div style="margin-bottom:15px;">
-                        <div style="margin-bottom:8px;"><i class="fas fa-history"></i> الجلسات الأخيرة</div>
-                        <div id="workspace-sessions" style="max-height:200px;overflow:auto;"></div>
-                    </div>
-                    <div style="margin-bottom:15px;">
-                        <div style="margin-bottom:8px;"><i class="fas fa-pen"></i> ملاحظات</div>
-                        <textarea id="workspace-notes" style="width:100%;min-height:100px;border-radius:12px;padding:8px;background:var(--bg-2);color:var(--text);border:1px solid var(--border);"></textarea>
-                    </div>
-                    <div style="display:flex;gap:8px;">
-                        <button class="sky-btn-secondary" id="workspace-save-notes"><i class="fas fa-save"></i> حفظ</button>
-                        <button class="sky-btn-secondary" id="workspace-export-notes"><i class="fas fa-download"></i> تصدير</button>
-                    </div>
-                `;
-                $("#close-workspace-btn")?.addEventListener("click", () => toggleWorkspace(false));
-                renderWorkspaceSessions();
-                const savedNotes = localStorage.getItem(LS_NOTES_KEY);
-                const notesArea = $("#workspace-notes");
-                if (notesArea && savedNotes) notesArea.value = savedNotes;
-                $("#workspace-save-notes")?.addEventListener("click", () => {
-                    const notes = $("#workspace-notes")?.value || "";
-                    localStorage.setItem(LS_NOTES_KEY, notes);
-                    showToast("تم حفظ الملاحظات", "success");
-                });
-                $("#workspace-export-notes")?.addEventListener("click", () => {
-                    const notes = $("#workspace-notes")?.value || "";
-                    const blob = new Blob([notes], { type: "text/plain" });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = `skyos_notes_${new Date().toISOString().slice(0,10)}.txt`;
-                    a.click();
-                    URL.revokeObjectURL(url);
-                    showToast("تم تصدير الملاحظات", "success");
-                });
-            }
-
-            function renderWorkspaceSessions() {
-                const container = $("#workspace-sessions");
-                if (!container) return;
-                container.innerHTML = "";
-                if (!sessions.length) {
-                    container.innerHTML = `<div style="text-align:center;opacity:0.5;"><i class="fas fa-inbox"></i><br>لا توجد جلسات</div>`;
-                    return;
-                }
-                sessions.slice(0, 8).forEach(s => {
-                    const div = document.createElement("div");
-                    div.style.cssText = "padding:8px;border-radius:12px;cursor:pointer;margin-bottom:6px;transition:all0.2s";
-                    div.innerHTML = `<i class="fas fa-comment"></i> ${s.title}<br><small>${new Date(s.updated).toLocaleString("ar-SA")}</small>`;
-                    div.addEventListener("click", () => {
-                        sessionId = s.id;
-                        localStorage.setItem(LS_SESSION_KEY, sessionId);
-                        if (sessionIndicator) sessionIndicator.innerHTML = `<i class="fas fa-id-card"></i> جلسة: ${sessionId.slice(0, 8)}`;
-                        loadLocalHistory();
-                        showToast("تم فتح الجلسة", "success");
-                    });
-                    div.addEventListener("mouseenter", () => div.style.background = "var(--glass)");
-                    div.addEventListener("mouseleave", () => div.style.background = "transparent");
-                    container.appendChild(div);
-                });
-            }
-
-            function toggleWorkspace(force) {
-                if (!workspacePanel) return;
-                const visible = typeof force === "boolean" ? force : !workspacePanel.classList.contains("visible");
-                workspacePanel.classList.toggle("visible", visible);
-                if (visible) workspacePanel.classList.remove("hidden");
-                else workspacePanel.classList.add("hidden");
-            }
-
-            // Event Setup
-            function setupEvents() {
-                sendBtn?.addEventListener("click", () => {
-                    const text = userInput?.value.trim();
-                    if (!text) return;
-                    if (handleQuickCommand(text)) { if (userInput) userInput.value = ""; return; }
-                    sendMessage(text);
-                });
-                userInput?.addEventListener("keydown", (e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        const text = userInput.value.trim();
-                        if (!text) return;
-                        if (handleQuickCommand(text)) { userInput.value = ""; return; }
-                        sendMessage(text);
-                    }
-                });
-                fileInput?.addEventListener("change", e => { if (e.target.files[0]) uploadFile(e.target.files[0]); fileInput.value = ""; });
-                hiddenAudioInput?.addEventListener("change", e => { if (e.target.files[0]) uploadAudio(e.target.files[0]); hiddenAudioInput.value = ""; });
-                hiddenImageInput?.addEventListener("change", e => { if (e.target.files[0]) uploadImage(e.target.files[0]); hiddenImageInput.value = ""; });
-                voiceBtn?.addEventListener("click", () => hiddenAudioInput?.click());
-                visionBtn?.addEventListener("click", () => hiddenImageInput?.click());
-                miniUploadBtn?.addEventListener("click", () => fileInput?.click());
-                miniVoiceBtn?.addEventListener("click", () => hiddenAudioInput?.click());
-                miniVisionBtn?.addEventListener("click", () => hiddenImageInput?.click());
-                newSessionBtn?.addEventListener("click", createNewSession);
-                toggleThemeBtn?.addEventListener("click", () => setTheme(!isDark));
-                openSettingsBtn?.addEventListener("click", () => toggleSettings());
-                openWorkspaceBtn?.addEventListener("click", () => toggleWorkspace());
-                menuToggleBtn?.addEventListener("click", () => sidebar?.classList.toggle("open"));
-                clearChatBtn?.addEventListener("click", clearChat);
-                if (chatWindow) {
-                    ["dragenter", "dragover"].forEach(ev => chatWindow.addEventListener(ev, e => { e.preventDefault(); chatWindow.classList.add("drag-over"); }));
-                    ["dragleave", "drop"].forEach(ev => chatWindow.addEventListener(ev, e => { e.preventDefault(); chatWindow.classList.remove("drag-over"); if (ev === "drop" && e.dataTransfer.files[0]) { const f = e.dataTransfer.files[0]; if (f.type.startsWith("image/")) uploadImage(f); else if (f.type.startsWith("audio/")) uploadAudio(f); else uploadFile(f); } }));
-                }
-                setInterval(pingStatus, 30000);
-            }
-
-            // Initialize
-            setSession(sessionId);
-            renderSessionList();
-            buildSettingsPanel();
-            buildWorkspacePanel();
-            loadLocalHistory();
-            pingStatus();
-            setupEvents();
-            autoResizeTextarea(userInput);
-        })();
-    </script>
+  <!-- Main JavaScript -->
+  <script src="static/js/script.js"></script>
 </body>
 </html>
