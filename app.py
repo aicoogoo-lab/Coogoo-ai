@@ -75,15 +75,14 @@ except ImportError:
 # إعداد التطبيق وتفعيل WhiteNoise بالمسارات المطلقة الصارمة
 # ============================
 
-# جلب المسار المطلق لملف التشغيل الحالي لضمان التوافق الكامل مع خوادم Linux في Render
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
 
 app = Flask(__name__, template_folder=TEMPLATES_DIR, static_folder=STATIC_DIR)
 
-# ربط وتكوين WhiteNoise بالمسار المطلق الحقيقي لمنع أخطاء الـ 404 واختفاء التنسيقات
-app.wsgi_app = WhiteNoise(app.wsgi_app, root=STATIC_DIR, prefix="static/")
+# تصحيح البادئة وإضافة autorefresh لضمان سحب الملفات الستاتيكية بدون أخطاء 404
+app.wsgi_app = WhiteNoise(app.wsgi_app, root=STATIC_DIR, prefix="/static/", autorefresh=True)
 
 if HAS_CORS:
     CORS(app, resources={r"/*": {"origins": "*"}})
@@ -247,7 +246,7 @@ def call_provider(messages, provider="groq"):
         # 3) OPENAI ENGINE
         if provider == "openai":
             key = os.environ.get("OPENAI_API_KEY")
-            if not None: return None
+            if not key: return None
             response = requests.post(
                 "https://api.openai.com/v1/chat/completions",
                 headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
