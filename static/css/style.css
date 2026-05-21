@@ -1,570 +1,280 @@
 /* ============================================================
-   SkyOS v10.0 — Holographic Edition
-   Holographic • Liquid • Alive • Intelligent
-   تم تحديثه بالكامل لدعم هندسة الجوال 2026 وأزرار التفاعل
+   SkyOS v10.0 — Holographic Production Style Engine
    ============================================================ */
 
-/* ------------------------------
-   ROOT VARIABLES — Dynamic Theme
-   ------------------------------ */
 :root {
-  --bg: #0a0a14;
-  --bg-2: #0f0f1f;
-  --bg-3: #141428;
-  --glass: rgba(255, 255, 255, 0.06);
-  --glass-strong: rgba(255, 255, 255, 0.12);
-  --border: rgba(255, 255, 255, 0.12);
-  --border-strong: rgba(255, 255, 255, 0.22);
+  --bg: #05050d;
+  --bg-2: #0c0c1a;
+  --bg-3: #111126;
+  --glass: rgba(255, 255, 255, 0.04);
+  --glass-strong: rgba(255, 255, 255, 0.09);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.18);
   --text: #ffffff;
-  --text-soft: #d1d5db;
-  --text-muted: #9ca3af;
-  --primary: #7c3aed;
-  --primary-2: #a855f7;
-  --primary-3: #c084fc;
-  --accent: #00eaff;
-  --radius: 16px;
-  --radius-lg: 22px;
-  --shadow: 0 0 40px rgba(0, 0, 0, 0.4);
-  --transition: 0.25s ease;
-  --transition-fast: 0.15s ease;
-}
-
-/* Light Mode */
-body.light {
-  --bg: #f5f6ff;
-  --bg-2: #ffffff;
-  --bg-3: #eef1ff;
-  --glass: rgba(0, 0, 0, 0.06);
-  --glass-strong: rgba(0, 0, 0, 0.12);
-  --border: rgba(0, 0, 0, 0.12);
-  --border-strong: rgba(0, 0, 0, 0.22);
-  --text: #111827;
-  --text-soft: #374151;
-  --text-muted: #6b7280;
-  --primary: #4f46e5;
-  --primary-2: #6366f1;
-  --primary-3: #818cf8;
+  --text-soft: #e2e8f0;
+  --text-muted: #94a3b8;
+  --primary: #6366f1;
+  --primary-2: #8b5cf6;
+  --primary-3: #a78bfa;
   --accent: #06b6d4;
+  --radius: 12px;
+  --radius-lg: 18px;
+  --shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
 
-/* ------------------------------
-   GLOBAL RESET
-   ------------------------------ */
+body.light {
+  --bg: #f8fafc;
+  --bg-2: #ffffff;
+  --bg-3: #f1f5f9;
+  --glass: rgba(15, 23, 42, 0.04);
+  --glass-strong: rgba(15, 23, 42, 0.08);
+  --border: rgba(15, 23, 42, 0.09);
+  --border-strong: rgba(15, 23, 42, 0.18);
+  --text: #0f172a; /* تم الإصلاح الجذري: خط داكن شديد التباين في النهار */
+  --text-soft: #334155;
+  --text-muted: #64748b;
+  --primary: #4f46e5;
+  --primary-2: #7c3aed;
+  --primary-3: #4338ca;
+  --accent: #0891b2;
+}
+
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+  margin: 0; padding: 0; box-sizing: border-box;
+  transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 html, body {
-  height: 100% !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  overflow: hidden !important;
+  height: 100dvh; width: 100%;
+  overflow: hidden;
   font-family: "Cairo", sans-serif;
   background: var(--bg);
   color: var(--text);
+  -webkit-text-size-adjust: 100%;
 }
 
 #sky-root {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  width: 100%;
+  display: flex; flex-direction: column;
+  height: 100dvh; width: 100%; position: relative; z-index: 2;
 }
 
 /* ------------------------------
-   BACKGROUND — Holographic Layers
+   شاشة الإقلاع التفاعلية (Boot Screen)
    ------------------------------ */
-.sky-background {
-  position: fixed;
-  inset: 0;
-  overflow: hidden;
-  z-index: 0;
+#sky-boot-screen {
+  position: fixed; inset: 0; background: #05050d;
+  z-index: 99999; display: flex; align-items: center; justify-content: center;
+  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s ease;
 }
+#sky-boot-screen.fade-out {
+  opacity: 0; pointer-events: none; transform: scale(1.05);
+}
+.boot-loader-container { text-align: center; width: 280px; }
+.boot-logo { font-size: 3rem; color: #6366f1; animation: logoPulse 1.5s infinite ease-in-out; margin-bottom: 15px; }
+.boot-title { font-size: 1.5rem; font-weight: 800; color: #fff; letter-spacing: 1px; margin-bottom: 5px; }
+.boot-status { font-size: 0.65rem; color: #64748b; font-family: monospace; margin-bottom: 15px; }
+.boot-bar { width: 100%; height: 3px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; }
+.boot-progress { width: 0%; height: 100%; background: linear-gradient(90deg, #6366f1, #06b6d4); animation: bootLoad 1.8s forwards cubic-bezier(0.1, 0.8, 0.3, 1); }
 
+@keyframes bootLoad { to { width: 100%; } }
+
+/* Background Canvas */
+.sky-background { position: absolute; inset: 0; overflow: hidden; z-index: 1; pointer-events: none; }
 .sky-gradient {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 20% 30%, rgba(124, 58, 237, 0.35), transparent 60%),
-              radial-gradient(circle at 80% 70%, rgba(0, 234, 255, 0.25), transparent 60%);
-  filter: blur(80px);
-  animation: gradientMove 18s infinite alternate ease-in-out;
-  transition: transform 0.3s ease-out;
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at 15% 20%, rgba(99, 102, 241, 0.15), transparent 50%),
+              radial-gradient(circle at 85% 80%, rgba(6, 182, 212, 0.1), transparent 50%);
+  filter: blur(60px);
 }
 
-@keyframes gradientMove {
-  0% { transform: translate(0, 0) scale(1); }
-  100% { transform: translate(-40px, 40px) scale(1.2); }
-}
-
-.sky-glow-layer {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0));
-  mix-blend-mode: overlay;
-}
-
-.sky-canvas {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-
-/* ------------------------------
-   GLASS EFFECT
-   ------------------------------ */
-.glass-layer {
-  background: var(--glass);
-  backdrop-filter: blur(18px);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow);
-}
-
-/* ------------------------------
-   TOPBAR
-   ------------------------------ */
+/* Layout Architecture */
 .sky-topbar {
-  height: 60px;
-  padding: 0 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--glass-strong);
-  border-bottom: 1px solid var(--border-strong);
-  backdrop-filter: blur(22px);
-  z-index: 20;
-  position: relative;
+  height: 65px; padding: 0 20px; display: flex; align-items: center; justify-content: space-between;
+  background: var(--glass-strong); border-bottom: 1px solid var(--border); backdrop-filter: blur(20px);
 }
-
-.sky-topbar-left { display: flex; align-items: center; }
-.sky-topbar-center { display: flex; align-items: center; justify-content: center; }
-.sky-topbar-right { display: flex; align-items: center; gap: 8px; }
-
-.sky-brand { display: flex; align-items: center; gap: 12px; }
-
+.sky-brand { display: flex; align-items: center; gap: 10px; }
 .sky-logo {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-lg);
-  background: linear-gradient(135deg, var(--primary), var(--primary-3));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.3rem;
-  color: #fff;
-  box-shadow: 0 0 20px var(--primary-3);
-  animation: logoPulse 3s infinite ease-in-out;
-  position: relative;
-  overflow: hidden;
+  width: 38px; height: 38px; border-radius: var(--radius); background: linear-gradient(135deg, var(--primary), var(--primary-2));
+  display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.1rem;
 }
-
-.hologram { position: relative; overflow: hidden; }
-.hologram::before {
-  content: '';
-  position: absolute;
-  top: -50%; left: -50%; width: 200%; height: 200%;
-  background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
-  transform: rotate(45deg);
-  animation: hologramShine 3s infinite;
-}
-
-@keyframes hologramShine {
-  0% { transform: translateX(-100%) rotate(45deg); }
-  100% { transform: translateX(100%) rotate(45deg); }
-}
-
-@keyframes logoPulse {
-  0%, 100% { transform: scale(1); box-shadow: 0 0 20px var(--primary-3); }
-  50% { transform: scale(1.05); box-shadow: 0 0 30px var(--primary-2); }
-}
-
-.sky-brand-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  background: linear-gradient(135deg, #fff, var(--primary-3));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
+.sky-brand-title { font-size: 1.1rem; font-weight: 700; color: var(--text); }
 .sky-brand-subtitle { font-size: 0.65rem; color: var(--text-muted); }
+.sky-status { display: flex; align-items: center; gap: 8px; background: var(--glass); padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border); }
+.sky-status-dot { width: 7px; height: 7px; background: #10b981; border-radius: 50%; }
+.sky-status-text { font-size: 0.75rem; color: var(--text-soft); }
 
-.sky-status {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--glass);
-  padding: 4px 12px;
-  border-radius: 100px;
-  border: 1px solid var(--border);
-}
+.sky-layout { display: flex; flex: 1; height: calc(100dvh - 65px); position: relative; overflow: hidden; }
 
-.sky-status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #22c55e;
-  animation: pulseDot 2s infinite;
-}
-
-@keyframes pulseDot {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(1.2); }
-}
-.sky-status-text { font-size: 0.75rem; }
-
-/* ------------------------------
-   BUTTONS
-   ------------------------------ */
-.sky-icon-btn {
-  background: var(--glass);
-  border: 1px solid var(--border);
-  padding: 8px 12px;
-  border-radius: 12px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: var(--transition-fast);
-  color: var(--text);
-}
-
-.sky-icon-btn:hover {
-  background: var(--primary);
-  border-color: var(--primary-3);
-  transform: scale(1.05);
-}
-
-.sky-btn-primary {
-  width: 100%;
-  padding: 12px;
-  border-radius: var(--radius);
-  background: linear-gradient(135deg, var(--primary), var(--primary-3));
-  border: none;
-  color: white;
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition-fast);
-  font-family: inherit;
-}
-
-.sky-btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(124, 58, 237, 0.4);
-}
-
-.sky-btn-secondary {
-  width: 100%;
-  padding: 10px;
-  border-radius: var(--radius);
-  background: var(--glass-strong);
-  border: 1px solid var(--border);
-  color: var(--text);
-  cursor: pointer;
-  transition: var(--transition-fast);
-  font-family: inherit;
-  margin-bottom: 8px;
-}
-
-.sky-btn-secondary:hover {
-  background: var(--glass);
-  border-color: var(--primary-3);
-}
-
-/* ------------------------------
-   LAYOUT & SIDEBAR
-   ------------------------------ */
-.sky-layout {
-  display: flex;
-  flex: 1;
-  height: calc(100vh - 60px);
-  position: relative;
-  overflow: hidden;
-  z-index: 5;
-}
-
+/* Sidebar Design */
 .sky-sidebar {
-  width: 300px;
-  background: #090911;
-  border-inline-end: 1px solid var(--border);
-  padding: 20px;
-  overflow-y: auto;
-  backdrop-filter: blur(20px);
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
+  width: 300px; background: var(--bg-2); border-left: 1px solid var(--border);
+  padding: 20px; display: flex; flex-direction: column; gap: 20px; z-index: 10;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
+.sky-sidebar-title { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; display: flex; align-items: center; gap: 8px; text-transform: uppercase; }
+.sky-session-list { flex: 1; overflow-y: auto; margin-top: 5px; padding-left: 2px; }
+.sky-session-empty { font-size: 0.8rem; color: var(--text-muted); text-align: center; padding: 20px 0; opacity: 0.6; }
 
-.sky-sidebar-section { margin-bottom: 20px; }
-.sky-sidebar-title {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.sky-session-list { max-height: 240px; overflow-y: auto; }
-.sky-session-empty { text-align: center; opacity: 0.5; padding: 15px; font-size: 0.8rem; }
-
+/* عنصر الجلسة المحسن مع زر الحذف الذكي */
 .session-item {
-  padding: 10px 12px;
-  border-radius: var(--radius);
-  color: var(--text-soft);
-  cursor: pointer;
-  transition: var(--transition);
-  margin-bottom: 6px;
-  font-size: 0.85rem;
-  border: 1px solid transparent;
+  display: flex; align-items: center; justify-content: space-between; padding: 10px 12px;
+  border-radius: var(--radius); background: var(--glass); border: 1px solid var(--border);
+  color: var(--text-soft); font-size: 0.85rem; cursor: pointer; margin-bottom: 8px; gap: 8px;
 }
+.session-item:hover, .session-item.active { background: var(--glass-strong); border-color: var(--primary); }
+.session-title-text { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.delete-session-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; font-size: 0.85rem; }
+.delete-session-btn:hover { color: #ef4444; transform: scale(1.1); }
 
-.session-item:hover {
-  background: var(--glass-strong);
-  border-color: var(--primary-3);
-}
-
-.session-item.active {
-  background: var(--glass-strong);
-  border-color: var(--accent);
-  box-shadow: 0 0 10px rgba(0, 234, 255, 0.15);
-}
-
-/* ------------------------------
-   MAIN CHAT WINDOW
-   ------------------------------ */
+/* Main Screen Core */
 .sky-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  background: transparent;
-  position: relative;
-  z-index: 5;
-  padding-bottom: 90px; /* ترك مساحة مريحة لحقل الإدخال السفلي الصاعد */
-  box-sizing: border-box;
+  flex: 1; display: flex; flex-direction: column; background: var(--bg-3);
+  position: relative; overflow: hidden; height: 100%;
 }
-
 .sky-chat-header {
-  padding: 15px 20px;
-  background: var(--glass);
-  border-bottom: 1px solid var(--border);
-  backdrop-filter: blur(20px);
+  padding: 15px 20px; display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border); background: var(--glass); backdrop-filter: blur(10px);
 }
-
-.sky-chat-title {
-  font-size: 1.2rem;
-  font-weight: 700;
-  background: linear-gradient(135deg, var(--text), var(--primary-3));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
+.sky-chat-title { font-size: 1rem; font-weight: 700; color: var(--text); }
 .sky-chat-subtitle { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
-.sky-chat-meta { display: flex; gap: 15px; margin-top: 8px; }
-.sky-chat-meta-item { display: flex; align-items: center; gap: 6px; font-size: 0.7rem; color: var(--text-muted); }
 
+.clear-active-btn { color: var(--text-muted); border-color: var(--border); padding: 6px 12px; font-size: 0.8rem; display: flex; align-items: center; gap: 6px; }
+.clear-active-btn:hover { background: rgba(239, 68, 68, 0.1); border-color: #ef4444; color: #ef4444; }
+
+/* نافذة عرض الدردشة المستقرة هندسياً */
 .sky-chat-window {
-  flex: 1;
-  padding: 20px;
-  overflow-y: auto !important;
-  -webkit-overflow-scrolling: touch;
+  flex: 1; overflow-y: auto !important; padding: 20px;
+  display: flex; flex-direction: column; gap: 20px;
+  padding-bottom: 100px; /* عزل ومساحة أمان سفلي لمنع التداخل */
 }
 
-/* ------------------------------
-   MESSAGE BUBBLES
-   ------------------------------ */
-.message-row { display: flex; gap: 12px; margin-bottom: 20px; animation: fadeIn 0.25s ease-out; }
-.message-row.user { flex-direction: row-reverse; }
+/* فقاعات الرسائل والمحتوى واجهة وتنسيق */
+.message-row { display: flex; gap: 12px; max-width: 85%; animation: msgIn 0.2s ease forwards; }
+.message-row.user { align-self: flex-start; }
+.message-row.assistant { align-self: flex-end; flex-direction: row-reverse; }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+@keyframes msgIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
 .avatar {
-  width: 42px; height: 42px; border-radius: var(--radius-lg);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.1rem; color: #fff; box-shadow: 0 0 15px rgba(124, 58, 237, 0.3); flex-shrink: 0;
+  width: 36px; height: 36px; border-radius: var(--radius); display: flex; align-items: center; justify-content: center;
+  font-size: 0.95rem; color: #fff; flex-shrink: 0; margin-top: 2px;
 }
-.assistant-avatar { background: linear-gradient(135deg, var(--primary), var(--primary-3)); }
-.user-avatar { background: linear-gradient(135deg, #374151, #111827); }
+.user-avatar { background: linear-gradient(135deg, #475569, #1e293b); }
+.assistant-avatar { background: linear-gradient(135deg, var(--primary), var(--primary-2)); }
 
 .message-bubble {
-  max-width: 80%; padding: 14px 18px; border-radius: var(--radius-lg);
-  background: var(--glass); border: 1px solid var(--border);
-  backdrop-filter: blur(14px); box-shadow: var(--shadow);
+  padding: 12px 16px; border-radius: var(--radius-lg); background: var(--glass-strong);
+  border: 1px solid var(--border); color: var(--text); font-size: 0.95rem; line-height: 1.6;
+  word-break: break-word; display: flex; flex-direction: column; gap: 8px;
 }
+.message-row.user .message-bubble { background: var(--bg-2); border-right: 3px solid var(--primary); }
+.message-row.assistant .message-bubble { background: var(--glass); border-left: 3px solid var(--accent); }
 
-.message-row.user .message-bubble { background: linear-gradient(135deg, var(--primary), var(--primary-2)); border: none; }
-.message-row.user .message-bubble .message-header .message-author { color: rgba(255,255,255,0.9); }
-.message-row.user .message-content { color: white; }
-
-.message-header { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.7rem; color: var(--text-muted); }
-.message-author { font-weight: 600; color: var(--primary-3); }
-.message-content { line-height: 1.6; font-size: 0.9rem; word-break: break-word; }
+/* شريط أدوات الرسالة السفلي الموحد (نسخ، تفاعل) */
+.msg-action-bar {
+  display: flex; items-center: center; gap: 12px; margin-top: 4px;
+  padding-top: 6px; border-top: 1px solid var(--border);
+}
+.msg-action-btn {
+  background: none; border: none; color: var(--text-muted); font-size: 0.75rem;
+  cursor: pointer; display: flex; align-items: center; gap: 4px; font-family: inherit;
+}
+.msg-action-btn:hover { color: var(--primary); }
 
 /* ------------------------------
-   إصلاح وعزل كتل الأكواد البرمجية (الجوال والكمبيوتر)
+   إصلاح وعزل كتل الأكواد بالكامل (Code Blocks)
    ------------------------------ */
-.sky-code-block {
-  background: #1e1e2f !important;
-  border-left: 4px solid #6366f1 !important;
-  padding: 12px !important;
-  margin: 12px 0 !important;
-  border-radius: 8px !important;
-  overflow-x: auto !important; /* تفعيل سحب الكود أفقياً يميناً ويساراً */
-  display: block !important;
-  max-width: 100% !important;
-  box-sizing: border-box !important;
+.sky-code-container {
+  margin: 12px 0; border-radius: 8px; overflow: hidden;
+  border: 1px solid var(--border-strong); background: #090914 !important;
+  max-width: 100%; display: flex; flex-direction: column;
 }
+.sky-code-header {
+  background: rgba(255,255,255,0.03); padding: 6px 12px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border); font-size: 0.75rem; color: #94a3b8; font-family: monospace;
+}
+.sky-code-copy-btn {
+  background: none; border: none; color: #64748b; cursor: pointer; display: flex; align-items: center; gap: 4px;
+}
+.sky-code-copy-btn:hover { color: #fff; }
 
+.sky-code-block {
+  padding: 14px; overflow-x: auto !important; width: 100%;
+  margin: 0; display: block; box-sizing: border-box;
+}
 .sky-code-block code {
-  direction: ltr !important; /* إجبار الكود البرمجي على الاتجاه الأجنبي */
-  text-align: left !important;
-  display: block !important;
-  white-space: pre !important;
-  font-family: 'Courier New', Courier, monospace !important;
-  color: #f8fafc !important;
-  font-size: 13.5px !important;
+  font-family: "Courier New", Courier, monospace !important;
+  font-size: 0.85rem !important; color: #38bdf8 !important;
+  white-space: pre !important; display: block;
+  direction: ltr !important; text-align: left !important;
 }
 
 .sky-inline-code {
-  background: rgba(99, 102, 241, 0.2) !important;
-  color: #f43f5e !important;
-  padding: 2px 6px !important;
-  border-radius: 4px !important;
-  font-family: monospace !important;
-  font-size: 0.85rem;
-  direction: ltr !important;
-  display: inline-block !important;
+  background: rgba(99, 102, 241, 0.15); color: var(--primary-3);
+  padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 0.85rem;
+  direction: ltr; display: inline-block;
 }
 
-/* ------------------------------
-   أزرار التفاعل الجديدة تحت الرسائل
-   ------------------------------ */
-.msg-action-bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 10px;
-  padding-top: 8px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.msg-action-btn {
-  background: none;
-  border: none;
-  color: #94a3b8;
-  cursor: pointer;
-  font-size: 0.8rem;
-  font-family: 'Cairo', sans-serif;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  transition: color 0.2s, transform 0.1s;
-}
-.msg-action-btn:hover { color: var(--primary-3); transform: scale(1.02); }
-
-/* ------------------------------
-   تحديث وتأمين حقل الكتابة وزر السهم
-   ------------------------------ */
+/* Fixed Input Section */
 .sky-input-bar {
-  position: fixed !important;
-  bottom: env(safe-area-inset-bottom, 15px) !important; /* رفعه حمايةً من أزرار تصفح الجوال الأساسية */
-  left: 10px !important;
-  right: 10px !important;
-  width: calc(100% - 20px) !important;
-  z-index: 9995 !important;
-  background: rgba(15, 15, 25, 0.95) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: 16px !important;
-  padding: 10px 12px !important;
-  box-sizing: border-box !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 10px !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
-  backdrop-filter: blur(12px);
+  position: absolute; bottom: 15px; left: 15px; right: 15px;
+  background: var(--bg-2); border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg); padding: 10px 14px;
+  display: flex; align-items: center; gap: 12px; box-shadow: var(--shadow); z-index: 15;
 }
-
-body.light .sky-input-bar { background: rgba(255, 255, 255, 0.95) !important; }
-
 .sky-input {
-  flex: 1 !important;
-  min-width: 0 !important;
-  padding: 10px 12px !important;
-  border-radius: 10px !important;
-  border: 1px solid var(--border) !important;
-  background: rgba(255, 255, 255, 0.05) !important;
-  color: inherit !important;
-  resize: none !important;
-  font-family: inherit;
-  font-size: 0.95rem !important;
-  max-height: 140px !important;
+  flex: 1; background: none; border: none; color: var(--text);
+  font-family: inherit; font-size: 0.95rem; outline: none; resize: none;
+  max-height: 100px; padding: 4px 0;
 }
-
-/* تكبير زر الإرسال وتحويله إلى سهم أبيض دائري احترافي */
 .sky-send-btn {
-  width: 44px !important;
-  height: 44px !important;
-  min-width: 44px !important;
-  background: #6366f1 !important;
-  color: #ffffff !important;
-  border: none !important;
-  border-radius: 50% !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  cursor: pointer !important;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4) !important;
+  width: 38px; height: 38px; border-radius: 50%; background: var(--primary);
+  border: none; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: transform 0.15s, background 0.15s; flex-shrink: 0;
 }
-.sky-send-btn span { display: none !important; } /* إلغاء النص */
-.sky-send-btn i { font-size: 16px !important; transform: rotate(180deg); } /* لف السهم ليناسب الكتابة العربية */
+.sky-send-btn:hover { background: var(--primary-2); transform: scale(1.05); }
 
-/* ------------------------------
-   PANELS & TOASTS
-   ------------------------------ */
+/* Buttons & Elements Control */
+.sky-icon-btn {
+  background: var(--glass); border: 1px solid var(--border); color: var(--text-soft);
+  width: 36px; height: 36px; border-radius: 10px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; font-size: 0.95rem;
+}
+.sky-icon-btn:hover { background: var(--glass-strong); color: var(--text); border-color: var(--text-muted); }
+.sky-btn-primary {
+  width: 100%; padding: 10px; border-radius: var(--radius); background: linear-gradient(135deg, var(--primary), var(--primary-2));
+  border: none; color: white; font-weight: 600; font-family: inherit; cursor: pointer; font-size: 0.85rem;
+}
+.sky-btn-secondary {
+  width: 100%; padding: 8px 12px; border-radius: var(--radius); background: var(--glass);
+  border: 1px solid var(--border); color: var(--text-soft); font-family: inherit; cursor: pointer; font-size: 0.8rem; text-align: right;
+}
+.sky-btn-secondary:hover { background: var(--glass-strong); }
+
+/* Panels Control */
 .sky-settings, .sky-workspace {
-  position: fixed; top: 70px; right: 20px; width: 340px;
-  max-height: calc(100vh - 100px); background: #111122;
-  border: 1px solid var(--border); border-radius: var(--radius-lg);
-  padding: 16px; z-index: 200; overflow-y: auto;
+  position: fixed; top: 75px; left: 20px; width: 300px; background: var(--bg-2);
+  border: 1px solid var(--border-strong); border-radius: var(--radius-lg); padding: 16px;
+  box-shadow: var(--shadow); z-index: 900; display: flex; flex-direction: column; gap: 15px;
 }
-.sky-settings.hidden, .sky-workspace.hidden { display: none !important; }
+.panel-header h4 { font-size: 0.9rem; color: var(--primary-3); }
+.settings-row { display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; }
+.settings-row select { background: var(--bg-3); color: var(--text); border: 1px solid var(--border); padding: 4px 8px; border-radius: 6px; font-family: inherit; outline: none; }
+.hidden { display: none !important; }
 
-.sky-settings-box h4 { margin: 0 0 10px 0; font-size: 15px; color: #6366f1; }
-.settings-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 14px; }
-.settings-row select { background: #22223b; color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 6px; font-family: 'Cairo'; }
-
-#toast-container { position: fixed; bottom: 85px; right: 20px; z-index: 10000; }
-.toast {
-  background: rgba(20, 20, 35, 0.95); border: 1px solid var(--border);
-  padding: 10px 16px; border-radius: var(--radius); color: #fff;
-  margin-top: 8px; display: flex; align-items: center; font-size: 0.85rem;
-}
+#toast-container { position: fixed; bottom: 85px; left: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+.toast { background: var(--bg-2); border: 1px solid var(--border-strong); padding: 10px 16px; border-radius: var(--radius); font-size: 0.85rem; color: var(--text); box-shadow: var(--shadow); animation: msgIn 0.2s ease; }
 
 /* ------------------------------
-   RESPONSIVE (شاشات الجوال والتوافق السلس)
+   التجاوب الصارم وحماية الجوال وشاشات اللمس
    ------------------------------ */
 @media (max-width: 768px) {
   .sky-sidebar {
-    position: fixed !important;
-    top: 60px !important;
-    right: -100% !important; /* مخفي افتراضياً لليمين */
-    width: 280px !important;
-    height: calc(100vh - 60px) !important;
-    z-index: 9999 !important;
-    transition: right 0.3s ease-in-out !important;
-    box-shadow: -5px 0 25px rgba(0,0,0,0.7) !important;
+    position: fixed; top: 65px; bottom: 0; right: -100%; width: 280px;
+    background: var(--bg); box-shadow: -5px 0 25px rgba(0,0,0,0.5); border-left: none; border-right: 1px solid var(--border);
   }
-  /* الكلاس المتوافق تماماً مع الجافا سكريبت حالياً */
-  .sky-sidebar.mobile-show {
-    right: 0 !important;
-  }
-  .sky-settings, .sky-workspace {
-    width: calc(100% - 30px); right: 15px; left: 15px;
-  }
+  .sky-sidebar.mobile-show { transform: translateX(-100%); right: 0; }
+  .sky-settings, .sky-workspace { width: calc(100% - 40px); left: 20px; top: 75px; }
+  .message-row { max-width: 95%; }
 }
