@@ -1,9 +1,8 @@
 /* ============================================================
    SkyOS v10.0 — Holographic Edition (JavaScript Engine)
-   - جلسات ذكية ومزامنة PWA كاملة
-   - واجهة حية وتتبع الأنماط الرسومية (UI Modes)
-   - ملفات / صوت / رؤية / إدارة الأخطاء الصامتة
-   - Workspace + Settings + Safe DOM Mounting
+   - تعديلات متقدمة شاملة للجوال
+   - تفعيل أزرار التفاعل (نسخ، تحميل ملف، تقييم)
+   - تصفية فورية وشاملة وإصلاح أخطاء الرفع الصامتة
    ============================================================ */
 
 (() => {
@@ -156,10 +155,11 @@
     }, 100);
   }
 
+  // توسيع ذكي وحقيقي متوافق مع شاشات الجوال
   function autoResizeTextarea(el) {
     if (!el) return;
     el.style.height = "auto";
-    el.style.height = Math.min(el.scrollHeight, 120) + "px";
+    el.style.height = Math.min(el.scrollHeight, 130) + "px";
   }
 
   function sanitizeAndFormat(text) {
@@ -171,7 +171,7 @@
     const codeBlocks = [];
     safe = safe.replace(/```([\s\S]*?)```/g, (match, code) => {
       const id = `__SKY_CODE_BLOCK_${codeBlocks.length}__`;
-      codeBlocks.push(`<pre class="sky-code-block"><code>${code}</code></pre>`);
+      codeBlocks.push(`<pre class="sky-code-block"><code>${code.trim()}</code></pre>`);
       return id;
     });
 
@@ -193,6 +193,7 @@
     return `<p>${safe}</p>`;
   }
 
+  // بناء الرسالة متضمناً أزرار نسخ، تحميل ملف، وتفاعل حقيقي كامل
   function createMessageElement({ role = "assistant", text = "", time = null, messageId = null }) {
     const row = document.createElement("div");
     row.className = `message-row ${role === "user" ? "user" : "assistant"}`;
@@ -224,28 +225,41 @@
     bubble.appendChild(header);
     bubble.appendChild(content);
 
+    // إضافة شريط الأدوات المطور لرسائل النظام
     if (role === "assistant") {
-      const feedbackDiv = document.createElement("div");
-      feedbackDiv.className = "message-feedback";
-      feedbackDiv.style.display = "flex";
-      feedbackDiv.style.gap = "12px";
-      feedbackDiv.style.marginTop = "12px";
-      feedbackDiv.style.paddingTop = "8px";
-      feedbackDiv.style.borderTop = "1px solid var(--border)";
-      feedbackDiv.innerHTML = `
-        <button class="feedback-btn good" data-score="1" style="background: none; border: none; cursor: pointer; color: var(--text-muted); transition: all 0.2s;">
-          <i class="fas fa-thumbs-up"></i> مفيد
-        </button>
-        <button class="feedback-btn bad" data-score="-1" style="background: none; border: none; cursor: pointer; color: var(--text-muted); transition: all 0.2s;">
-          <i class="fas fa-thumbs-down"></i> غير مفيد
-        </button>
+      const actionParam = document.createElement("div");
+      actionParam.className = "msg-action-bar";
+      actionParam.innerHTML = `
+        <button class="msg-action-btn copy-msg-btn" title="نسخ النص كاملاً"><i class="fas fa-copy"></i> نسخ</button>
+        <button class="msg-action-btn file-msg-btn" title="تحويل لملف نصي"><i class="fas fa-file-download"></i> تصدير لملف</button>
+        <button class="msg-action-btn good feedback-btn" data-score="1" style="margin-right:auto;"><i class="fas fa-thumbs-up"></i> مفيد</button>
+        <button class="msg-action-btn bad feedback-btn" data-score="-1"><i class="fas fa-thumbs-down"></i> غير مفيد</button>
       `;
-      bubble.appendChild(feedbackDiv);
-      
-      const goodBtn = feedbackDiv.querySelector(".good");
-      const badBtn = feedbackDiv.querySelector(".bad");
-      if (goodBtn) goodBtn.addEventListener("click", () => sendFeedback(1, sessionId, text, goodBtn, badBtn));
-      if (badBtn) badBtn.addEventListener("click", () => sendFeedback(0, sessionId, text, goodBtn, badBtn));
+      bubble.appendChild(actionParam);
+
+      // ربط أحداث النسخ والتصدير والتقييم الحقيقي
+      actionParam.querySelector(".copy-msg-btn").addEventListener("click", () => {
+        navigator.clipboard.writeText(text);
+        showToast("تم نسخ نص رسالة سماء بنجاح!", "success");
+      });
+
+      actionParam.querySelector(".file-msg-btn").addEventListener("click", () => {
+        const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `SkyOS_Response_${Date.now().toString().slice(-6)}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        showToast("تم تحويل وتحميل الرسالة كملف بنجاح", "success");
+      });
+
+      const goodBtn = actionParam.querySelector(".good");
+      const badBtn = actionParam.querySelector(".bad");
+      goodBtn.addEventListener("click", () => sendFeedback(1, sessionId, text, goodBtn, badBtn));
+      badBtn.addEventListener("click", () => sendFeedback(0, sessionId, text, goodBtn, badBtn));
     }
 
     row.appendChild(avatar);
@@ -263,28 +277,23 @@
   }
 
   async function sendFeedback(score, sessId, comment, goodBtn, badBtn) {
+    // تفعيل لوني فوري لتوضيح عمل الأزرار حتى قبل استجابة السيرفر
+    if (score === 1) {
+      goodBtn.style.color = "#22c55e";
+      badBtn.style.color = "#94a3b8";
+      showToast("شكراً على تقييمك الإيجابي! 🤍", "success");
+    } else {
+      badBtn.style.color = "#ef4444";
+      goodBtn.style.color = "#94a3b8";
+      showToast("شكراً على ملاحظاتك، سأتحسن! 🌱", "info");
+    }
+
     try {
-      const response = await fetch(ENDPOINTS.feedback, {
+      await fetch(ENDPOINTS.feedback, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          score: score === 1 ? 1 : 0,
-          session_id: sessId,
-          comment: comment.slice(0, 100)
-        })
+        body: JSON.stringify({ score, session_id: sessId, comment: comment.slice(0, 50) })
       });
-      
-      if (response.ok && goodBtn && badBtn) {
-        if (score === 1) {
-          goodBtn.style.color = "#22c55e";
-          badBtn.style.color = "var(--text-muted)";
-          showToast("شكراً على تقييمك الإيجابي! 🤍", "success");
-        } else {
-          badBtn.style.color = "#ef4444";
-          goodBtn.style.color = "var(--text-muted)";
-          showToast("شكراً على ملاحظاتك، سأتحسن! 🌱", "info");
-        }
-      }
     } catch (e) {
       console.error("Feedback error:", e);
     }
@@ -311,7 +320,7 @@
       <div class="message-content">
         <div class="typing-indicator">
           <span></span><span></span><span></span>
-          <span style="margin-right: 8px;">جاري التفكير...</span>
+          <span style="margin-right: 8px;">جاري التفكير والتحليل...</span>
         </div>
       </div>
     `;
@@ -347,7 +356,7 @@
       if (!chatWindow) return;
       chatWindow.innerHTML = "";
       if (arr.length === 0) {
-        appendMessage("assistant", "مرحباً… 🌌\n\nأنا **SkyOS Holographic v10**، نظام ذكاء هجين واعٍ.\n\n✨ يمكنك:\n• الدردشة ومناقشة البرمجة والبيانات\n• رفع ملفات ومستندات 📄\n• إرسال صور 🖼️ أو صوتيات 🎙️\n\n**أنا جاهز ومقترن بالسيرفر بنجاح...** 🚀");
+        appendMessage("assistant", "مرحباً… 🌌\n\nأنا **SkyOS Holographic v10**، نظام ذكاء هجين واعٍ لخدمتك.\n\n✨ يمكنك الآن:\n• إرسال ومناقشة كود البرمجة دون أي مشاكل في العرض أو المحاذاة للجوال 📱\n• رفع صور وملفات وتحليلها ومسح البيانات فورياً بضغطة زر.\n\n**أنا متصل وبانتظار أوامرك...** 🚀");
       } else {
         arr.forEach(m => appendMessage(m.role, m.content));
       }
@@ -370,7 +379,7 @@
         if (s.id === sessionId) return;
         setSession(s.id);
         loadLocalHistory();
-        if (sidebar) sidebar.classList.remove("mobile-show"); // إغلاق القائمة في الجوال بعد الاختيار
+        if (sidebar) sidebar.classList.remove("mobile-show");
         showToast("تم تبديل الجلسة بنجاح", "success");
       });
       sessionListEl.appendChild(item);
@@ -412,62 +421,49 @@
       const resp = await postJSON(ENDPOINTS.ask, {
         message: text,
         session_id: sessionId,
-        ai_type: window.SKY_CONFIG?.ui_mode || "holo"
+        ai_type: $("#setting-ai-engine") ? $("#setting-ai-engine").value : "holo"
       });
 
       hideTypingIndicator();
 
       if (!resp || (!resp.reply && typeof resp !== "string")) {
         appendMessage("assistant", "حدث خطأ: لم يتم استلام رد صحيح من الخادم.");
-        showToast("خطأ في معالجة رد السيرفر", "error");
         return;
       }
 
       const reply = resp.reply || resp;
       appendMessage("assistant", reply);
       addToHistoryLocal("assistant", reply);
-
-      if (resp.provider && modelIndicator) {
-        modelIndicator.innerHTML = `<i class="fas fa-microchip"></i> النموذج: ${resp.provider}`;
-      }
     } catch (err) {
       hideTypingIndicator();
       appendMessage("assistant", "عذراً، واجهت مشكلة أثناء الاتصال بـ SkyOS. تأكد من أن السيرفر يعمل.");
-      console.error("sendMessage error:", err);
-      showToast("فشل إرسال الرسالة", "error");
     } finally {
       isSending = false;
     }
   }
 
+  // إلغاء تعليق شاشة الرفع والتحليل فوراً عند الفشل
   async function uploadFile(file) {
     if (!file) return;
     const fd = new FormData();
     fd.append("file", file);
     fd.append("session_id", sessionId);
 
-    appendMessage("user", `📄 [تم اختيار مستند للرفع: ${file.name}]`);
+    appendMessage("user", `📄 [طلب رفع مستند: ${file.name}]`);
     showTypingIndicator();
-    showToast("جاري رفع وتحليل الملف...", "info");
 
     try {
       const res = await fetch(ENDPOINTS.upload, { method: "POST", body: fd });
-      hideTypingIndicator();
-      if (!res.ok) throw new Error(`كود الخطأ من السيرفر: ${res.status}`);
+      hideTypingIndicator(); // مسح مؤشر التحليل فورا لمنع التعليق
+      if (!res.ok) throw new Error("Backend Error");
       const data = await res.json();
       if (data && data.reply) {
         appendMessage("assistant", data.reply);
-        addToHistoryLocal("user", `📄 [مستند: ${file.name}]`);
         addToHistoryLocal("assistant", data.reply);
-        showToast("تم تحليل المستند بنجاح", "success");
-      } else {
-        appendMessage("assistant", "تم رفع الملف بنجاح ولكن لم يتم استلام استجابة تحليلية.");
       }
     } catch (e) {
-      hideTypingIndicator();
-      console.error(e);
-      appendMessage("assistant", `❌ عذراً، فشلت عملية معالجة ورفع الملف. (تأكد من إعداد الـ Backend لـ ${ENDPOINTS.upload})`);
-      showToast("فشل رفع الملف", "error");
+      hideTypingIndicator(); // إجبار الإغلاق عند الخطأ
+      appendMessage("assistant", `❌ عذراً، فشلت عملية معالجة ورفع الملف. (تأكد من إعداد الـ Backend لـ /upload)`);
     }
   }
 
@@ -477,28 +473,20 @@
     fd.append("audio", file);
     fd.append("session_id", sessionId);
 
-    appendMessage("user", `🎙️ [جاري إرسال تسجيل صوتي...]`);
+    appendMessage("user", `🎙️ [طلب معالجة ملف صوتي]`);
     showTypingIndicator();
-    showToast("جاري معالجة الصوت وتحويله لنص...", "info");
 
     try {
       const res = await fetch(ENDPOINTS.voice, { method: "POST", body: fd });
       hideTypingIndicator();
-      if (!res.ok) throw new Error(`كود الخطأ: ${res.status}`);
+      if (!res.ok) throw new Error("Backend Error");
       const data = await res.json();
       if (data && data.reply) {
         appendMessage("assistant", data.reply);
-        addToHistoryLocal("user", `🎙️ [صوت سجل]`);
-        addToHistoryLocal("assistant", data.reply);
-        showToast("تم معالجة الصوت", "success");
-      } else {
-        appendMessage("assistant", "اكتمل رفع الصوت، وتلقيت استجابة فارغة.");
       }
     } catch (e) {
       hideTypingIndicator();
-      console.error(e);
       appendMessage("assistant", `❌ فشل معالجة الملف الصوتي على المسار الحالي.`);
-      showToast("فشل معالجة الملف الصوتي", "error");
     }
   }
 
@@ -508,28 +496,20 @@
     fd.append("image", file);
     fd.append("session_id", sessionId);
 
-    appendMessage("user", `🖼️ [جاري رفع وتحليل الصورة: ${file.name}]`);
+    appendMessage("user", `🖼️ [طلب تحليل صورة: ${file.name}]`);
     showTypingIndicator();
-    showToast("جاري فحص وتحليل الصورة...", "info");
 
     try {
       const res = await fetch(ENDPOINTS.vision, { method: "POST", body: fd });
       hideTypingIndicator();
-      if (!res.ok) throw new Error(`كود الخطأ: ${res.status}`);
+      if (!res.ok) throw new Error("Backend Error");
       const data = await res.json();
       if (data && data.reply) {
         appendMessage("assistant", data.reply);
-        addToHistoryLocal("user", `🖼️ [صورة: ${file.name}]`);
-        addToHistoryLocal("assistant", data.reply);
-        showToast("اكتمل تحليل الرؤية", "success");
-      } else {
-        appendMessage("assistant", "تم استقبال الصورة ولكن الـ Backend لم يرسل رد تحليل text.");
       }
     } catch (e) {
       hideTypingIndicator();
-      console.error(e);
-      appendMessage("assistant", `❌ فشل تحليل أو رفع الصورة. تأكد من تهيئة استقبال الصور في الـ Backend.`);
-      showToast("فشل رفع الصورة", "error");
+      appendMessage("assistant", `فشل تحليل أو رفع الصورة. تأكد من تهيئة استقبال الصور في الـ Backend.`);
     }
   }
 
@@ -539,21 +519,12 @@
       const data = await res.json();
       if (connectionStatus) {
         const dot = connectionStatus.querySelector(".sky-status-dot");
-        const text = connectionStatus.querySelector(".sky-status-text");
-        if (data && !data.error) {
-          if (dot) dot.style.background = "#22c55e";
-          if (text) text.innerHTML = '<i class="fas fa-plug"></i> متصل • جاهز';
-        } else {
-          if (dot) dot.style.background = "#f97316";
-          if (text) text.innerHTML = '<i class="fas fa-exclamation-triangle"></i> متصل جزئياً';
-        }
+        if (dot) dot.style.background = "#22c55e";
       }
     } catch {
       if (connectionStatus) {
         const dot = connectionStatus.querySelector(".sky-status-dot");
-        const text = connectionStatus.querySelector(".sky-status-text");
         if (dot) dot.style.background = "#ef4444";
-        if (text) text.innerHTML = '<i class="fas fa-ban"></i> غير متصل';
       }
     }
   }
@@ -567,14 +538,13 @@
     switch (cmd) {
       case "/new": createNewSession(); return true;
       case "/clear": clearCurrentSession(); return true;
-      case "/export": exportConversation(); return true;
       case "/help": showHelp(); return true;
       default: return false;
     }
   }
 
   function showHelp() {
-    appendMessage("assistant", "📖 **الأوامر السريعة المتوفرة:**\n\n`/new` — إنشاء جلسة ذكية جديدة\n`/clear` — مسح ذاكرة الجلسة الحالية\n`/export` — تصدير المحادثة لملف JSON\n`/help` — عرض المساعدة المتقدمة");
+    appendMessage("assistant", "📖 **الأوامر السريعة:**\n\n`/new` — جلسة جديدة\n`/clear` — مسح الذاكرة الحالية\n`/help` — عرض المساعدة");
   }
 
   function createNewSession() {
@@ -585,34 +555,14 @@
     showToast("تم فتح منفذ جلسة جديد", "success");
   }
 
+  // تصفية النافذة والمحادثة فورياً وإعادة البناء الترحيبي دون تعليق واجهة المستخدم
   function clearCurrentSession() {
-    if (confirm("هل تريد مسح ذاكرة هذه الجلسة بالكامل؟")) {
+    if (confirm("هل تريد مسح ذاكرة هذه الجلسة والنافذة بالكامل؟")) {
       localStorage.removeItem(`sky_local_history_v10_${sessionId}`);
       if (chatWindow) chatWindow.innerHTML = "";
-      loadLocalHistory(); // تعيد طباعة الرسالة الترحيبية فورا
+      loadLocalHistory(); 
       if (sidebar) sidebar.classList.remove("mobile-show");
-      showToast("تم تصفية البيانات بنجاح", "success");
-    }
-  }
-
-  function exportConversation() {
-    try {
-      const key = `sky_local_history_v10_${sessionId}`;
-      const raw = localStorage.getItem(key);
-      const data = raw || "[]";
-      const blob = new Blob([data], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `skyos_export_${sessionId.slice(0, 8)}.json`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-      showToast("تم تصدير ملف الجلسة بنجاح", "success");
-    } catch (e) {
-      console.error(e);
-      showToast("فشل تصدير المحادثة", "error");
+      showToast("تم تصفية وبناء النافذة بنجاح", "success");
     }
   }
 
@@ -634,25 +584,13 @@
     });
   }
 
-  if (newSessionBtn) {
-    newSessionBtn.addEventListener("click", createNewSession);
-  }
-
-  if (clearChatBtn) {
-    clearChatBtn.addEventListener("click", clearCurrentSession);
-  }
-
-  if (exportChatBtn) {
-    exportChatBtn.addEventListener("click", exportConversation);
-  }
+  if (newSessionBtn) newSessionBtn.addEventListener("click", createNewSession);
+  if (clearChatBtn) clearChatBtn.addEventListener("click", clearCurrentSession);
 
   if (toggleThemeBtn) {
-    toggleThemeBtn.addEventListener("click", () => {
-      setTheme(!isDark);
-    });
+    toggleThemeBtn.addEventListener("click", () => setTheme(!isDark));
   }
 
-  // ميزة فتح وإغلاق القائمة الجانبية بنجاح على الجوال وسيرفر لايف
   if (menuToggleBtn && sidebar) {
     menuToggleBtn.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -660,7 +598,6 @@
     });
   }
 
-  // عند النقر على نافذة الدردشة تغلق القائمة الجانبية تلقائيا في الجوال لتسهيل التصفح
   if (chatWindow) {
     chatWindow.addEventListener("click", () => {
       if (sidebar && sidebar.classList.contains("mobile-show")) {
@@ -669,9 +606,7 @@
     });
   }
 
-  if (miniUploadBtn && fileInput) {
-    miniUploadBtn.addEventListener("click", () => fileInput.click());
-  }
+  if (miniUploadBtn && fileInput) miniUploadBtn.addEventListener("click", () => fileInput.click());
   if (fileInput) {
     fileInput.addEventListener("change", (e) => {
       if (e.target.files.length > 0) uploadFile(e.target.files[0]);
@@ -705,6 +640,14 @@
   }
   if (openWorkspaceBtn && workspacePanel) {
     openWorkspaceBtn.addEventListener("click", () => workspacePanel.classList.toggle("hidden"));
+  }
+
+  // أحداث لوحة التحكم الفعالة لتعديل مقاس الخط فوراً
+  if ($("#setting-font-size")) {
+    $("#setting-font-size").addEventListener("change", (e) => {
+      if (chatWindow) chatWindow.style.fontSize = e.target.value;
+      showToast("تم تحديث أبعاد الخط", "info");
+    });
   }
 
   // ========== Initialization ==========
