@@ -1,11 +1,9 @@
 /* ============================================================
-   SkyOS v7.2 — Crown Edition (JavaScript Engine)
-   - جلسات ذكية
-   - واجهة حية متحركة
-   - ملفات / صوت / رؤية
-   - Workspace + Settings
-   - Toasts + Status + Theme
-   - تم تصحيح جميع الأخطاء
+   SkyOS v10.0 — Holographic Edition (JavaScript Engine)
+   - جلسات ذكية ومزامنة PWA كاملة
+   - واجهة حية وتتبع الأنماط الرسومية (UI Modes)
+   - ملفات / صوت / رؤية / إدارة الأخطاء الصامتة
+   - Workspace + Settings + Safe DOM Mounting
    ============================================================ */
 
 (() => {
@@ -21,10 +19,9 @@
     status: "/api/v1/status",
   };
 
-  const LS_SESSION_KEY = "sky_session_id_v72";
-  const LS_SESSIONS_LIST = "sky_sessions_list_v72";
-  const LS_THEME_KEY = "sky_theme_v72";
-  const LS_NOTES_KEY = "sky_workspace_notes_v72";
+  const LS_SESSION_KEY = "sky_session_id_v10";
+  const LS_SESSIONS_LIST = "sky_sessions_list_v10";
+  const LS_THEME_KEY = "sky_theme_v10";
 
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => Array.from(document.querySelectorAll(sel));
@@ -129,13 +126,12 @@
     sessions.unshift({ id, title, updated: Date.now() });
     saveSessions();
     renderSessionList();
-    renderWorkspaceSessions();
   }
 
   function showToast(text, type = "info", timeout = 4000) {
     if (!toastContainer) return;
     const t = document.createElement("div");
-    t.className = "toast";
+    t.className = `toast ${type}`;
     const icon = type === "error" ? "fa-exclamation-circle" : type === "success" ? "fa-check-circle" : "fa-info-circle";
     t.innerHTML = `<i class="fas ${icon}" style="margin-left: 8px;"></i> ${text}`;
     toastContainer.appendChild(t);
@@ -158,15 +154,31 @@
     });
   }
 
+  function autoResizeTextarea(el) {
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, 180) + "px";
+  }
+
   function sanitizeAndFormat(text) {
     if (!text) return "";
     const div = document.createElement("div");
     div.textContent = text;
     let safe = div.innerHTML;
+
+    // معالجة قوالب الأكواد البرمجية الكبيرة (Code Blocks)
+    safe = safe.replace(/```([\s\S]*?)```/g, '<pre class="sky-code-block"><code>$1</code></pre>');
+    
+    // معالجة الأكواد البرمجية السطرية (Inline Code)
+    safe = safe.replace(/`([^`]+)`/g, '<code class="sky-inline-code">$1</code>');
+
+    // الروابط
     safe = safe.replace(
       /(https?:\/\/[^\s]+)/g,
-      (m) => `<a href="${m}" target="_blank" rel="noopener noreferrer" style="color: var(--primary-3);">${m}</a>`
+      (m) => `<a href="${m}" target="_blank" rel="noopener noreferrer" style="color: var(--primary-3); text-decoration: underline;">${m}</a>`
     );
+    
+    // التنسيقات العادية
     safe = safe.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
     safe = safe.replace(/\*(.*?)\*/g, "<em>$1</em>");
     safe = safe.replace(/\n{2,}/g, "</p><p>").replace(/\n/g, "<br/>");
@@ -204,7 +216,6 @@
     bubble.appendChild(header);
     bubble.appendChild(content);
 
-    // Feedback buttons for assistant messages only
     if (role === "assistant") {
       const feedbackDiv = document.createElement("div");
       feedbackDiv.className = "message-feedback";
@@ -272,8 +283,7 @@
   }
 
   function showTypingIndicator() {
-    if (!chatWindow) return;
-    if ($("#typing-indicator")) return;
+    if (!chatWindow || $("#typing-indicator")) return;
 
     const row = document.createElement("div");
     row.id = "typing-indicator";
@@ -293,7 +303,7 @@
       <div class="message-content">
         <div class="typing-indicator">
           <span></span><span></span><span></span>
-          <span style="margin-right: 8px;">يكتب</span>
+          <span style="margin-right: 8px;">جاري التفكير...</span>
         </div>
       </div>
     `;
@@ -309,73 +319,55 @@
     if (el) el.remove();
   }
 
-  function autoResizeTextarea(el) {
-    if (!el) return;
-    const resize = () => {
-      el.style.height = "auto";
-      el.style.height = Math.min(el.scrollHeight, 180) + "px";
-    };
-    el.addEventListener("input", resize);
-    resize();
-  }
-
   // ========== Local History ==========
 
   function addToHistoryLocal(role, content) {
     try {
-      const key = `sky_local_history_v72_${sessionId}`;
+      const key = `sky_local_history_v10_${sessionId}`;
       const raw = localStorage.getItem(key);
       const arr = raw ? JSON.parse(raw) : [];
       arr.push({ role, content, t: Date.now() });
-      const trimmed = arr.slice(-200);
-      localStorage.setItem(key, JSON.stringify(trimmed));
+      localStorage.setItem(key, JSON.stringify(arr.slice(-200)));
     } catch {}
   }
 
   function loadLocalHistory() {
     try {
-      const key = `sky_local_history_v72_${sessionId}`;
+      const key = `sky_local_history_v10_${sessionId}`;
       const raw = localStorage.getItem(key);
       const arr = raw ? JSON.parse(raw) : [];
       if (!chatWindow) return;
       chatWindow.innerHTML = "";
       if (arr.length === 0) {
-        appendMessage("assistant", "مرحباً… 🌌\n\nأنا **SkyOS Crown Edition v7.2**، نظام ذكاء هجين واعٍ.\n\n✨ يمكنك:\n• الدردشة معي بأي موضوع\n• رفع ملفات 📄\n• إرسال صور 🖼️ للتحليل\n• إرسال صوت 🎙️\n• استخدام الأوامر السريعة: /new, /clear, /export, /help\n\n**أنا جاهز. اكتب ما تريد…** 🚀");
+        appendMessage("assistant", "مرحباً… 🌌\n\nأنا **SkyOS Holographic v10**، نظام ذكاء هجين واعٍ.\n\n✨ يمكنك:\n• الدردشة ومناقشة البرمجة والبيانات\n• رفع ملفات ومستندات 📄\n• إرسال صور 🖼️ أو صوتيات 🎙️\n\n**أنا جاهز ومقترن بالسيرفر بنجاح...** 🚀");
       } else {
         arr.forEach(m => appendMessage(m.role, m.content));
       }
     } catch {}
   }
 
-  // ========== Rendering ==========
-
   function renderSessionList() {
     if (!sessionListEl) return;
     sessionListEl.innerHTML = "";
     if (!sessions.length) {
-      sessionListEl.innerHTML = `<div class="sky-session-empty" style="text-align:center; opacity:0.6;"><i class="fas fa-inbox"></i><br>لا يوجد أرشيف</div>`;
+      sessionListEl.innerHTML = `<div class="sky-session-empty"><i class="fas fa-inbox"></i><br>لا يوجد أرشيف</div>`;
       return;
     }
     sessions.forEach((s) => {
       const item = document.createElement("div");
-      item.className = "session-item";
+      item.className = "session-item" + (s.id === sessionId ? " active" : "");
       item.innerHTML = `<i class="fas fa-comment"></i> ${s.title}<br><small>${new Date(s.updated).toLocaleString("ar-SA")}</small>`;
-      item.dataset.id = s.id;
       item.addEventListener("click", () => {
         if (s.id === sessionId) return;
-        sessionId = s.id;
-        localStorage.setItem(LS_SESSION_KEY, sessionId);
-        if (sessionIndicator) {
-          sessionIndicator.innerHTML = `<i class="fas fa-id-card"></i> جلسة: ${sessionId.slice(0, 8)}`;
-        }
+        setSession(s.id);
         loadLocalHistory();
-        showToast("تم تبديل الجلسة", "success");
+        showToast("تم تبديل الجلسة بنجاح", "success");
       });
       sessionListEl.appendChild(item);
     });
   }
 
-  // ========== Network ==========
+  // ========== Network Actions ==========
 
   async function postJSON(url, payload) {
     const res = await fetch(url, {
@@ -388,41 +380,41 @@
 
   async function sendMessage(text) {
     if (!text || isSending) return;
-    isSending = true;
-    if (userInput) userInput.value = "";
-    appendMessage("user", text);
-    addSessionRecord(sessionId, `جلسة ${sessionId.slice(2, 10)}`);
-    addToHistoryLocal("user", text);
+    if (handleQuickCommand(text)) {
+      if (userInput) {
+        userInput.value = "";
+        autoResizeTextarea(userInput);
+      }
+      return;
+    }
 
+    isSending = true;
+    if (userInput) {
+      userInput.value = "";
+      autoResizeTextarea(userInput);
+    }
+    appendMessage("user", text);
+    addToHistoryLocal("user", text);
+    addSessionRecord(sessionId, text.slice(0, 20) + "...");
     showTypingIndicator();
 
     try {
       const resp = await postJSON(ENDPOINTS.ask, {
         message: text,
         session_id: sessionId,
-        ai_type: "groq",
+        ai_type: window.SKY_CONFIG?.ui_mode || "holo"
       });
 
       hideTypingIndicator();
 
-      if (!resp) {
-        appendMessage("assistant", "حدث خطأ: لم يتم استلام رد من الخادم.");
-        showToast("خطأ في الاتصال بالمزود", "error");
-        isSending = false;
-        return;
-      }
-
-      if (typeof resp.reply === "string" && resp.reply.startsWith("REFUSE:")) {
-        const msg = resp.reply.replace(/^REFUSE:\s*/i, "");
-        appendMessage("assistant", msg);
-        addToHistoryLocal("assistant", msg);
-        isSending = false;
+      if (!resp || (!resp.reply && typeof resp !== "string")) {
+        appendMessage("assistant", "حدث خطأ: لم يتم استلام رد صحيح من الخادم.");
+        showToast("خطأ في معالجة رد السيرفر", "error");
         return;
       }
 
       const reply = resp.reply || resp;
       appendMessage("assistant", reply);
-      addSessionRecord(sessionId, `جلسة ${sessionId.slice(2, 10)}`);
       addToHistoryLocal("assistant", reply);
 
       if (resp.provider && modelIndicator) {
@@ -430,7 +422,7 @@
       }
     } catch (err) {
       hideTypingIndicator();
-      appendMessage("assistant", "عذراً، حدث خطأ أثناء معالجة الطلب.");
+      appendMessage("assistant", "عذراً، واجهت مشكلة أثناء الاتصال بـ SkyOS. تأكد من أن السيرفر يعمل.");
       console.error("sendMessage error:", err);
       showToast("فشل إرسال الرسالة", "error");
     } finally {
@@ -444,19 +436,17 @@
     fd.append("file", file);
     fd.append("session_id", sessionId);
 
-    showToast("جارٍ رفع الملف وتحليله...", "info");
+    showToast("جارٍ رفع وتحليل الملف...", "info");
     try {
       const res = await fetch(ENDPOINTS.upload, { method: "POST", body: fd });
       const data = await res.json();
       if (data && data.reply) {
         appendMessage("assistant", data.reply);
         addToHistoryLocal("assistant", data.reply);
-        showToast("تم تحليل الملف", "success");
-      } else {
-        showToast("لم يتم تحليل الملف بنجاح", "error");
+        showToast("تم تحليل المستند بنجاح", "success");
       }
     } catch (e) {
-      console.error("uploadFile error:", e);
+      console.error(e);
       showToast("فشل رفع الملف", "error");
     }
   }
@@ -467,20 +457,18 @@
     fd.append("audio", file);
     fd.append("session_id", sessionId);
 
-    showToast("جارٍ رفع الصوت وتحويله إلى نص...", "info");
+    showToast("جارٍ معالجة الصوت وتحويله لنص...", "info");
     try {
       const res = await fetch(ENDPOINTS.voice, { method: "POST", body: fd });
       const data = await res.json();
       if (data && data.reply) {
         appendMessage("assistant", data.reply);
         addToHistoryLocal("assistant", data.reply);
-        showToast("تم تحويل الصوت والرد", "success");
-      } else {
-        showToast("لم يتم تحويل الصوت بنجاح", "error");
+        showToast("تم معالجة الصوت", "success");
       }
     } catch (e) {
-      console.error("uploadAudio error:", e);
-      showToast("فشل رفع الصوت", "error");
+      console.error(e);
+      showToast("فشل معالجة الملف الصوتي", "error");
     }
   }
 
@@ -490,19 +478,17 @@
     fd.append("image", file);
     fd.append("session_id", sessionId);
 
-    showToast("جارٍ رفع الصورة وتحليلها...", "info");
+    showToast("جارٍ فحص وتحليل الصورة...", "info");
     try {
       const res = await fetch(ENDPOINTS.vision, { method: "POST", body: fd });
       const data = await res.json();
       if (data && data.reply) {
         appendMessage("assistant", data.reply);
         addToHistoryLocal("assistant", data.reply);
-        showToast("تم تحليل الصورة", "success");
-      } else {
-        showToast("لم يتم تحليل الصورة بنجاح", "error");
+        showToast("اكتمل تحليل الرؤية", "success");
       }
     } catch (e) {
-      console.error("uploadImage error:", e);
+      console.error(e);
       showToast("فشل رفع الصورة", "error");
     }
   }
@@ -535,422 +521,117 @@
   // ========== Quick Commands ==========
 
   function handleQuickCommand(text) {
-    const cmd = text.trim().split(/\s+/)[0].toLowerCase();
+    const t = text.trim();
+    if (!t.startsWith("/")) return false;
+    const cmd = t.split(/\s+/)[0].toLowerCase();
     switch (cmd) {
-      case "/new":
-        createNewSession();
-        return true;
-      case "/clear":
-        clearCurrentSession();
-        return true;
-      case "/export":
-        exportConversation();
-        return true;
-      case "/workspace":
-        toggleWorkspace();
-        return true;
-      case "/settings":
-        toggleSettings();
-        return true;
-      case "/help":
-        showHelp();
-        return true;
-      default:
-        return false;
+      case "/new": createNewSession(); return true;
+      case "/clear": clearCurrentSession(); return true;
+      case "/export": exportConversation(); return true;
+      case "/help": showHelp(); return true;
+      default: return false;
     }
   }
 
   function showHelp() {
-    appendMessage("assistant", "📖 **الأوامر السريعة المتاحة:**\n\n/new — جلسة جديدة\n/clear — مسح المحادثة\n/export — تصدير المحادثة\n/workspace — فتح مساحة العمل\n/settings — فتح الإعدادات\n/help — عرض هذه المساعدة\n\n✨ يمكنك أيضاً رفع ملفات، صور، أو صوت.");
+    appendMessage("assistant", "📖 **الأوامر السريعة المتوفرة:**\n\n`/new` — إنشاء جلسة ذكية جديدة\n`/clear` — مسح ذاكرة الجلسة الحالية\n`/export` — تصدير المحادثة لملف JSON\n`/help` — عرض المساعدة المتقدمة");
   }
 
   function createNewSession() {
     const id = "s-" + Math.random().toString(36).slice(2, 12);
     setSession(id);
     loadLocalHistory();
-    showToast("جلسة جديدة جاهزة", "success");
+    showToast("تم فتح منفذ جلسة جديد", "success");
   }
 
   function clearCurrentSession() {
-    if (confirm("هل أنت متأكد من مسح جميع الرسائل؟")) {
+    if (confirm("هل تريد مسح ذاكرة هذه الجلسة بالكامل؟")) {
       if (chatWindow) chatWindow.innerHTML = "";
-      localStorage.removeItem(`sky_local_history_v72_${sessionId}`);
-      appendMessage("assistant", "✨ تم مسح المحادثة. كيف يمكنني مساعدتك الآن؟");
-      showToast("تم مسح المحادثة", "success");
+      localStorage.removeItem(`sky_local_history_v10_${sessionId}`);
+      appendMessage("assistant", "✨ تم تهيئة الجلسة ومسح السجلات المحلية بنجاح.");
+      showToast("تم تصفية البيانات", "success");
     }
   }
 
   function exportConversation() {
     try {
-      const key = `sky_local_history_v72_${sessionId}`;
+      const key = `sky_local_history_v10_${sessionId}`;
       const raw = localStorage.getItem(key);
       const data = raw || "[]";
       const blob = new Blob([data], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `skyos_conversation_${sessionId.slice(0, 8)}.json`;
+      a.download = `skyos_export_${sessionId.slice(0, 8)}.json`;
       document.body.appendChild(a);
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      showToast("تم تصدير المحادثة", "success");
+      showToast("تم تصدير ملف الجلسة بنجاح", "success");
     } catch (e) {
-      console.error("exportConversation error:", e);
+      console.error(e);
       showToast("فشل تصدير المحادثة", "error");
     }
   }
 
-  // ========== Settings Panel ==========
+  // ========== Event Handlers & Mounting ==========
 
-  function buildSettingsPanel() {
-    if (!settingsPanel) return;
-    settingsPanel.classList.add("glass-layer");
-    settingsPanel.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;">
-        <div style="font-weight:700;font-size:1rem;"><i class="fas fa-cog"></i> الإعدادات</div>
-        <button class="sky-icon-btn" id="close-settings-btn"><i class="fas fa-times"></i></button>
-      </div>
-      <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:15px;">
-        تحكم في مظهر النظام وبعض السلوكيات العامة.
-      </div>
-
-      <div style="margin-bottom:15px;">
-        <div style="font-size:0.85rem;font-weight:600;margin-bottom:8px;"><i class="fas fa-palette"></i> المظهر</div>
-        <div style="display:flex;gap:8px;">
-          <button class="sky-btn-secondary" data-theme="light"><i class="fas fa-sun"></i> فاتح</button>
-          <button class="sky-btn-secondary" data-theme="dark"><i class="fas fa-moon"></i> داكن</button>
-        </div>
-      </div>
-
-      <div style="margin-bottom:15px;">
-        <div style="font-size:0.85rem;font-weight:600;margin-bottom:8px;"><i class="fas fa-comments"></i> جلسة العمل</div>
-        <button class="sky-btn-secondary full" id="settings-new-session"><i class="fas fa-plus"></i> جلسة جديدة</button>
-        <button class="sky-btn-secondary full" id="settings-clear-session" style="margin-top:6px;"><i class="fas fa-trash-alt"></i> مسح المحادثة</button>
-        <button class="sky-btn-secondary full" id="settings-export-chat" style="margin-top:6px;"><i class="fas fa-download"></i> تصدير المحادثة</button>
-      </div>
-
-      <div style="margin-top:15px;font-size:0.75rem;color:var(--text-muted);text-align:center;">
-        <i class="fas fa-crown"></i> SkyOS Crown Edition v7.2
-      </div>
-    `;
-
-    const closeBtn = $("#close-settings-btn");
-    if (closeBtn) closeBtn.addEventListener("click", () => toggleSettings(false));
-
-    $$("#settings-panel [data-theme]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const theme = btn.getAttribute("data-theme");
-        setTheme(theme === "dark");
-        showToast(theme === "dark" ? "تم تفعيل الوضع الداكن 🌙" : "تم تفعيل الوضع الفاتح ☀️", "success");
-      });
-    });
-
-    const newSessionSettingsBtn = $("#settings-new-session");
-    const clearSessionSettingsBtn = $("#settings-clear-session");
-    const exportChatBtn = $("#settings-export-chat");
-    
-    if (newSessionSettingsBtn) newSessionSettingsBtn.addEventListener("click", createNewSession);
-    if (clearSessionSettingsBtn) clearSessionSettingsBtn.addEventListener("click", clearCurrentSession);
-    if (exportChatBtn) exportChatBtn.addEventListener("click", exportConversation);
-  }
-
-  function toggleSettings(force) {
-    if (!settingsPanel) return;
-    const visible = typeof force === "boolean" ? force : !settingsPanel.classList.contains("visible");
-    settingsPanel.classList.toggle("visible", visible);
-    settingsPanel.classList.toggle("hidden", !visible);
-  }
-
-  // ========== Workspace Panel ==========
-
-  function buildWorkspacePanel() {
-    if (!workspacePanel) return;
-    workspacePanel.classList.add("glass-layer");
-    workspacePanel.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;">
-        <div style="font-weight:700;font-size:1rem;"><i class="fas fa-folder-open"></i> مساحة العمل</div>
-        <button class="sky-icon-btn" id="close-workspace-btn"><i class="fas fa-times"></i></button>
-      </div>
-      <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:15px;">
-        نظرة سريعة على الجلسات الأخيرة والملاحظات الشخصية.
-      </div>
-
-      <div style="margin-bottom:15px;">
-        <div style="font-size:0.85rem;font-weight:600;margin-bottom:8px;"><i class="fas fa-history"></i> الجلسات الأخيرة</div>
-        <div id="workspace-sessions" style="max-height:200px;overflow:auto;border-radius:12px;border:1px solid rgba(255,255,255,0.1);padding:6px 8px;"></div>
-      </div>
-
-      <div style="margin-bottom:15px;">
-        <div style="font-size:0.85rem;font-weight:600;margin-bottom:8px;"><i class="fas fa-pen"></i> ملاحظات سريعة</div>
-        <textarea id="workspace-notes" placeholder="اكتب ملاحظاتك هنا..." style="width:100%;min-height:100px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);padding:8px;font-size:0.85rem;background:rgba(0,0,0,0.4);color:#fff;"></textarea>
-      </div>
-
-      <div style="display:flex;justify-content:flex-end;gap:8px;">
-        <button class="sky-btn-secondary" id="workspace-save-notes"><i class="fas fa-save"></i> حفظ الملاحظات</button>
-        <button class="sky-btn-secondary" id="workspace-export-notes"><i class="fas fa-download"></i> تصدير</button>
-      </div>
-    `;
-
-    const closeBtn = $("#close-workspace-btn");
-    if (closeBtn) closeBtn.addEventListener("click", () => toggleWorkspace(false));
-
-    renderWorkspaceSessions();
-    
-    const savedNotes = localStorage.getItem(LS_NOTES_KEY);
-    const notesArea = $("#workspace-notes");
-    if (notesArea && savedNotes) notesArea.value = savedNotes;
-    
-    const saveNotesBtn = $("#workspace-save-notes");
-    if (saveNotesBtn) {
-      saveNotesBtn.addEventListener("click", () => {
-        const notes = $("#workspace-notes")?.value || "";
-        localStorage.setItem(LS_NOTES_KEY, notes);
-        showToast("تم حفظ الملاحظات", "success");
-      });
-    }
-
-    const exportNotesBtn = $("#workspace-export-notes");
-    if (exportNotesBtn) {
-      exportNotesBtn.addEventListener("click", () => {
-        const notes = $("#workspace-notes")?.value || "";
-        const blob = new Blob([notes], { type: "text/plain" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `skyos_notes_${new Date().toISOString().slice(0, 10)}.txt`;
-        a.click();
-        URL.revokeObjectURL(url);
-        showToast("تم تصدير الملاحظات", "success");
-      });
-    }
-  }
-
-  function renderWorkspaceSessions() {
-    const container = $("#workspace-sessions");
-    if (!container) return;
-    container.innerHTML = "";
-    if (!sessions.length) {
-      container.innerHTML = `<div style="text-align:center;opacity:0.6;"><i class="fas fa-inbox"></i><br>لا توجد جلسات</div>`;
-      return;
-    }
-    sessions.slice(0, 8).forEach((s) => {
-      const div = document.createElement("div");
-      div.style.cssText = "padding:8px;border-radius:12px;cursor:pointer;margin-bottom:6px;transition:all0.2s";
-      div.innerHTML = `<i class="fas fa-comment"></i> ${s.title}<br><small>${new Date(s.updated).toLocaleString("ar-SA")}</small>`;
-      div.addEventListener("click", () => {
-        sessionId = s.id;
-        localStorage.setItem(LS_SESSION_KEY, sessionId);
-        if (sessionIndicator) {
-          sessionIndicator.innerHTML = `<i class="fas fa-id-card"></i> جلسة: ${sessionId.slice(0, 8)}`;
-        }
-        loadLocalHistory();
-        showToast("تم فتح الجلسة", "success");
-      });
-      div.addEventListener("mouseenter", () => div.style.background = "var(--glass)");
-      div.addEventListener("mouseleave", () => div.style.background = "transparent");
-      container.appendChild(div);
-    });
-  }
-
-  function loadWorkspaceNotes() {
-    const notesEl = $("#workspace-notes");
-    if (!notesEl) return;
-    const saved = localStorage.getItem(LS_NOTES_KEY);
-    if (saved) notesEl.value = saved;
-  }
-
-  function toggleWorkspace(force) {
-    if (!workspacePanel) return;
-    const visible = typeof force === "boolean" ? force : !workspacePanel.classList.contains("visible");
-    workspacePanel.classList.toggle("visible", visible);
-    workspacePanel.classList.toggle("hidden", !visible);
-  }
-
-  // ========== Particles Effect ==========
-
-  function initParticles() {
-    try {
-      const canvas = document.getElementById("sky-particles");
-      if (!canvas) return;
-      const ctx = canvas.getContext("2d");
-      let w = canvas.width = window.innerWidth;
-      let h = canvas.height = window.innerHeight;
-      const particles = [];
-      const count = Math.max(12, Math.floor((w * h) / 120000));
-
-      for (let i = 0; i < count; i++) {
-        particles.push({
-          x: Math.random() * w,
-          y: Math.random() * h,
-          r: 20 + Math.random() * 60,
-          vx: (Math.random() - 0.5) * 0.2,
-          vy: (Math.random() - 0.5) * 0.2,
-          hue: 260 + Math.random() * 120
-        });
-      }
-
-      function draw() {
-        if (!ctx) return;
-        ctx.clearRect(0, 0, w, h);
-        particles.forEach(p => {
-          p.x += p.vx;
-          p.y += p.vy;
-          if (p.x < -200) p.x = w + 200;
-          if (p.x > w + 200) p.x = -200;
-          if (p.y < -200) p.y = h + 200;
-          if (p.y > h + 200) p.y = -200;
-          const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
-          g.addColorStop(0, `hsla(${p.hue}, 90%, 60%, 0.12)`);
-          g.addColorStop(0.6, `hsla(${p.hue}, 80%, 50%, 0.04)`);
-          g.addColorStop(1, "rgba(0,0,0,0)");
-          ctx.fillStyle = g;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-          ctx.fill();
-        });
-        requestAnimationFrame(draw);
-      }
-
-      window.addEventListener("resize", () => {
-        w = canvas.width = window.innerWidth;
-        h = canvas.height = window.innerHeight;
-      });
-
-      draw();
-    } catch (e) {
-      console.warn("Particles init failed", e);
-    }
-  }
-
-  // ========== Event Setup ==========
-
-  function setupEvents() {
+  function initEvents() {
     if (sendBtn && userInput) {
-      sendBtn.addEventListener("click", () => {
-        const text = userInput.value.trim();
-        if (!text) return;
-        if (handleQuickCommand(text)) {
-          userInput.value = "";
-          return;
-        }
-        sendMessage(text);
-      });
-
+      sendBtn.addEventListener("click", () => sendMessage(userInput.value));
       userInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter" && !e.shiftKey) {
           e.preventDefault();
-          const text = userInput.value.trim();
-          if (!text) return;
-          if (handleQuickCommand(text)) {
-            userInput.value = "";
-            return;
-          }
-          sendMessage(text);
+          sendMessage(userInput.value);
         }
       });
+      // تفعيل توسيع صندوق الكتابة ديناميكياً مع المدخلات
+      userInput.addEventListener("input", () => autoResizeTextarea(userInput));
     }
 
-    if (fileInput) {
-      fileInput.addEventListener("change", (e) => {
-        if (e.target.files[0]) uploadFile(e.target.files[0]);
-        fileInput.value = "";
+    if (toggleThemeBtn) {
+      toggleThemeBtn.addEventListener("click", () => {
+        setTheme(!isDark);
+        showToast(isDark ? "تم تفعيل الوضع المظلم" : "تم تفعيل الوضع المضيء", "info");
       });
     }
 
-    if (hiddenAudioInput) {
-      hiddenAudioInput.addEventListener("change", (e) => {
-        if (e.target.files[0]) uploadAudio(e.target.files[0]);
-        hiddenAudioInput.value = "";
-      });
+    if (menuToggleBtn && sidebar) {
+      menuToggleBtn.addEventListener("click", () => sidebar.classList.toggle("open"));
     }
 
-    if (hiddenImageInput) {
-      hiddenImageInput.addEventListener("change", (e) => {
-        if (e.target.files[0]) uploadImage(e.target.files[0]);
-        hiddenImageInput.value = "";
-      });
-    }
-
-    if (voiceBtn && hiddenAudioInput) voiceBtn.addEventListener("click", () => hiddenAudioInput.click());
-    if (visionBtn && hiddenImageInput) visionBtn.addEventListener("click", () => hiddenImageInput.click());
+    if (fileInput) fileInput.addEventListener("change", (e) => uploadFile(e.target.files[0]));
     if (miniUploadBtn && fileInput) miniUploadBtn.addEventListener("click", () => fileInput.click());
+
+    if (hiddenAudioInput) hiddenAudioInput.addEventListener("change", (e) => uploadAudio(e.target.files[0]));
+    if (voiceBtn && hiddenAudioInput) voiceBtn.addEventListener("click", () => hiddenAudioInput.click());
     if (miniVoiceBtn && hiddenAudioInput) miniVoiceBtn.addEventListener("click", () => hiddenAudioInput.click());
+
+    if (hiddenImageInput) hiddenImageInput.addEventListener("change", (e) => uploadImage(e.target.files[0]));
+    if (visionBtn && hiddenImageInput) visionBtn.addEventListener("click", () => hiddenImageInput.click());
     if (miniVisionBtn && hiddenImageInput) miniVisionBtn.addEventListener("click", () => hiddenImageInput.click());
 
     if (newSessionBtn) newSessionBtn.addEventListener("click", createNewSession);
     if (clearChatBtn) clearChatBtn.addEventListener("click", clearCurrentSession);
     if (exportChatBtn) exportChatBtn.addEventListener("click", exportConversation);
 
-    if (toggleThemeBtn) {
-      toggleThemeBtn.addEventListener("click", () => {
-        setTheme(!isDark);
-        showToast(isDark ? "تم تفعيل الوضع الفاتح ☀️" : "تم تفعيل الوضع الداكن 🌙", "success");
-      });
+    if (openSettingsBtn && settingsPanel) {
+      openSettingsBtn.addEventListener("click", () => settingsPanel.classList.toggle("hidden"));
     }
-
-    if (openSettingsBtn) openSettingsBtn.addEventListener("click", () => toggleSettings());
-    if (openWorkspaceBtn) openWorkspaceBtn.addEventListener("click", () => toggleWorkspace());
-
-    if (menuToggleBtn && sidebar) {
-      menuToggleBtn.addEventListener("click", () => {
-        sidebar.classList.toggle("open");
-      });
+    if (openWorkspaceBtn && workspacePanel) {
+      openWorkspaceBtn.addEventListener("click", () => workspacePanel.classList.toggle("hidden"));
     }
-
-    // Drag & Drop
-    if (chatWindow) {
-      ["dragenter", "dragover"].forEach((ev) => {
-        chatWindow.addEventListener(ev, (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          chatWindow.classList.add("drag-over");
-        });
-      });
-      ["dragleave", "drop"].forEach((ev) => {
-        chatWindow.addEventListener(ev, (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          chatWindow.classList.remove("drag-over");
-        });
-      });
-      chatWindow.addEventListener("drop", (e) => {
-        const files = e.dataTransfer.files;
-        if (!files || !files.length) return;
-        const file = files[0];
-        if (file.type.startsWith("image/")) {
-          uploadImage(file);
-        } else if (file.type.startsWith("audio/")) {
-          uploadAudio(file);
-        } else {
-          uploadFile(file);
-        }
-      });
-    }
-
-    // Parallax effect for background
-    const grad = document.querySelector(".sky-gradient");
-    if (grad) {
-      window.addEventListener("mousemove", (e) => {
-        const x = (e.clientX / window.innerWidth - 0.5) * 20;
-        const y = (e.clientY / window.innerHeight - 0.5) * 20;
-        grad.style.transform = `translate(${x}px, ${y}px)`;
-      });
-    }
-
-    setInterval(pingStatus, 30000);
   }
 
-  // ========== Initialization ==========
+  // ========== System Boot ==========
+  document.addEventListener("DOMContentLoaded", () => {
+    setSession(sessionId);
+    loadLocalHistory();
+    renderSessionList();
+    initEvents();
+    if (userInput) autoResizeTextarea(userInput); // تهيئة أولية لحجم الصندوق
+    pingStatus();
+    setInterval(pingStatus, 30000);
+  });
 
-  setSession(sessionId);
-  renderSessionList();
-  buildSettingsPanel();
-  buildWorkspacePanel();
-  loadWorkspaceNotes();
-  loadLocalHistory();
-  pingStatus();
-  setupEvents();
-  autoResizeTextarea(userInput);
-  initParticles();
 })();
