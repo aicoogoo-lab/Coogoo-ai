@@ -3,6 +3,7 @@ SkyOS Backend — Holographic OS v10 (Ultimate Production Ready)
 By Driving & Copilot — 2026
 
 - الإصدار v10.0 المصحح بالكامل والمنسجم مع نواة الذاكرة ومحرك الرؤية وسماء
+- مدمج به محرك WhiteNoise لتقديم الملفات الستاتيكية والـ CSS فوراً على خوادم الإنتاج
 """
 
 import os
@@ -16,7 +17,7 @@ import hashlib
 import re
 import json
 from pathlib import Path
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from functools import wraps
 from concurrent.futures import ThreadPoolExecutor
 
@@ -27,6 +28,8 @@ from flask import (
     render_template,
     send_from_directory,
 )
+
+from whitenoise import WhiteNoise  # محرك الإنتاج الفائق لملفات الـ CSS والـ JS
 
 try:
     from flask_cors import CORS
@@ -60,7 +63,6 @@ try:
     import memory
     import sky_analyzer
 except ImportError:
-    # محاولة استيراد عبر اسم الحزمة في حال بيئة التشغيل من الجذر
     try:
         from core import sky_core, memory, sky_analyzer
     except Exception as e:
@@ -70,16 +72,19 @@ except ImportError:
         sky_analyzer = None
 
 # ============================
-# إعداد التطبيق
+# إعداد التطبيق وتفعيل WhiteNoise
 # ============================
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
+
+# ربط وتكوين WhiteNoise لتقديم الملفات الثابتة وتفادي انهيار الـ CSS
+app.wsgi_app = WhiteNoise(app.wsgi_app, root="static/", prefix="static/")
 
 if HAS_CORS:
     CORS(app, resources={r"/*": {"origins": "*"}})
 
 app.secret_key = os.environ.get("SECRET_KEY", "sky-enterprise-secret-2026")
-app.config["MAX_CONTENT_LENGTH"] = 100 * 1024 * 1024  # 100MB آمنة للسيرفرات السحابية
+app.config["MAX_CONTENT_LENGTH"] = 100 * 1024 * 1024  # 100MB آمنة
 UPLOAD_FOLDER = Path("/tmp/sky_uploads")
 UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
 
@@ -92,12 +97,8 @@ logging.basicConfig(
 logger = logging.getLogger("SkyOS")
 
 # ============================
-# تقديم static والملفات الرئيسية يدويًا
+# تقديم الحزم الأساسية يدويًا
 # ============================
-
-@app.route("/static/<path:filename>")
-def serve_static(filename):
-    return send_from_directory("static", filename)
 
 @app.route("/manifest.json")
 def serve_manifest():
@@ -228,7 +229,6 @@ def call_provider(messages, provider="groq"):
             key = os.environ.get("GEMINI_API_KEY")
             if not key: return None
             url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={key}"
-            # تحويل البنية لتناسب نظام محادثات جيميناي الفوري
             prompt_text = ""
             for m in messages:
                 role_label = "سماء" if m['role'] == 'system' or m['role'] == 'assistant' else "سيدي"
@@ -276,7 +276,6 @@ def _quick_url_context(user_message, session_id=None):
     extra_context = ""
     background_urls = []
 
-    # إذا كان رابطاً واحداً في الرسالة، نقوم بتحليله فوراً لدمجه في الاستجابة اللحظية
     if len(urls) == 1 and len(user_message) < 300:
         url = urls[0]
         cached_result = cache.get(f"url:{url}")
@@ -296,7 +295,6 @@ def _quick_url_context(user_message, session_id=None):
     else:
         background_urls = urls
 
-    # معالجة بقية الروابط في خيوط خلفية مستقلة لعدم تعطيل العميل
     for url in background_urls[:2]:
         executor.submit(_background_url_analysis, url, session_id)
 
@@ -306,15 +304,13 @@ def _quick_url_context(user_message, session_id=None):
     return extra_context, urls
 
 # ============================
-# 3) AI Router & Core Pipeline (تم إزالة الكاش الفاسد وتصحيح الحفظ)
+# 3) AI Router & Core Pipeline
 # ============================
 
 def generate_ai_response(session_id, user_message, ai_type="groq", ui_mode="holo"):
-    # 1) استخراج محتوى الروابط الفورية إن وجدت
     extra_context, urls = _quick_url_context(user_message, session_id)
     extra_context += f"\n[واجهة العرض الحالية]: {ui_mode}\n"
 
-    # 2) جلب الـ System Prompt المتكامل والمحدث من النواة
     system_prompt = safe_get_system_prompt(
         user_message=user_message,
         session_id=session_id,
@@ -324,10 +320,8 @@ def generate_ai_response(session_id, user_message, ai_type="groq", ui_mode="holo
     if isinstance(system_prompt, str) and system_prompt.startswith("REFUSE:"):
         return system_prompt.replace("REFUSE:", "").strip(), "safety"
 
-    # 3) بناء مصفوفة الرسائل المباشرة المفلترة للموفر
     messages = [{"role": "system", "content": system_prompt}]
     
-    # جلب المحادثات السابقة لضبط السياق التاريخي للموفر (مع تصفية منع التكرار)
     history = safe_get_conversation_context(session_id, 20)
     for h in history:
         messages.append({
@@ -337,7 +331,6 @@ def generate_ai_response(session_id, user_message, ai_type="groq", ui_mode="holo
         
     messages.append({"role": "user", "content": user_message})
 
-    # 4) ميكانيكية التنقل المرن (Fallback Mechanism) بين الموفرين في حال الانقطاع
     providers_chain = [ai_type, "groq", "gemini", "openai"]
     used_providers = []
     
@@ -346,7 +339,6 @@ def generate_ai_response(session_id, user_message, ai_type="groq", ui_mode="holo
             used_providers.append(prov)
             reply = call_provider(messages, prov)
             if reply:
-                # 5) قيد حاسم وثابت: حفظ المدخلات والردود في الذاكرة لمنع فقدان السياق
                 safe_add_to_history("user", user_message, session_id)
                 safe_add_to_history("assistant", reply, session_id)
                 return reply, prov
@@ -391,7 +383,6 @@ def api_chat():
         if not user_message:
             return jsonify({"status": "error", "reply": "لا يمكن معالجة رسالة فارغة."}), 400
 
-        # توليد الرد البرمجي عبر محرك التوجيه
         reply, current_provider = generate_ai_response(session_id, user_message, ai_type, ui_mode)
 
         return jsonify({
@@ -399,7 +390,7 @@ def api_chat():
             "reply": reply,
             "provider": current_provider,
             "session_id": session_id,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         })
     except Exception as e:
         logger.error(f"خطأ في بوابة استقبال المحادثات: {e}")
@@ -407,7 +398,6 @@ def api_chat():
 
 @app.route("/scrape", methods=["POST"])
 def scrape_website():
-    """ دالة كشط وتحليل المواقع الفورية المستقرة """
     try:
         data = request.json or {}
         url = data.get("url", "").strip()
@@ -419,7 +409,6 @@ def scrape_website():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-# تشغيل خادم الاختبار المحلي عند استدعاء الملف مباشرة
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
