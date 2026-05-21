@@ -1,93 +1,158 @@
-body {
-  background: linear-gradient(135deg, #0a0a14, #1a0040);
-  background-size: 200% 200%;
-  animation: bgMove 6s ease-in-out infinite, fadeOut 4.8s ease-in-out forwards;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  margin: 0;
-  position: relative;
-  overflow: hidden;
-}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkyOS v10.0 — Loading</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      background: linear-gradient(135deg, #0a0a14, #141428, #1a0040);
+      background-size: 200% 200%;
+      animation: bgMove 6s ease-in-out infinite, fadeOut 4.8s ease-in-out forwards;
+      display: flex;
+      flex-direction: column; /* ترتيب العناصر عمودياً */
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      position: relative;
+      overflow: hidden;
+      font-family: 'Cairo', sans-serif;
+    }
 
-/* الشعار */
-.logo {
-  width: 200px;
-  opacity: 0;
-  animation: 
-    popIn 1.2s ease-out forwards,
-    glow 2s ease-in-out infinite alternate,
-    pulse 2.4s ease-in-out infinite;
-  position: relative;
-  z-index: 2;
-}
+    /* حاوية الشعار والنص */
+    .splash-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 2;
+    }
 
-/* النص */
-.text {
-  color: #c7b8ff;
-  font-family: 'Arial', sans-serif;
-  margin-top: 25px;
-  text-align: center;
-  opacity: 0;
-  animation: slideUp 1.4s ease-out forwards;
-  z-index: 2;
-}
+    /* الشعار الهولوجرافي المحدث */
+    .logo {
+      width: 100px;
+      height: 100px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, #7c3aed, #c084fc);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3.5rem;
+      font-weight: bold;
+      color: #fff;
+      opacity: 0;
+      animation: 
+        popIn 1.2s ease-out forwards,
+        glow 2s ease-in-out infinite alternate,
+        pulse 2.4s ease-in-out infinite;
+      position: relative;
+      box-shadow: 0 0 30px rgba(192, 132, 252, 0.4);
+    }
 
-/* موجة ضوئية */
-.wave {
-  position: absolute;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(160,0,255,0.6), rgba(0,0,0,0));
-  animation: wavePulse 2.8s ease-out infinite;
-  z-index: 1;
-  opacity: 0.7;
-}
+    /* النص المستقبلي */
+    .text {
+      color: #ffffff;
+      margin-top: 25px;
+      text-align: center;
+      opacity: 0;
+      animation: slideUp 1.4s ease-out 0.5s forwards; /* يبدأ بعد ظهور الشعار بقليل */
+    }
 
-/* حركة الموجة */
-@keyframes wavePulse {
-  0%   { transform: scale(1); opacity: 0.6; }
-  70%  { transform: scale(6); opacity: 0; }
-  100% { transform: scale(6); opacity: 0; }
-}
+    .text h1 {
+      font-size: 1.8rem;
+      margin: 0;
+      background: linear-gradient(135deg, #fff, #c084fc);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
 
-/* توهج مزدوج */
-@keyframes glow {
-  from { filter: drop-shadow(0 0 12px #00aaff); }
-  to   { filter: drop-shadow(0 0 28px #a000ff); }
-}
+    .text p {
+      font-size: 0.9rem;
+      color: #9ca3af;
+      margin-top: 5px;
+      letter-spacing: 1px;
+    }
 
-/* نبض ضوئي */
-@keyframes pulse {
-  0%   { transform: scale(1); filter: drop-shadow(0 0 12px #00aaff); }
-  50%  { transform: scale(1.08); filter: drop-shadow(0 0 32px #a000ff); }
-  100% { transform: scale(1); filter: drop-shadow(0 0 12px #00aaff); }
-}
+    /* موجة ضوئية هيدروليكية */
+    .wave {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(124, 58, 237, 0.4), transparent 70%);
+      animation: wavePulse 2.8s ease-out infinite;
+      z-index: 1;
+      opacity: 0.7;
+    }
 
-/* دخول الشعار */
-@keyframes popIn {
-  0%   { transform: scale(0.6); opacity: 0; }
-  60%  { transform: scale(1.15); opacity: 1; }
-  100% { transform: scale(1); }
-}
+    /* حركة الموجة */
+    @keyframes wavePulse {
+      0%   { transform: scale(1); opacity: 0.8; }
+      70%  { transform: scale(8); opacity: 0; }
+      100% { transform: scale(8); opacity: 0; }
+    }
 
-/* دخول النص */
-@keyframes slideUp {
-  0%   { opacity: 0; transform: translateY(25px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
+    /* توهج مزدوج متناسق مع الألوان الجديدة */
+    @keyframes glow {
+      from { filter: drop-shadow(0 0 15px #00eaff); }
+      to   { filter: drop-shadow(0 0 35px #7c3aed); }
+    }
 
-/* حركة الخلفية */
-@keyframes bgMove {
-  0%   { background-position: 0% 50%; }
-  50%  { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
+    /* نبض ضوئي */
+    @keyframes pulse {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.06); }
+      100% { transform: scale(1); }
+    }
 
-/* خروج السبلاتش */
-@keyframes fadeOut {
-  85%  { opacity: 1; }
-  100% { opacity: 0; }
-}
+    /* دخول الشعار */
+    @keyframes popIn {
+      0%   { transform: scale(0.6); opacity: 0; }
+      60%  { transform: scale(1.1); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* دخول النص */
+    @keyframes slideUp {
+      0%   { opacity: 0; transform: translateY(20px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    /* حركة الخلفية السائلة */
+    @keyframes bgMove {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* خروج السبلاتش بسلاسة قبل النقل مباشرة */
+    @keyframes fadeOut {
+      85%  { opacity: 1; }
+      100% { opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="wave"></div>
+
+  <div class="splash-container">
+    <div class="logo">S</div>
+    
+    <div class="text">
+      <h1>SkyOS v10.0</h1>
+      <p>Holographic Intelligent Core</p>
+    </div>
+  </div>
+
+  <script>
+    // الانتظار لمدة 4.6 ثانية (قبل انتهاء الـ fadeOut تماماً) لنقل المستخدم بسلاسة لواجهة الشات الرئيسية
+    setTimeout(() => {
+      window.location.href = "/";
+    }, 4600);
+  </script>
+</body>
+</html>
