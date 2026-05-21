@@ -1,5 +1,5 @@
 """
-ذاكرة "سماء" الواعية - النسخة الاحترافية المتقدمة v5.0
+ذاكرة "سماء" الواعية - النسخة الاحترافية المتقدمة v10.0 (Holographic Core)
 Long-term Memory + RLHF + Master Profile + File & URL Analysis + Personality Layer
 """
 
@@ -108,14 +108,14 @@ def init_db() -> None:
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             session_id TEXT,
             score REAL,
-            reason TEXT,
+            comment TEXT,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     ''')
 
     conn.commit()
     conn.close()
-    logger.info("✅ ذاكرة سماء v5.0 جاهزة وتعمل")
+    logger.info("✅ ذاكرة سماء v10.0 جاهزة وتعمل بكفاءة هيدروليكية كاملة")
 
 
 # ============================================================
@@ -123,9 +123,6 @@ def init_db() -> None:
 # ============================================================
 
 def save_master_info(key: str, value: str) -> bool:
-    """
-    تخزين معلومة عن السيد (الاسم، الأسلوب، المشاريع، الحالة، آخر نشاط...)
-    """
     try:
         conn = get_connection()
         cursor = conn.cursor()
@@ -143,9 +140,6 @@ def save_master_info(key: str, value: str) -> bool:
 
 
 def get_master_profile() -> Dict[str, str]:
-    """
-    استرجاع كل معلومات السيد بشكل قاموس
-    """
     try:
         conn = get_connection()
         cursor = conn.cursor()
@@ -157,9 +151,6 @@ def get_master_profile() -> Dict[str, str]:
 
 
 def get_master_profile_text() -> str:
-    """
-    تحويل ملف السيد إلى نص يمكن حقنه في الـ System Prompt
-    """
     try:
         profile = get_master_profile()
         if not profile:
@@ -177,9 +168,6 @@ def get_master_profile_text() -> str:
 # ============================================================
 
 def save_conversation(role: str, content: str, session_id: Optional[str] = None, metadata: Dict = None) -> bool:
-    """
-    حفظ رسالة في الذاكرة (مع metadata + importance مبدئيًا = 1.0)
-    """
     try:
         conn = get_connection()
         cursor = conn.cursor()
@@ -190,7 +178,6 @@ def save_conversation(role: str, content: str, session_id: Optional[str] = None,
             VALUES (?, ?, ?, ?, ?)
         ''', (role, content, session_id, 1.0, meta_json))
 
-        # إدخال في FTS
         try:
             cursor.execute('''
                 INSERT INTO conversations_fts (content, session_id)
@@ -209,9 +196,6 @@ def save_conversation(role: str, content: str, session_id: Optional[str] = None,
 
 
 def get_recent_conversations(limit: int = 20, session_id: Optional[str] = None) -> List[Dict]:
-    """
-    استرجاع آخر المحادثات (للتوافق مع أنظمة أخرى إن وجدت)
-    """
     try:
         conn = get_connection()
         cursor = conn.cursor()
@@ -232,9 +216,6 @@ def get_recent_conversations(limit: int = 20, session_id: Optional[str] = None) 
 
 
 def get_full_conversation_context(session_id: str, limit: int = 50) -> List[Dict]:
-    """
-    استرجاع سياق كامل للجلسة (آخر N رسالة)
-    """
     try:
         conn = get_connection()
         cursor = conn.cursor()
@@ -249,10 +230,26 @@ def get_full_conversation_context(session_id: str, limit: int = 50) -> List[Dict
         conn.close()
 
 
+def get_all_unique_sessions() -> List[Dict]:
+    """
+    دالة مضافة خصيصاً لجلب قائمة الجلسات الفريدة لملء القائمة الجانبية للـ UI
+    """
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT session_id, content AS title, MAX(timestamp) as updated
+            FROM conversations 
+            WHERE role = 'user'
+            GROUP BY session_id
+            ORDER BY updated DESC
+        ''')
+        return [dict(row) for row in cursor.fetchall() if row['session_id']]
+    finally:
+        conn.close()
+
+
 def clear_conversation_history(session_id: Optional[str] = None):
-    """
-    مسح تاريخ المحادثة لجلسة معينة أو الكل
-    """
     try:
         conn = get_connection()
         cursor = conn.cursor()
@@ -278,9 +275,6 @@ def clear_conversation_history(session_id: Optional[str] = None):
 # ============================================================
 
 def save_knowledge(topic: str, content: str, source: str = "محادثة", importance: float = 1.0) -> bool:
-    """
-    تخزين معرفة دائمة (موضوع + محتوى + مصدر + أهمية)
-    """
     try:
         conn = get_connection()
         cursor = conn.cursor()
@@ -307,9 +301,6 @@ def save_knowledge(topic: str, content: str, source: str = "محادثة", impor
 
 
 def get_all_knowledge_text() -> str:
-    """
-    تجميع أهم المعارف في نص واحد لحقنه في الـ System Prompt
-    """
     try:
         conn = get_connection()
         cursor = conn.cursor()
@@ -331,9 +322,6 @@ def get_all_knowledge_text() -> str:
 
 
 def save_url_analysis(url: str, title: str, text: str) -> bool:
-    """
-    تخزين تحليل رابط كمعرفة دائمة
-    """
     try:
         conn = get_connection()
         cursor = conn.cursor()
@@ -355,9 +343,6 @@ def save_url_analysis(url: str, title: str, text: str) -> bool:
 # ============================================================
 
 def save_uploaded_file(filename: str, original_name: str, file_type: str, size: int, extracted_text: str) -> bool:
-    """
-    تخزين معلومات عن ملف مرفوع + النص المستخرج منه
-    """
     try:
         conn = get_connection()
         cursor = conn.cursor()
@@ -375,36 +360,40 @@ def save_uploaded_file(filename: str, original_name: str, file_type: str, size: 
 
 
 # ============================================================
-# 7) التغذية الراجعة (RLHF)
+# 7) التغذية الراجعة (RLHF) — تم إصلاح المنطق المتوافق مع SQLite
 # ============================================================
 
 def process_feedback(user_message: str, ai_reply: str, feedback_score: float,
-                     session_id: str = None, reason: str = "") -> bool:
+                     session_id: str = None, comment: str = "") -> bool:
     """
-    تسجيل تغذية راجعة + تعديل reward لآخر رد من المساعد في الجلسة
+    تسجيل تغذية راجعة + تعديل reward لآخر رد من المساعد في الجلسة بأسلوب متوافق مع معايير SQLite القياسية
     """
     try:
         conn = get_connection()
         cursor = conn.cursor()
 
-        # حفظ التغذية الراجعة في جدول مستقل
+        # حفظ التغذية الراجعة في جدول مستقل (تم تعديل الحقل لـ comment ليتوافق مع الـ JS)
         cursor.execute('''
-            INSERT INTO feedback (session_id, score, reason)
+            INSERT INTO feedback (session_id, score, comment)
             VALUES (?, ?, ?)
-        ''', (session_id, feedback_score, reason))
+        ''', (session_id, feedback_score, comment))
 
-        # تعديل reward لآخر رد من المساعد
-        cursor.execute('''
-            UPDATE conversations 
-            SET reward = reward + ? 
-            WHERE session_id = ? AND role = 'assistant' 
-            ORDER BY timestamp DESC LIMIT 1
-        ''', (feedback_score, session_id))
+        # إصلاح استعلام الـ UPDATE: استخدام Subquery للحصول على معرف آخر رسالة للمساعد
+        if session_id:
+            cursor.execute('''
+                UPDATE conversations 
+                SET reward = reward + ? 
+                WHERE id = (
+                    SELECT id FROM conversations 
+                    WHERE session_id = ? AND role = 'assistant' 
+                    ORDER BY timestamp DESC LIMIT 1
+                )
+            ''', (feedback_score, session_id))
 
         conn.commit()
         return True
     except Exception as e:
-        logger.error(f"خطأ في process_feedback: {e}")
+        logger.error(f"خطأ في process_feedback وتم تلافيه صامتاً: {e}")
         return False
     finally:
         conn.close()
@@ -415,9 +404,6 @@ def process_feedback(user_message: str, ai_reply: str, feedback_score: float,
 # ============================================================
 
 def get_personality_summary() -> str:
-    """
-    ملخص شخصية "سماء" الحالي (يمكن تطويره لاحقًا ليعتمد على البيانات)
-    """
     profile = get_master_profile()
     last_activity = profile.get("last_activity", "غير معروف")
 
@@ -430,22 +416,12 @@ def get_personality_summary() -> str:
 
 
 # ============================================================
-# 9) توافق إضافي (إن احتاجه أي جزء قديم)
+# 9) توافق إضافي وإقلاع تلقائي
 # ============================================================
 
 def add_to_history(role: str, content: str, session_id: str):
-    """
-    دالة احتياطية للتوافق مع أي كود قديم يستدعيها.
-    يمكن لاحقًا ربطها بمنطق إضافي إن لزم.
-    """
-    # حالياً لا تفعل شيئًا إضافيًا، لأن save_conversation يقوم بالمهمة الأساسية.
-    pass
+    save_conversation(role, content, session_id)
 
-
-# ============================================================
-# 10) تهيئة عند التشغيل المباشر
-# ============================================================
 
 if __name__ == "__main__" or not DB_PATH.exists():
     init_db()
-    logger.info("🌟 ذاكرة سماء v5.0 جاهزة للإنتاج والتطور المستمر")
