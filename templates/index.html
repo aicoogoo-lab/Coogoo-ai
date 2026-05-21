@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <meta name="theme-color" content="#0a0a14" />
   <meta name="description" content="SkyOS v10 — Holographic PWA Intelligence System" />
   <title>SkyOS v10 — Holographic Edition</title>
@@ -21,6 +21,109 @@
   <link rel="stylesheet" href="/static/css/style.css" />
 
   <link rel="preload" href="/static/js/script.js" as="script" />
+
+  <style>
+    /* فرض أبعاد الشاشة ومنع الاختفاء */
+    html, body {
+      height: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      overflow: hidden !important;
+    }
+
+    #sky-root {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      width: 100%;
+    }
+
+    .sky-layout {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 60px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sky-main {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      height: 100% !important;
+      position: relative !important;
+      padding-bottom: 85px !important; /* مسافة لحماية حقل النص الثابت السفلي */
+      box-sizing: border-box;
+    }
+
+    .sky-chat-window {
+      flex: 1;
+      overflow-y: auto !important;
+      padding: 15px !important;
+      padding-bottom: 30px !important;
+    }
+
+    /* تثبيت حقل الكتابة بقوة أسفل شاشة الهاتف وسطح المكتب */
+    .sky-input-bar {
+      position: fixed !important;
+      bottom: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      width: 100% !important;
+      z-index: 9995 !important; /* رفعه فوق كل طبقات التصميم */
+      background: #0a0a14 !important;
+      border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+      padding: 10px 15px !important;
+      box-sizing: border-box !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: 10px !important;
+      box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.7) !important;
+    }
+
+    body.light .sky-input-bar {
+      background: #ffffff !important;
+      border-top: 1px solid rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .sky-input {
+      flex: 1 !important;
+      min-width: 0 !important;
+      background: rgba(255, 255, 255, 0.05) !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      color: inherit !important;
+      border-radius: 8px !important;
+      padding: 10px !important;
+      resize: none !important;
+      font-family: 'Cairo', sans-serif !important;
+    }
+
+    body.light .sky-input {
+      background: rgba(0, 0, 0, 0.03) !important;
+      border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    }
+
+    /* تنسيق متجاوب للقائمة الجانبية لإصلاحها على الجوال */
+    @media (max-width: 768px) {
+      .sky-sidebar {
+        position: fixed !important;
+        top: 60px !important;
+        right: -100% !important; /* مخفية خارج الشاشة يمينا افتراضياً */
+        width: 290px !important;
+        height: calc(100vh - 60px) !important;
+        z-index: 9999 !important;
+        transition: right 0.3s ease-in-out !important;
+        background: rgba(10, 10, 20, 0.98) !important;
+        box-shadow: -5px 0 20px rgba(0,0,0,0.5) !important;
+        display: block !important;
+      }
+
+      /* الكلاس البرمجي المسؤول عن سحب القائمة للداخل عند الضغط على زر التحكم */
+      .sky-sidebar.mobile-show {
+        right: 0 !important;
+      }
+    }
+  </style>
 </head>
 
 <body class="dark sky-mode-{{ ui_mode if ui_mode else 'holo' }}">
@@ -162,12 +265,12 @@
       ui_mode: "{{ ui_mode if ui_mode else 'holo' }}",
       endpoints: {
         ask: "/api/chat",
-        upload: "/scrape",
-        voice: "/api/chat",
-        vision: "/api/chat",
-        feedback: "/scrape",
-        clear: "/os/desktop",
-        status: "/"
+        upload: "/upload",
+        voice: "/voice",
+        vision: "/vision",
+        feedback: "/feedback",
+        clear: "/clear",
+        status: "/api/v1/status"
       }
     };
   </script>
