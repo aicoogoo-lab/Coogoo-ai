@@ -160,14 +160,12 @@
     el.style.height = Math.min(el.scrollHeight, 180) + "px";
   }
 
-  // تم إصلاح الدالة لحماية الأسطر البرمجية والمسافات داخل قوالب الكود من التلف
   function sanitizeAndFormat(text) {
     if (!text) return "";
     const div = document.createElement("div");
     div.textContent = text;
     let safe = div.innerHTML;
 
-    // مصفوفة مؤقتة لحفظ الأكواد ومنع تأثير الـ <br/> عليها
     const codeBlocks = [];
     safe = safe.replace(/```([\s\S]*?)```/g, (match, code) => {
       const id = `__SKY_CODE_BLOCK_${codeBlocks.length}__`;
@@ -175,21 +173,17 @@
       return id;
     });
 
-    // معالجة الأكواد البرمجية السطرية (Inline Code)
     safe = safe.replace(/`([^`]+)`/g, '<code class="sky-inline-code">$1</code>');
 
-    // الروابط
     safe = safe.replace(
       /(https?:\/\/[^\s]+)/g,
       (m) => `<a href="${m}" target="_blank" rel="noopener noreferrer" style="color: var(--primary-3); text-decoration: underline;">${m}</a>`
     );
     
-    // التنسيقات العادية للمنصوص
     safe = safe.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
     safe = safe.replace(/\*(.*?)\*/g, "<em>$1</em>");
     safe = safe.replace(/\n{2,}/g, "</p><p>").replace(/\n/g, "<br/>");
     
-    // إعادة قوالب الأكواد البرمجية الأصلية سليمة بدون وسم <br/>
     codeBlocks.forEach((block, index) => {
       safe = safe.replace(`__SKY_CODE_BLOCK_${index}__`, block);
     });
@@ -586,4 +580,95 @@
     }
   }
 
-  // ========== Event Handlers & Mounti
+  // ========== Event Handlers & Mounting ==========
+
+  if (sendBtn) {
+    sendBtn.addEventListener("click", () => {
+      if (userInput) sendMessage(userInput.value.trim());
+    });
+  }
+
+  if (userInput) {
+    userInput.addEventListener("input", () => autoResizeTextarea(userInput));
+    userInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage(userInput.value.trim());
+      }
+    });
+  }
+
+  if (newSessionBtn) {
+    newSessionBtn.addEventListener("click", createNewSession);
+  }
+
+  if (clearChatBtn) {
+    clearChatBtn.addEventListener("click", clearCurrentSession);
+  }
+
+  if (exportChatBtn) {
+    exportChatBtn.addEventListener("click", exportConversation);
+  }
+
+  if (toggleThemeBtn) {
+    toggleThemeBtn.addEventListener("click", () => {
+      setTheme(!isDark);
+    });
+  }
+
+  if (menuToggleBtn && sidebar) {
+    menuToggleBtn.addEventListener("click", () => {
+      sidebar.classList.toggle("collapsed");
+    });
+  }
+
+  if (miniUploadBtn && fileInput) {
+    miniUploadBtn.addEventListener("click", () => fileInput.click());
+  }
+  if (fileInput) {
+    fileInput.addEventListener("change", (e) => {
+      if (e.target.files.length > 0) uploadFile(e.target.files[0]);
+    });
+  }
+
+  if ((voiceBtn || miniVoiceBtn) && hiddenAudioInput) {
+    const triggerVoice = () => hiddenAudioInput.click();
+    if (voiceBtn) voiceBtn.addEventListener("click", triggerVoice);
+    if (miniVoiceBtn) miniVoiceBtn.addEventListener("click", triggerVoice);
+  }
+  if (hiddenAudioInput) {
+    hiddenAudioInput.addEventListener("change", (e) => {
+      if (e.target.files.length > 0) uploadAudio(e.target.files[0]);
+    });
+  }
+
+  if ((visionBtn || miniVisionBtn) && hiddenImageInput) {
+    const triggerVision = () => hiddenImageInput.click();
+    if (visionBtn) visionBtn.addEventListener("click", triggerVision);
+    if (miniVisionBtn) miniVisionBtn.addEventListener("click", triggerVision);
+  }
+  if (hiddenImageInput) {
+    hiddenImageInput.addEventListener("change", (e) => {
+      if (e.target.files.length > 0) uploadImage(e.target.files[0]);
+    });
+  }
+
+  if (openSettingsBtn && settingsPanel) {
+    openSettingsBtn.addEventListener("click", () => settingsPanel.classList.toggle("hidden"));
+  }
+  if (openWorkspaceBtn && workspacePanel) {
+    openWorkspaceBtn.addEventListener("click", () => workspacePanel.classList.toggle("hidden"));
+  }
+
+  // ========== Initialization ==========
+  function init() {
+    setSession(sessionId);
+    loadLocalHistory();
+    renderSessionList();
+    pingStatus();
+    setInterval(pingStatus, 30000);
+  }
+
+  init();
+
+})();
