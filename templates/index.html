@@ -15,9 +15,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') if url_for else '/static/css/style.css' }}" />
@@ -50,7 +48,7 @@
 
       <div class="sky-topbar-center">
         <div class="sky-status" id="connection-status">
-          <span class="sky-status-dot"></span>
+          <span class="sky-status-dot animated-pulse"></span>
           <span class="sky-status-text"><i class="fas fa-plug"></i> متصل • جاهز</span>
         </div>
       </div>
@@ -83,9 +81,9 @@
         </div>
 
         <div class="sky-sidebar-section">
-          <div class="sky-sidebar-title"><i class="fas fa-paperclip"></i> الملفات</div>
+          <div class="sky-sidebar-title"><i class="fas fa-paperclip"></i> التحكم والملفات</div>
           <label class="sky-btn-secondary full" style="display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;">
-            <i class="fas fa-upload"></i> رفع ملف
+            <i class="fas fa-upload"></i> رفع ملف عام
             <input type="file" id="file-input" hidden />
           </label>
           <button class="sky-btn-secondary full" id="clear-chat-btn"><i class="fas fa-trash-alt"></i> مسح المحادثة</button>
@@ -109,23 +107,28 @@
 
         <div class="sky-chat-header glass-layer">
           <div>
-            <div class="sky-chat-title"><i class="fas fa-comments"></i> جلسة مع SkyOS</div>
+            <div class="sky-chat-title"><i class="fas fa-comments"></i> جلسة مع سماء</div>
             <div class="sky-chat-subtitle">ذكاء هجين واعٍ • يتذكر • يحلل • يتطور</div>
           </div>
 
           <div class="sky-chat-meta">
             <div class="sky-chat-meta-item">
-              <span class="dot"></span>
-              <span id="model-indicator"><i class="fas fa-microchip"></i> النموذج: تلقائي</span>
+              <span class="dot active"></span>
+              <span id="model-indicator"><i class="fas fa-microchip"></i> الموفر: تلقائي</span>
             </div>
             <div class="sky-chat-meta-item">
-              <span class="dot"></span>
-              <span id="session-indicator"><i class="fas fa-id-card"></i> جلسة جديدة</span>
+              <span class="dot session"></span>
+              <span id="session-indicator"><i class="fas fa-id-card"></i> جلسة: افتراضية</span>
             </div>
           </div>
         </div>
 
         <section class="sky-chat-window" id="chat-window"></section>
+
+        <div id="file-preview-bar" class="sky-preview-bar hidden">
+          <span id="preview-file-name"></span>
+          <button id="cancel-upload-btn" class="sky-cancel-btn"><i class="fas fa-times"></i></button>
+        </div>
 
         <footer class="sky-input-bar glass-layer">
           <div class="sky-input-tools">
@@ -134,7 +137,7 @@
             <button class="sky-icon-btn" id="mini-vision-btn" title="التقاط صورة"><i class="fas fa-camera"></i></button>
           </div>
 
-          <textarea id="user-input" class="sky-input" placeholder="اكتب لـ SkyOS..." rows="1"></textarea>
+          <textarea id="user-input" class="sky-input" placeholder="اكتب لـ سماء..." rows="1"></textarea>
 
           <button class="sky-send-btn" id="send-btn">
             <i class="fas fa-paper-plane"></i> <span>إرسال</span>
@@ -148,9 +151,11 @@
     <input type="file" id="hidden-image-input" accept="image/*" hidden />
 
     <div id="toast-container"></div>
-
-    <div id="settings-panel" class="sky-settings hidden"></div>
-    <div id="workspace-panel" class="sky-workspace hidden"></div>
+    
+    <div id="settings-panel" class="sky-settings hidden">
+      </div>
+    <div id="workspace-panel" class="sky-workspace hidden">
+      </div>
 
   </div>
 
@@ -158,13 +163,13 @@
     const SKY_CONFIG = {
       ui_mode: "{{ ui_mode if ui_mode else 'holo' }}",
       endpoints: {
-        ask: "/ask",
-        upload: "/upload",
-        voice: "/voice",
-        vision: "/vision",
-        feedback: "/feedback",
-        clear: "/clear",
-        status: "/api/v1/status"
+        ask: "/api/chat",         // تصحيح فوري ليتوافق مع المسار المعتمد في الـ Backend للـ API Router
+        upload: "/scrape",        // توجيه دالة معالجة روابط المواقع والكشط
+        voice: "/api/chat",       // إرسال كود معالجة المحادثات الصوتية المكتوبة
+        vision: "/api/chat",      // معالجة الصور المباشرة
+        feedback: "/scrape",      // مرن
+        clear: "/os/desktop",
+        status: "/"               // Health Check الرئيسي للسيرفر
       }
     };
   </script>
@@ -175,8 +180,8 @@
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker.register("/service-worker.js")
-          .then(reg => console.log("SkyOS Service Worker Registered Successfully!", reg.scope))
-          .catch(err => console.error("Service Worker Fail:", err));
+          .then(reg => console.log("🚀 SkyOS Holographic Core PWA Ready! Scope:", reg.scope))
+          .catch(err => console.error("❌ PWA Worker Error:", err));
       });
     }
   </script>
