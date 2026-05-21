@@ -1,13 +1,12 @@
 /* ============================================================
    SkyOS v10.0 — Holographic Edition
    Holographic • Liquid • Alive • Intelligent
-   تم تصحيح جميع الأخطاء وتحسين التوافق مع محرك v10
+   تم تحديثه بالكامل لدعم هندسة الجوال 2026 وأزرار التفاعل
    ============================================================ */
 
 /* ------------------------------
    ROOT VARIABLES — Dynamic Theme
    ------------------------------ */
-
 :root {
   --bg: #0a0a14;
   --bg-2: #0f0f1f;
@@ -51,7 +50,6 @@ body.light {
 /* ------------------------------
    GLOBAL RESET
    ------------------------------ */
-
 * {
   margin: 0;
   padding: 0;
@@ -59,17 +57,25 @@ body.light {
 }
 
 html, body {
-  height: 100%;
-  overflow: hidden;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
   font-family: "Cairo", sans-serif;
   background: var(--bg);
   color: var(--text);
 }
 
+#sky-root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+}
+
 /* ------------------------------
    BACKGROUND — Holographic Layers
    ------------------------------ */
-
 .sky-background {
   position: fixed;
   inset: 0;
@@ -111,7 +117,6 @@ html, body {
 /* ------------------------------
    GLASS EFFECT
    ------------------------------ */
-
 .glass-layer {
   background: var(--glass);
   backdrop-filter: blur(18px);
@@ -122,10 +127,9 @@ html, body {
 /* ------------------------------
    TOPBAR
    ------------------------------ */
-
 .sky-topbar {
-  height: 70px;
-  padding: 0 26px;
+  height: 60px;
+  padding: 0 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -136,38 +140,21 @@ html, body {
   position: relative;
 }
 
-.sky-topbar-left {
-  display: flex;
-  align-items: center;
-}
+.sky-topbar-left { display: flex; align-items: center; }
+.sky-topbar-center { display: flex; align-items: center; justify-content: center; }
+.sky-topbar-right { display: flex; align-items: center; gap: 8px; }
 
-.sky-topbar-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.sky-topbar-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.sky-brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
+.sky-brand { display: flex; align-items: center; gap: 12px; }
 
 .sky-logo {
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   border-radius: var(--radius-lg);
   background: linear-gradient(135deg, var(--primary), var(--primary-3));
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.6rem;
+  font-size: 1.3rem;
   color: #fff;
   box-shadow: 0 0 20px var(--primary-3);
   animation: logoPulse 3s infinite ease-in-out;
@@ -175,18 +162,11 @@ html, body {
   overflow: hidden;
 }
 
-.hologram {
-  position: relative;
-  overflow: hidden;
-}
-
+.hologram { position: relative; overflow: hidden; }
 .hologram::before {
   content: '';
   position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
+  top: -50%; left: -50%; width: 200%; height: 200%;
   background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
   transform: rotate(45deg);
   animation: hologramShine 3s infinite;
@@ -199,11 +179,11 @@ html, body {
 
 @keyframes logoPulse {
   0%, 100% { transform: scale(1); box-shadow: 0 0 20px var(--primary-3); }
-  50% { transform: scale(1.08); box-shadow: 0 0 40px var(--primary-2); }
+  50% { transform: scale(1.05); box-shadow: 0 0 30px var(--primary-2); }
 }
 
 .sky-brand-title {
-  font-size: 1.3rem;
+  font-size: 1.1rem;
   font-weight: 700;
   background: linear-gradient(135deg, #fff, var(--primary-3));
   -webkit-background-clip: text;
@@ -211,17 +191,14 @@ html, body {
   color: transparent;
 }
 
-.sky-brand-subtitle {
-  font-size: 0.7rem;
-  color: var(--text-muted);
-}
+.sky-brand-subtitle { font-size: 0.65rem; color: var(--text-muted); }
 
 .sky-status {
   display: flex;
   align-items: center;
   gap: 8px;
   background: var(--glass);
-  padding: 6px 16px;
+  padding: 4px 12px;
   border-radius: 100px;
   border: 1px solid var(--border);
 }
@@ -238,22 +215,18 @@ html, body {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.5; transform: scale(1.2); }
 }
-
-.sky-status-text {
-  font-size: 0.85rem;
-}
+.sky-status-text { font-size: 0.75rem; }
 
 /* ------------------------------
    BUTTONS
    ------------------------------ */
-
 .sky-icon-btn {
   background: var(--glass);
   border: 1px solid var(--border);
   padding: 8px 12px;
   border-radius: 12px;
   cursor: pointer;
-  font-size: 1.1rem;
+  font-size: 1rem;
   transition: var(--transition-fast);
   color: var(--text);
 }
@@ -300,97 +273,68 @@ html, body {
   border-color: var(--primary-3);
 }
 
-.full {
-  width: 100%;
-}
-
 /* ------------------------------
-   LAYOUT
+   LAYOUT & SIDEBAR
    ------------------------------ */
-
 .sky-layout {
   display: flex;
-  height: calc(100vh - 70px);
+  flex: 1;
+  height: calc(100vh - 60px);
   position: relative;
+  overflow: hidden;
   z-index: 5;
 }
 
-/* ------------------------------
-   SIDEBAR
-   ------------------------------ */
-
 .sky-sidebar {
   width: 300px;
-  background: var(--glass);
+  background: #090911;
   border-inline-end: 1px solid var(--border);
-  padding: 24px;
+  padding: 20px;
   overflow-y: auto;
   backdrop-filter: blur(20px);
   z-index: 10;
-  transition: transform 0.3s ease, right 0.3s ease, left 0.3s ease;
+  display: flex;
+  flex-direction: column;
 }
 
-.sky-sidebar-section {
-  margin-bottom: 28px;
-}
-
+.sky-sidebar-section { margin-bottom: 20px; }
 .sky-sidebar-title {
   font-size: 0.75rem;
   color: var(--text-muted);
-  margin-bottom: 12px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
+  margin-bottom: 10px;
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.sky-session-list {
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.sky-session-empty {
-  text-align: center;
-  opacity: 0.5;
-  padding: 20px;
-  font-size: 0.8rem;
-}
+.sky-session-list { max-height: 240px; overflow-y: auto; }
+.sky-session-empty { text-align: center; opacity: 0.5; padding: 15px; font-size: 0.8rem; }
 
 .session-item {
-  padding: 10px 14px;
+  padding: 10px 12px;
   border-radius: var(--radius);
-  background: transparent;
-  border: 1px solid transparent;
   color: var(--text-soft);
   cursor: pointer;
   transition: var(--transition);
   margin-bottom: 6px;
   font-size: 0.85rem;
+  border: 1px solid transparent;
 }
 
 .session-item:hover {
   background: var(--glass-strong);
   border-color: var(--primary-3);
-  transform: translateY(-2px);
 }
 
-/* تمكين مظهر الجلسة النشطة المستدعى بالـ JS */
 .session-item.active {
   background: var(--glass-strong);
   border-color: var(--accent);
   box-shadow: 0 0 10px rgba(0, 234, 255, 0.15);
 }
 
-.session-item small {
-  font-size: 0.7rem;
-  color: var(--text-muted);
-}
-
 /* ------------------------------
-   MAIN CHAT AREA
+   MAIN CHAT WINDOW
    ------------------------------ */
-
 .sky-main {
   flex: 1;
   display: flex;
@@ -398,17 +342,19 @@ html, body {
   background: transparent;
   position: relative;
   z-index: 5;
+  padding-bottom: 90px; /* ترك مساحة مريحة لحقل الإدخال السفلي الصاعد */
+  box-sizing: border-box;
 }
 
 .sky-chat-header {
-  padding: 20px 26px;
+  padding: 15px 20px;
   background: var(--glass);
   border-bottom: 1px solid var(--border);
   backdrop-filter: blur(20px);
 }
 
 .sky-chat-title {
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   font-weight: 700;
   background: linear-gradient(135deg, var(--text), var(--primary-3));
   -webkit-background-clip: text;
@@ -416,74 +362,22 @@ html, body {
   color: transparent;
 }
 
-.sky-chat-subtitle {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  margin-top: 4px;
-}
-
-.sky-chat-meta {
-  display: flex;
-  gap: 20px;
-  margin-top: 12px;
-}
-
-.sky-chat-meta-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.7rem;
-  color: var(--text-muted);
-}
-
-.dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--primary-3);
-}
-
-/* ------------------------------
-   CHAT WINDOW
-   ------------------------------ */
+.sky-chat-subtitle { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+.sky-chat-meta { display: flex; gap: 15px; margin-top: 8px; }
+.sky-chat-meta-item { display: flex; align-items: center; gap: 6px; font-size: 0.7rem; color: var(--text-muted); }
 
 .sky-chat-window {
   flex: 1;
-  padding: 26px;
-  overflow-y: auto;
-  position: relative;
+  padding: 20px;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
 }
 
-.sky-chat-window::-webkit-scrollbar {
-  width: 6px;
-}
-
-.sky-chat-window::-webkit-scrollbar-track {
-  background: var(--glass);
-  border-radius: 10px;
-}
-
-.sky-chat-window::-webkit-scrollbar-thumb {
-  background: var(--primary);
-  border-radius: 10px;
-}
-
-.sky-chat-window.drag-over {
-  border: 2px dashed var(--primary-3);
-  background: var(--glass);
-}
-
-/* Message Rows */
-.message-row {
-  display: flex;
-  gap: 14px;
-  margin-bottom: 22px;
-  animation: fadeIn 0.25s ease-out;
-}
-
-.message-row.user {
-  flex-direction: row-reverse;
-}
+/* ------------------------------
+   MESSAGE BUBBLES
+   ------------------------------ */
+.message-row { display: flex; gap: 12px; margin-bottom: 20px; animation: fadeIn 0.25s ease-out; }
+.message-row.user { flex-direction: row-reverse; }
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(6px); }
@@ -491,420 +385,186 @@ html, body {
 }
 
 .avatar {
-  width: 46px;
-  height: 46px;
-  border-radius: var(--radius-lg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.3rem;
-  color: #fff;
-  box-shadow: 0 0 20px rgba(124, 58, 237, 0.4);
-  flex-shrink: 0;
+  width: 42px; height: 42px; border-radius: var(--radius-lg);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; color: #fff; box-shadow: 0 0 15px rgba(124, 58, 237, 0.3); flex-shrink: 0;
 }
+.assistant-avatar { background: linear-gradient(135deg, var(--primary), var(--primary-3)); }
+.user-avatar { background: linear-gradient(135deg, #374151, #111827); }
 
-.assistant-avatar {
-  background: linear-gradient(135deg, var(--primary), var(--primary-3));
-}
-
-.user-avatar {
-  background: linear-gradient(135deg, #374151, #111827);
-}
-
-/* Message Bubble */
 .message-bubble {
-  max-width: 75%;
-  padding: 16px 20px;
-  border-radius: var(--radius-lg);
-  background: var(--glass);
-  border: 1px solid var(--border);
-  backdrop-filter: blur(14px);
-  box-shadow: var(--shadow);
-  animation: bubbleAppear 0.25s ease-out;
+  max-width: 80%; padding: 14px 18px; border-radius: var(--radius-lg);
+  background: var(--glass); border: 1px solid var(--border);
+  backdrop-filter: blur(14px); box-shadow: var(--shadow);
 }
 
-.message-row.user .message-bubble {
-  background: linear-gradient(135deg, var(--primary), var(--primary-2));
-  border: none;
-}
+.message-row.user .message-bubble { background: linear-gradient(135deg, var(--primary), var(--primary-2)); border: none; }
+.message-row.user .message-bubble .message-header .message-author { color: rgba(255,255,255,0.9); }
+.message-row.user .message-content { color: white; }
 
-.message-row.user .message-bubble .message-header .message-author {
-  color: rgba(255,255,255,0.9);
-}
-
-.message-row.user .message-content {
-  color: white;
-}
-
-@keyframes bubbleAppear {
-  from { transform: scale(0.96); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
-
-.message-header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
-  font-size: 0.7rem;
-  color: var(--text-muted);
-}
-
-.message-author {
-  font-weight: 600;
-  color: var(--primary-3);
-}
-
-.message-content {
-  line-height: 1.6;
-  font-size: 0.9rem;
-}
-
-.message-content a {
-  color: var(--primary-3);
-  text-decoration: none;
-}
-
-.message-content a:hover {
-  text-decoration: underline;
-}
-
-.message-content p {
-  margin-bottom: 8px;
-}
-
-.message-content p:last-child {
-  margin-bottom: 0;
-}
+.message-header { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.7rem; color: var(--text-muted); }
+.message-author { font-weight: 600; color: var(--primary-3); }
+.message-content { line-height: 1.6; font-size: 0.9rem; word-break: break-word; }
 
 /* ------------------------------
-   CODE FORMATTING (تمت إضافتها للمزامنة مع الـ JS Engine)
+   إصلاح وعزل كتل الأكواد البرمجية (الجوال والكمبيوتر)
    ------------------------------ */
-
 .sky-code-block {
-  background: #05050d;
-  border: 1px solid var(--border);
-  padding: 14px;
-  border-radius: 10px;
-  font-family: "Courier New", Courier, monospace;
-  font-size: 0.85rem;
-  color: #a7f3d0;
-  overflow-x: auto;
-  margin: 10px 0;
-  direction: ltr;
-  text-align: left;
+  background: #1e1e2f !important;
+  border-left: 4px solid #6366f1 !important;
+  padding: 12px !important;
+  margin: 12px 0 !important;
+  border-radius: 8px !important;
+  overflow-x: auto !important; /* تفعيل سحب الكود أفقياً يميناً ويساراً */
+  display: block !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
 }
 
-body.light .sky-code-block {
-  background: #f3f4f6;
-  color: #065f46;
+.sky-code-block code {
+  direction: ltr !important; /* إجبار الكود البرمجي على الاتجاه الأجنبي */
+  text-align: left !important;
+  display: block !important;
+  white-space: pre !important;
+  font-family: 'Courier New', Courier, monospace !important;
+  color: #f8fafc !important;
+  font-size: 13.5px !important;
 }
 
 .sky-inline-code {
-  background: rgba(124, 58, 237, 0.15);
-  color: var(--primary-3);
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-family: monospace;
+  background: rgba(99, 102, 241, 0.2) !important;
+  color: #f43f5e !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+  font-family: monospace !important;
   font-size: 0.85rem;
-  direction: ltr;
-  display: inline-block;
+  direction: ltr !important;
+  display: inline-block !important;
 }
 
-/* Typing Indicator */
-.typing-indicator {
+/* ------------------------------
+   أزرار التفاعل الجديدة تحت الرسائل
+   ------------------------------ */
+.msg-action-bar {
   display: flex;
-  gap: 6px;
-  align-items: center;
-}
-
-.typing-indicator span {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--primary-3);
-  animation: typingBounce 1.4s infinite;
-}
-
-.typing-indicator span:nth-child(1) { animation-delay: 0s; }
-.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
-.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
-
-@keyframes typingBounce {
-  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-  30% { transform: translateY(-10px); opacity: 1; }
-}
-
-/* Feedback Buttons */
-.message-feedback {
-  display: flex;
-  gap: 12px;
-  margin-top: 12px;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
   padding-top: 8px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.feedback-btn {
+.msg-action-btn {
   background: none;
   border: none;
+  color: #94a3b8;
   cursor: pointer;
-  color: var(--text-muted);
-  transition: var(--transition-fast);
   font-size: 0.8rem;
+  font-family: 'Cairo', sans-serif;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
+  transition: color 0.2s, transform 0.1s;
 }
-
-.feedback-btn:hover {
-  color: var(--primary-3);
-  transform: scale(1.05);
-}
+.msg-action-btn:hover { color: var(--primary-3); transform: scale(1.02); }
 
 /* ------------------------------
-   INPUT BAR
+   تحديث وتأمين حقل الكتابة وزر السهم
    ------------------------------ */
-
 .sky-input-bar {
-  padding: 16px 26px;
-  background: var(--glass-strong);
-  border-top: 1px solid var(--border);
-  backdrop-filter: blur(20px);
-  display: flex;
-  gap: 12px;
-  align-items: flex-end;
+  position: fixed !important;
+  bottom: env(safe-area-inset-bottom, 15px) !important; /* رفعه حمايةً من أزرار تصفح الجوال الأساسية */
+  left: 10px !important;
+  right: 10px !important;
+  width: calc(100% - 20px) !important;
+  z-index: 9995 !important;
+  background: rgba(15, 15, 25, 0.95) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 16px !important;
+  padding: 10px 12px !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(12px);
 }
 
-.sky-input-tools {
-  display: flex;
-  gap: 8px;
-}
+body.light .sky-input-bar { background: rgba(255, 255, 255, 0.95) !important; }
 
 .sky-input {
-  flex: 1;
-  padding: 12px 20px;
-  border-radius: 24px; /* تحويلها لتصميم مرن بدلاً من الدائري المطلق ليناسب الأسطر المتعددة */
-  border: 1px solid var(--border);
-  background: var(--bg-2);
-  color: var(--text);
-  resize: none;
-  transition: var(--transition-fast);
+  flex: 1 !important;
+  min-width: 0 !important;
+  padding: 10px 12px !important;
+  border-radius: 10px !important;
+  border: 1px solid var(--border) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: inherit !important;
+  resize: none !important;
   font-family: inherit;
-  font-size: 0.9rem;
-  max-height: 180px; /* الارتفاع الأقصى قبل التمرير الداخلي */
-  overflow-y: auto;
+  font-size: 0.95rem !important;
+  max-height: 140px !important;
 }
 
-.sky-input:focus {
-  outline: none;
-  border-color: var(--primary-3);
-  box-shadow: 0 0 12px var(--primary-2);
-}
-
+/* تكبير زر الإرسال وتحويله إلى سهم أبيض دائري احترافي */
 .sky-send-btn {
-  padding: 14px 26px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, var(--primary), var(--primary-3));
-  color: #fff;
-  border: none;
-  cursor: pointer;
-  font-weight: 700;
-  transition: var(--transition-fast);
-  box-shadow: 0 0 20px rgba(124, 58, 237, 0.4);
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  background: #6366f1 !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4) !important;
 }
-
-.sky-send-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 0 30px rgba(124, 58, 237, 0.6);
-}
+.sky-send-btn span { display: none !important; } /* إلغاء النص */
+.sky-send-btn i { font-size: 16px !important; transform: rotate(180deg); } /* لف السهم ليناسب الكتابة العربية */
 
 /* ------------------------------
-   TOASTS
+   PANELS & TOASTS
    ------------------------------ */
-
-#toast-container {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 1000;
+.sky-settings, .sky-workspace {
+  position: fixed; top: 70px; right: 20px; width: 340px;
+  max-height: calc(100vh - 100px); background: #111122;
+  border: 1px solid var(--border); border-radius: var(--radius-lg);
+  padding: 16px; z-index: 200; overflow-y: auto;
 }
+.sky-settings.hidden, .sky-workspace.hidden { display: none !important; }
 
+.sky-settings-box h4 { margin: 0 0 10px 0; font-size: 15px; color: #6366f1; }
+.settings-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 14px; }
+.settings-row select { background: #22223b; color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 6px; font-family: 'Cairo'; }
+
+#toast-container { position: fixed; bottom: 85px; right: 20px; z-index: 10000; }
 .toast {
-  background: var(--glass-strong);
-  border: 1px solid var(--border);
-  padding: 12px 20px;
-  border-radius: var(--radius);
-  backdrop-filter: blur(14px);
-  box-shadow: var(--shadow);
-  color: var(--text-soft);
-  animation: toastIn 0.25s ease-out;
-  margin-top: 10px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 0.85rem;
-  transition: opacity 0.25s ease, transform 0.25s ease;
-}
-
-@keyframes toastIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  background: rgba(20, 20, 35, 0.95); border: 1px solid var(--border);
+  padding: 10px 16px; border-radius: var(--radius); color: #fff;
+  margin-top: 8px; display: flex; align-items: center; font-size: 0.85rem;
 }
 
 /* ------------------------------
-   PANELS (Settings + Workspace — تم تعديلها لتتوافق مع الـ JS .hidden toggle)
+   RESPONSIVE (شاشات الجوال والتوافق السلس)
    ------------------------------ */
-
-.sky-settings,
-.sky-workspace {
-  position: fixed;
-  top: 80px;
-  right: 20px;
-  width: 360px;
-  max-height: calc(100vh - 100px);
-  background: var(--glass-strong);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 20px;
-  backdrop-filter: blur(20px);
-  box-shadow: var(--shadow);
-  opacity: 1;
-  transition: opacity 0.25s ease, transform 0.25s ease;
-  z-index: 200;
-  overflow-y: auto;
-  display: block; /* الحالة الافتراضية مرئية والتحكم بالطمس والإخفاء التام عبر كلاس .hidden */
-}
-
-/* التوافق الكامل مع دالة التبديل السريع للجافا سكريبت */
-.sky-settings.hidden,
-.sky-workspace.hidden {
-  display: none !important;
-  opacity: 0;
-  pointer-events: none;
-}
-
-/* ------------------------------
-   RESPONSIVE
-   ------------------------------ */
-
 @media (max-width: 768px) {
-  .sky-topbar {
-    padding: 0 16px;
-  }
-  
   .sky-sidebar {
-    position: fixed;
-    right: -300px;
-    top: 70px;
-    height: calc(100vh - 70px);
-    z-index: 100;
+    position: fixed !important;
+    top: 60px !important;
+    right: -100% !important; /* مخفي افتراضياً لليمين */
+    width: 280px !important;
+    height: calc(100vh - 60px) !important;
+    z-index: 9999 !important;
+    transition: right 0.3s ease-in-out !important;
+    box-shadow: -5px 0 25px rgba(0,0,0,0.7) !important;
   }
-  
-  .sky-sidebar.open {
-    right: 0;
+  /* الكلاس المتوافق تماماً مع الجافا سكريبت حالياً */
+  .sky-sidebar.mobile-show {
+    right: 0 !important;
   }
-  
-  .sky-brand-title {
-    font-size: 1rem;
-  }
-  
-  .sky-brand-subtitle {
-    display: none;
-  }
-  
-  .sky-status-text {
-    display: none;
-  }
-  
-  .sky-status {
-    padding: 6px 10px;
+  .sky-settings, .sky-workspace {
+    width: calc(100% - 30px); right: 15px; left: 15px;
   }
 }
-
-@media (max-width: 600px) {
-  .sky-topbar {
-    padding: 0 12px;
-  }
-  
-  .sky-chat-window {
-    padding: 16px;
-  }
-  
-  .sky-chat-header {
-    padding: 12px 16px;
-  }
-  
-  .sky-input-bar {
-    padding: 12px 16px;
-  }
-  
-  .message-bubble {
-    max-width: 85%;
-    padding: 12px 14px;
-  }
-  
-  .avatar {
-    width: 36px;
-    height: 36px;
-    font-size: 1rem;
-  }
-  
-  .sky-settings,
-  .sky-workspace {
-    width: calc(100% - 40px);
-    right: 20px;
-    left: 20px;
-  }
-  
-  .sky-send-btn span {
-    display: none;
-  }
-  
-  .sky-send-btn {
-    padding: 14px 18px;
-  }
-}
-
-@media (max-width: 480px) {
-  .sky-chat-title {
-    font-size: 1rem;
-  }
-  
-  .sky-chat-subtitle {
-    font-size: 0.65rem;
-  }
-  
-  .sky-chat-meta {
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  
-  .sky-input-tools .sky-icon-btn {
-    padding: 6px 8px;
-  }
-}
-
-/* ------------------------------
-   ANIMATIONS & UTILITIES
-   ------------------------------ */
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-/* تحسين انتقال سلس للثيم */
-body {
-  transition: background 0.3s ease, color 0.3s ease;
-}
-
-* {
-  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-  }
