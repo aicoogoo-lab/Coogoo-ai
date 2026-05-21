@@ -160,15 +160,21 @@
     el.style.height = Math.min(el.scrollHeight, 180) + "px";
   }
 
+  // تم إصلاح الدالة لحماية الأسطر البرمجية والمسافات داخل قوالب الكود من التلف
   function sanitizeAndFormat(text) {
     if (!text) return "";
     const div = document.createElement("div");
     div.textContent = text;
     let safe = div.innerHTML;
 
-    // معالجة قوالب الأكواد البرمجية الكبيرة (Code Blocks)
-    safe = safe.replace(/```([\s\S]*?)```/g, '<pre class="sky-code-block"><code>$1</code></pre>');
-    
+    // مصفوفة مؤقتة لحفظ الأكواد ومنع تأثير الـ <br/> عليها
+    const codeBlocks = [];
+    safe = safe.replace(/```([\s\S]*?)```/g, (match, code) => {
+      const id = `__SKY_CODE_BLOCK_${codeBlocks.length}__`;
+      codeBlocks.push(`<pre class="sky-code-block"><code>${code}</code></pre>`);
+      return id;
+    });
+
     // معالجة الأكواد البرمجية السطرية (Inline Code)
     safe = safe.replace(/`([^`]+)`/g, '<code class="sky-inline-code">$1</code>');
 
@@ -178,10 +184,16 @@
       (m) => `<a href="${m}" target="_blank" rel="noopener noreferrer" style="color: var(--primary-3); text-decoration: underline;">${m}</a>`
     );
     
-    // التنسيقات العادية
+    // التنسيقات العادية للمنصوص
     safe = safe.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
     safe = safe.replace(/\*(.*?)\*/g, "<em>$1</em>");
     safe = safe.replace(/\n{2,}/g, "</p><p>").replace(/\n/g, "<br/>");
+    
+    // إعادة قوالب الأكواد البرمجية الأصلية سليمة بدون وسم <br/>
+    codeBlocks.forEach((block, index) => {
+      safe = safe.replace(`__SKY_CODE_BLOCK_${index}__`, block);
+    });
+
     return `<p>${safe}</p>`;
   }
 
@@ -585,7 +597,6 @@
           sendMessage(userInput.value);
         }
       });
-      // تفعيل توسيع صندوق الكتابة ديناميكياً مع المدخلات
       userInput.addEventListener("input", () => autoResizeTextarea(userInput));
     }
 
@@ -623,13 +634,25 @@
     }
   }
 
+  // محرك تفعيل الـ PWA لضمان العمل أوفلاين
+  function registerPWA() {
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/static/service-worker.js')
+          .then(reg => console.log('SkyOS Core: تم ربط الـ Service Worker بنجاح!'))
+          .catch(err => console.error('PWA Error: فشل تسجيل محرك الأوفلاين:', err));
+      });
+    }
+  }
+
   // ========== System Boot ==========
   document.addEventListener("DOMContentLoaded", () => {
     setSession(sessionId);
     loadLocalHistory();
     renderSessionList();
     initEvents();
-    if (userInput) autoResizeTextarea(userInput); // تهيئة أولية لحجم الصندوق
+    registerPWA(); // حقن التسجيل أثناء إقلاع النظام
+    if (userInput) autoResizeTextarea(userInput);
     pingStatus();
     setInterval(pingStatus, 30000);
   });
