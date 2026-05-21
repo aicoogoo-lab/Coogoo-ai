@@ -4,47 +4,37 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <meta name="theme-color" content="#0a0a14" />
-  <meta name="description" content="SkyOS v9.0 — PWA Hybrid Intelligence System" />
-  <title>SkyOS v9.0 — PWA Edition</title>
+  <meta name="description" content="SkyOS v10 — Holographic PWA Intelligence System" />
+  <title>SkyOS v10 — Holographic Edition</title>
 
-  <!-- PWA Manifest -->
-  <link rel="manifest" href="/static/manifest.json" />
+  <link rel="manifest" href="/manifest.json" />
 
-  <!-- iOS Support -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-  <link rel="apple-touch-icon" href="/static/icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192.png') if url_for else '/static/icons/icon-192.png' }}" />
 
-  <!-- Performance Boost -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-  <!-- Cairo Font -->
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 
-  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
-  <!-- Main CSS -->
-  <link rel="stylesheet" href="/static/css/style.css" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') if url_for else '/static/css/style.css' }}" />
 
-  <!-- Preload JS -->
-  <link rel="preload" href="/static/js/script.js" as="script" />
+  <link rel="preload" href="{{ url_for('static', filename='js/script.js') if url_for else '/static/js/script.js' }}" as="script" />
 </head>
 
-<body class="dark">
+<body class="dark sky-mode-{{ ui_mode if ui_mode else 'holo' }}">
 
-  <!-- Background -->
   <div class="sky-background">
     <div class="sky-gradient"></div>
     <div class="sky-glow-layer"></div>
     <canvas id="sky-particles" class="sky-canvas"></canvas>
   </div>
 
-  <!-- Root -->
   <div id="sky-root">
 
-    <!-- Topbar -->
     <header class="sky-topbar glass-layer">
       <div class="sky-topbar-left">
         <div class="sky-brand">
@@ -52,8 +42,8 @@
             <i class="fas fa-brain"></i>
           </div>
           <div class="sky-brand-text">
-            <div class="sky-brand-title">SkyOS v9.0</div>
-            <div class="sky-brand-subtitle">PWA Hybrid Intelligence</div>
+            <div class="sky-brand-title">SkyOS v10</div>
+            <div class="sky-brand-subtitle">Holographic Intelligence</div>
           </div>
         </div>
       </div>
@@ -66,16 +56,14 @@
       </div>
 
       <div class="sky-topbar-right">
-        <button class="sky-icon-btn" id="menu-toggle"><i class="fas fa-bars"></i></button>
-        <button class="sky-icon-btn" id="toggle-theme-btn"><i class="fas fa-moon"></i></button>
-        <button class="sky-icon-btn" id="open-settings-btn"><i class="fas fa-cog"></i></button>
+        <button class="sky-icon-btn" id="menu-toggle" title="القائمة"><i class="fas fa-bars"></i></button>
+        <button class="sky-icon-btn" id="toggle-theme-btn" title="المظهر"><i class="fas fa-moon"></i></button>
+        <button class="sky-icon-btn" id="open-settings-btn" title="الإعدادات"><i class="fas fa-cog"></i></button>
       </div>
     </header>
 
-    <!-- Layout -->
     <div class="sky-layout">
 
-      <!-- Sidebar -->
       <aside class="sky-sidebar glass-layer" id="sidebar">
 
         <div class="sky-sidebar-section">
@@ -117,7 +105,6 @@
 
       </aside>
 
-      <!-- Main Chat -->
       <main class="sky-main">
 
         <div class="sky-chat-header glass-layer">
@@ -142,9 +129,9 @@
 
         <footer class="sky-input-bar glass-layer">
           <div class="sky-input-tools">
-            <button class="sky-icon-btn" id="mini-upload-btn"><i class="fas fa-paperclip"></i></button>
-            <button class="sky-icon-btn" id="mini-voice-btn"><i class="fas fa-microphone"></i></button>
-            <button class="sky-icon-btn" id="mini-vision-btn"><i class="fas fa-camera"></i></button>
+            <button class="sky-icon-btn" id="mini-upload-btn" title="إرفاق ملف"><i class="fas fa-paperclip"></i></button>
+            <button class="sky-icon-btn" id="mini-voice-btn" title="تسجيل صوتي"><i class="fas fa-microphone"></i></button>
+            <button class="sky-icon-btn" id="mini-vision-btn" title="التقاط صورة"><i class="fas fa-camera"></i></button>
           </div>
 
           <textarea id="user-input" class="sky-input" placeholder="اكتب لـ SkyOS..." rows="1"></textarea>
@@ -157,22 +144,19 @@
       </main>
     </div>
 
-    <!-- Hidden Inputs -->
     <input type="file" id="hidden-audio-input" accept="audio/*" hidden />
     <input type="file" id="hidden-image-input" accept="image/*" hidden />
 
-    <!-- Toasts -->
     <div id="toast-container"></div>
 
-    <!-- Panels -->
     <div id="settings-panel" class="sky-settings hidden"></div>
     <div id="workspace-panel" class="sky-workspace hidden"></div>
 
   </div>
 
-  <!-- Config -->
   <script>
     const SKY_CONFIG = {
+      ui_mode: "{{ ui_mode if ui_mode else 'holo' }}",
       endpoints: {
         ask: "/ask",
         upload: "/upload",
@@ -185,13 +169,15 @@
     };
   </script>
 
-  <!-- Main JS -->
-  <script src="/static/js/script.js" defer></script>
+  <script src="{{ url_for('static', filename='js/script.js') if url_for else '/static/js/script.js' }}" defer></script>
 
-  <!-- Register Service Worker -->
   <script>
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/static/service-worker.js");
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/service-worker.js")
+          .then(reg => console.log("SkyOS Service Worker Registered Successfully!", reg.scope))
+          .catch(err => console.error("Service Worker Fail:", err));
+      });
     }
   </script>
 
