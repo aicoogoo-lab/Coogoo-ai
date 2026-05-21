@@ -11,9 +11,9 @@ flask-jwt-extended==4.6.0
 flask-limiter==3.8.0
 
 # ====================== AI & Embeddings (Render Safe Build) ======================
---find-links https://download.pytorch.org/whl/cpu
-torch==2.2.2+cpu
+torch==2.2.2
 sentence-transformers==3.1.1
+huggingface-hub==0.23.0
 scikit-learn==1.5.2
 numpy==1.26.4
 
