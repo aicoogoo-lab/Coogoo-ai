@@ -1,7 +1,7 @@
 /* ============================================================
-   SkyOS v7.2 — Crown Edition
+   SkyOS v10.0 — Holographic Edition
    Holographic • Liquid • Alive • Intelligent
-   تم تصحيح جميع الأخطاء وتحسين التوافق
+   تم تصحيح جميع الأخطاء وتحسين التوافق مع محرك v10
    ============================================================ */
 
 /* ------------------------------
@@ -327,7 +327,7 @@ html, body {
   overflow-y: auto;
   backdrop-filter: blur(20px);
   z-index: 10;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, right 0.3s ease, left 0.3s ease;
 }
 
 .sky-sidebar-section {
@@ -373,6 +373,13 @@ html, body {
   background: var(--glass-strong);
   border-color: var(--primary-3);
   transform: translateY(-2px);
+}
+
+/* تمكين مظهر الجلسة النشطة المستدعى بالـ JS */
+.session-item.active {
+  background: var(--glass-strong);
+  border-color: var(--accent);
+  box-shadow: 0 0 10px rgba(0, 234, 255, 0.15);
 }
 
 .session-item small {
@@ -569,6 +576,40 @@ html, body {
   margin-bottom: 0;
 }
 
+/* ------------------------------
+   CODE FORMATTING (تمت إضافتها للمزامنة مع الـ JS Engine)
+   ------------------------------ */
+
+.sky-code-block {
+  background: #05050d;
+  border: 1px solid var(--border);
+  padding: 14px;
+  border-radius: 10px;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.85rem;
+  color: #a7f3d0;
+  overflow-x: auto;
+  margin: 10px 0;
+  direction: ltr;
+  text-align: left;
+}
+
+body.light .sky-code-block {
+  background: #f3f4f6;
+  color: #065f46;
+}
+
+.sky-inline-code {
+  background: rgba(124, 58, 237, 0.15);
+  color: var(--primary-3);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.85rem;
+  direction: ltr;
+  display: inline-block;
+}
+
 /* Typing Indicator */
 .typing-indicator {
   display: flex;
@@ -640,8 +681,8 @@ html, body {
 
 .sky-input {
   flex: 1;
-  padding: 14px 20px;
-  border-radius: 999px;
+  padding: 12px 20px;
+  border-radius: 24px; /* تحويلها لتصميم مرن بدلاً من الدائري المطلق ليناسب الأسطر المتعددة */
   border: 1px solid var(--border);
   background: var(--bg-2);
   color: var(--text);
@@ -649,6 +690,8 @@ html, body {
   transition: var(--transition-fast);
   font-family: inherit;
   font-size: 0.9rem;
+  max-height: 180px; /* الارتفاع الأقصى قبل التمرير الداخلي */
+  overflow-y: auto;
 }
 
 .sky-input:focus {
@@ -702,15 +745,16 @@ html, body {
   align-items: center;
   gap: 10px;
   font-size: 0.85rem;
+  transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
 @keyframes toastIn {
-  from { opacity: 0; transform: translateX(20px); }
-  to { opacity: 1; transform: translateX(0); }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* ------------------------------
-   PANELS (Settings + Workspace)
+   PANELS (Settings + Workspace — تم تعديلها لتتوافق مع الـ JS .hidden toggle)
    ------------------------------ */
 
 .sky-settings,
@@ -726,24 +770,19 @@ html, body {
   padding: 20px;
   backdrop-filter: blur(20px);
   box-shadow: var(--shadow);
-  opacity: 0;
-  transform: translateY(20px);
-  pointer-events: none;
-  transition: var(--transition);
+  opacity: 1;
+  transition: opacity 0.25s ease, transform 0.25s ease;
   z-index: 200;
   overflow-y: auto;
+  display: block; /* الحالة الافتراضية مرئية والتحكم بالطمس والإخفاء التام عبر كلاس .hidden */
 }
 
-.sky-settings.visible,
-.sky-workspace.visible {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
-}
-
+/* التوافق الكامل مع دالة التبديل السريع للجافا سكريبت */
 .sky-settings.hidden,
 .sky-workspace.hidden {
-  display: none;
+  display: none !important;
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* ------------------------------
@@ -761,7 +800,6 @@ html, body {
     top: 70px;
     height: calc(100vh - 70px);
     z-index: 100;
-    transition: right 0.3s ease;
   }
   
   .sky-sidebar.open {
@@ -862,16 +900,7 @@ html, body {
   100% { background-position: 200% 0; }
 }
 
-/* تحسين للوضع الداكن */
-body.dark {
-  --bg: #0a0a14;
-}
-
-body.light {
-  --bg: #f5f6ff;
-}
-
-/* انتقال سلس للثيم */
+/* تحسين انتقال سلس للثيم */
 body {
   transition: background 0.3s ease, color 0.3s ease;
 }
