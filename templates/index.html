@@ -11,17 +11,16 @@
 
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-  <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192.png') if url_for else '/static/icons/icon-192.png' }}" />
+  <link rel="apple-touch-icon" href="/static/icons/icon-192.png" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') if url_for else '/static/css/style.css' }}" />
   <link rel="stylesheet" href="/static/css/style.css" />
 
-  <link rel="preload" href="{{ url_for('static', filename='js/script.js') if url_for else '/static/js/script.js' }}" as="script" />
+  <link rel="preload" href="/static/js/script.js" as="script" />
 </head>
 
 <body class="dark sky-mode-{{ ui_mode if ui_mode else 'holo' }}">
@@ -173,7 +172,6 @@
     };
   </script>
 
-  <script src="{{ url_for('static', filename='js/script.js') if url_for else '/static/js/script.js' }}" defer></script>
   <script src="/static/js/script.js" defer></script>
 
   <script>
