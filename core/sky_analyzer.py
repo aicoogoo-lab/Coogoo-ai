@@ -1,17 +1,13 @@
 """
-Sky Analyzer v5.0 — محرك التحليل الذكي المتكامل لسماء
+Sky Analyzer v10.0 — محرك التحليل الذكي المتكامل لسماء (Holographic Core)
 By Driving & Copilot — 2026
 
-مميزات النسخة:
-- تحليل روابط متقدم + تنظيف ذكي + استخراج metadata
+مميزات النسخة المحدثة:
+- تنظيف ذكي آمن للأكواد والروابط والرموز الهيكلية
 - OCR عربي/إنجليزي محسّن (Adaptive OCR Engine)
-- Gemini Vision + fallback OCR
-- تحليل ملفات شامل (PDF, DOCX, TXT, Code, JSON…)
-- استخراج معرفة دائمة + حقنها في الذاكرة
-- تكامل كامل مع memory.py v5.0
-- تكامل مع sky_core.py v5.0 (الشخصية + الوعي)
-- نظام Retry احترافي
-- نظام Logging عالمي
+- Gemini Vision المحسن + fallback OCR
+- تحليل ملفات شامل وحماية المسافات والسطور
+- تكامل كامل وثابت مع memory.py v10.0
 """
 
 import requests
@@ -40,22 +36,25 @@ try:
 except ImportError:
     OCR_AVAILABLE = False
 
-# استيراد الذاكرة
+# إصلاح استيراد الذاكرة ليتوافق مع وجود الملف داخل حزمة core
 try:
-    from memory import save_knowledge, save_url_analysis
-except:
-    def save_knowledge(*a, **k): return False
-    def save_url_analysis(*a, **k): return False
+    from core.memory import save_knowledge, save_url_analysis
+except ImportError:
+    try:
+        from memory import save_knowledge, save_url_analysis
+    except ImportError:
+        def save_knowledge(*a, **k): return False
+        def save_url_analysis(*a, **k): return False
 
 logger = logging.getLogger("SkyAnalyzer")
 
 
 # ============================================================
-# 1) Sky Analyzer — النسخة الجديدة
+# 1) Sky Analyzer — النسخة v10.0
 # ============================================================
 
 class SkyAnalyzer:
-    """محرك التحليل الذكي المتقدم لسماء — النسخة v5.0"""
+    """محرك التحليل الذكي المتقدم لسماء — النسخة v10.0"""
 
     def __init__(self):
         self.headers = {
@@ -69,14 +68,16 @@ class SkyAnalyzer:
         self.session.headers.update(self.headers)
 
     # ========================================================
-    # 2) تنظيف النصوص
+    # 2) تنظيف النصوص (مُعدّل ومحمي لدعم الأكواد والروابط)
     # ========================================================
 
     def clean_text(self, text: str) -> str:
         if not text:
             return ""
-        text = re.sub(r'\s+', ' ', text)
-        text = re.sub(r'[^\w\s\.\!\?\,\:\;\-\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]', ' ', text)
+        # إزالة المسافات المكررة الشاذة مع الإبقاء على قفزات السطور الهيكلية للأكواد
+        text = re.sub(r'[ \t]+', ' ', text)
+        # تم توسيع النطاق لحماية علامات الأكواد والروابط البرمجية حماية تامة
+        text = re.sub(r'[^\w\s\.\!\?\,\:\;\-\=\+\*\/\\\'\"\`\{\}\[\]\(\)\<\>\#\@\$\%\^\&\~\|\u0600-\u06FF]', ' ', text)
         return text.strip()
 
     # ========================================================
@@ -216,7 +217,7 @@ class SkyAnalyzer:
             return ""
 
     # ========================================================
-    # 6) Gemini Vision
+    # 6) Gemini Vision Engine
     # ========================================================
 
     def analyze_image_with_gemini(self, image_path: str, api_key: str) -> Dict:
@@ -227,6 +228,7 @@ class SkyAnalyzer:
             with open(image_path, "rb") as f:
                 img_data = base64.b64encode(f.read()).decode("utf-8")
 
+            # الحفاظ على الإصدار v1beta المستقر لمعالجة الـ Inline Data الفورية وبأقصى سرعة لنسخة v10
             url = (
                 "https://generativelanguage.googleapis.com/v1beta/models/"
                 "gemini-1.5-flash:generateContent?key=" + api_key
@@ -237,9 +239,9 @@ class SkyAnalyzer:
                     "parts": [
                         {
                             "text": (
-                                "أنتِ سماء. صفّي هذه الصورة بدقة عالية. "
-                                "استخرجي النصوص العربية والإنجليزية، "
-                                "وصفّي العناصر، الألوان، والسياق."
+                                "أنتِ سماء. نظام الذكاء الاصطناعي الهولوغرافي. صفّي هذه الصورة بدقة عالية وعميقة. "
+                                "استخرجي كل النصوص والرموز والأكواد العربية والإنجليزية بدقة متناهية، "
+                                "وحللي العناصر، الألوان، والسياق المحيط."
                             )
                         },
                         {"inline_data": {"mime_type": "image/jpeg", "data": img_data}}
@@ -265,7 +267,7 @@ class SkyAnalyzer:
                         "method": "ocr"
                     }
 
-            return {"success": False, "error": "فشل Gemini و OCR", "method": "failed"}
+            return {"success": False, "error": "فشل المحرك الأساسي والاحياطي للرؤية", "method": "failed"}
 
     # ========================================================
     # 7) تحليل الملفات
@@ -309,7 +311,7 @@ class SkyAnalyzer:
             return {
                 "success": True,
                 "type": "text",
-                "text": self.clean_text(content)[:9000]
+                "text": self.clean_text(content)[:15000] # رفع سقف الاستيعاب البرمجي لـ 15 ألف حرف لنسخة v10
             }
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -320,12 +322,12 @@ class SkyAnalyzer:
             with open(file_path, 'rb') as f:
                 reader = PyPDF2.PdfReader(f)
                 text = ""
-                for page in reader.pages[:12]:
+                for page in reader.pages[:15]: # زيادة معالجة الصفحات
                     text += page.extract_text() or ""
             return {
                 "success": True,
                 "type": "pdf",
-                "text": self.clean_text(text)[:10000]
+                "text": self.clean_text(text)[:15000]
             }
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -338,7 +340,7 @@ class SkyAnalyzer:
             return {
                 "success": True,
                 "type": "docx",
-                "text": self.clean_text(text)[:9000]
+                "text": self.clean_text(text)[:15000]
             }
         except Exception as e:
             return {"success": False, "error": str(e)}
