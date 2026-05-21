@@ -15,7 +15,7 @@ By Driving & Copilot — 2026
 - ✅ دعم تعدد المزودين (Groq / Gemini / OpenAI) مع Fallback
 - ✅ ذاكرة متقدمة + تلخيص جلسات + حفظ معرفة
 - ✅ Holographic UI Modes (classic / holo / liquid)
-- ✅ متوافق 100% مع Render / Gunicorn
+- ✅ متوافق 100% مع Render / Gunicorn / CORS Enabled
 - ✅ تحسين أمان API Keys
 - ✅ Rate Limiting بسيط مدمج
 - ✅ Health Checks متقدمة
@@ -42,6 +42,13 @@ from flask import (
     render_template,
     send_from_directory,
 )
+# استيراد حزمة CORS لحل مشكلة عدم استجابة طلبات الواجهة للمتصفح
+try:
+    from flask_cors import CORS
+    HAS_CORS = True
+except ImportError:
+    HAS_CORS = False
+
 from werkzeug.utils import secure_filename
 from werkzeug.exceptions import RequestEntityTooLarge
 
@@ -85,6 +92,12 @@ sky_analyzer = safe_import("sky_analyzer")
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 
+# تفعيل الـ CORS لحل مشاكل حظر المتصفح لطلبات الـ API الخاصة بالواجهة
+if HAS_CORS:
+    CORS(app, resources={r"/*": {"origins": "*"}})
+else:
+    logging.warning("⚠️ حزمة Flask-CORS غير مثبتة! قد تواجه الواجهة مشاكل اتصال بالـ API.")
+
 app.secret_key = os.environ.get("SECRET_KEY", "sky-enterprise-secret-2026")
 app.config["MAX_CONTENT_LENGTH"] = 200 * 1024 * 1024  # 200MB
 app.config["MAX_IMAGE_SIZE"] = 20 * 1024 * 1024       # 20MB
@@ -101,15 +114,25 @@ logging.basicConfig(
 logger = logging.getLogger("SkyOS")
 
 # ============================
-# تقديم static يدويًا (حل Render)
+# تقديم static والملفات الرئيسية يدويًا (حل Render الـ Safe)
 # ============================
 
 @app.route("/static/<path:filename>")
 def serve_static(filename):
-    """
-    تقديم ملفات static يدويًا لضمان عمل الواجهة على Render/Gunicorn
-    """
+    """ تقديم ملفات static يدويًا لضمان عمل الواجهة على Render/Gunicorn """
     return send_from_directory("static", filename)
+
+@app.route("/manifest.json")
+def serve_manifest():
+    """ تقديم ملف المانيفست المباشر لتشغيل الـ PWA بنجاح """
+    return send_from_directory(app.static_folder, "manifest.json")
+
+@app.route("/service-worker.js")
+def serve_sw():
+    """ تقديم ملف الـ Service Worker من المجلد الرئيسي أو الستاتيك """
+    if os.path.exists(os.path.join(app.static_folder, "service-worker.js")):
+        return send_from_directory(app.static_folder, "service-worker.js")
+    return send_from_directory(".", "service-worker.js")
 
 # ============================
 # Caching Layer
@@ -164,9 +187,7 @@ RATE_LIMIT_WINDOW = 10   # ثواني
 RATE_LIMIT_MAX = 40      # عدد الطلبات في النافذة
 
 def check_rate_limit(client_id: str) -> bool:
-    """
-    إرجاع True إذا مسموح، False إذا تجاوز الحد
-    """
+    """ إرجاع True إذا مسموح، False إذا تجاوز الحد """
     now = time.time()
     window_start = now - RATE_LIMIT_WINDOW
     entries = _rate_limiter.get(client_id, [])
@@ -186,9 +207,7 @@ def get_client_id():
 # ============================
 
 def safe_get_system_prompt(user_message="", session_id="", extra_context=""):
-    """
-    v10: إضافة extra_context (روابط، ملفات، حالة النظام) إلى الـ System Prompt
-    """
+    """ v10: إضافة extra_context (روابط، ملفات، حالة النظام) إلى الـ System Prompt """
     try:
         if sky_core and hasattr(sky_core, "get_enhanced_system_prompt"):
             return sky_core.get_enhanced_system_prompt(
@@ -273,9 +292,7 @@ def safe_process_feedback(score, session_id, reason):
         pass
 
 def safe_summarize_session(session_id):
-    """
-    v10: تلخيص الجلسة عند مسحها أو عند الطلب
-    """
+    """ v10: تلخيص الجلسة عند مسحها أو عند الطلب """
     try:
         history = safe_get_conversation_context(session_id, limit=80)
         if not history:
@@ -314,9 +331,7 @@ logger.info("✅ SkyOS v10 جاهز مع جميع أنظمة الحماية وا
 # ============================
 
 def call_provider(messages, provider="groq"):
-    """
-    دالة موحدة لاستدعاء مزودي الذكاء (Groq / Gemini / OpenAI)
-    """
+    """ دالة موحدة لاستدعاء مزودي الذكاء (Groq / Gemini / OpenAI) """
     import requests
 
     try:
@@ -470,11 +485,7 @@ def _background_url_analysis(url, session_id=None):
         logger.error(f"[BG-URL] خطأ: {e}")
 
 def _quick_url_context(user_message, session_id=None):
-    """
-    منطق ذكي لتحليل الروابط:
-    - إذا رسالة قصيرة + رابط واحد → تحليل متزامن سريع
-    - إذا طويلة أو عدة روابط → تحليل في الخلفية + ملاحظة
-    """
+    """ منطق ذكي لتحليل الروابط """
     urls = re.findall(r"https?://[^\s]+", user_message)
     if not urls:
         return "", []
@@ -528,14 +539,7 @@ def _quick_url_context(user_message, session_id=None):
 
 @cached(ttl=1800)
 def generate_ai_response(session_id, user_message, ai_type="groq", ui_mode="classic"):
-    """
-    الراوتر الذكي:
-    - يدعم تحليل الروابط
-    - يدعم Caching
-    - يدعم Holographic UI Mode (يُمرر في الـ System Prompt)
-    """
     extra_context, urls = _quick_url_context(user_message, session_id)
-
     extra_context += f"\n[SkyOS UI Mode]: {ui_mode}\n"
 
     system_prompt = safe_get_system_prompt(
@@ -573,27 +577,30 @@ def generate_ai_response(session_id, user_message, ai_type="groq", ui_mode="clas
     return "⚠️ جميع مزودي الذكاء غير متاحين حالياً.", "offline"
 
 # ============================
-# 4) Holographic OS Routes
+# 4) Holographic OS Routes (تحديث التقديم الـ Fail-Safe)
 # ============================
 
 @app.route("/")
 def home():
-    """
-    صفحة الواجهة الرئيسية:
-    - يمكنك في templates/index.html بناء Holographic UI
-    - هذا المسار يخدمها
-    """
+    """ صفحة الواجهة الرئيسية مع حماية في حال عدم وجود المجلد الافتراضي """
     ui_mode = request.args.get("mode", "holo")
-    return render_template("index.html", ui_mode=ui_mode)
+    try:
+        return render_template("index.html", ui_mode=ui_mode)
+    except Exception:
+        # حل بديل إذا كان الملف في مجلد static مباشرة
+        if os.path.exists(os.path.join(app.static_folder, "index.html")):
+            return send_from_directory(app.static_folder, "index.html")
+        return jsonify({"error": "ملف index.html غير موجود في templates أو static"}), 500
 
 @app.route("/os/desktop")
 def os_desktop():
-    """
-    مسار رمزي لنظام التشغيل SkyOS:
-    - يمكن ربطه بواجهة Holographic Desktop
-    """
     ui_mode = request.args.get("mode", "holo")
-    return render_template("desktop.html", ui_mode=ui_mode)
+    try:
+        return render_template("desktop.html", ui_mode=ui_mode)
+    except Exception:
+        if os.path.exists(os.path.join(app.static_folder, "desktop.html")):
+            return send_from_directory(app.static_folder, "desktop.html")
+        return jsonify({"error": "ملف desktop.html غير موجود"}), 500
 
 # ============================
 # 5) Website Scraping
@@ -601,7 +608,6 @@ def os_desktop():
 
 @app.route("/scrape", methods=["POST"])
 def scrape_website():
-    """تحليل صفحة كاملة واستخراج محتواها"""
     try:
         if not check_rate_limit(get_client_id()):
             return jsonify({"reply": "تم تجاوز حد الطلبات مؤقتاً."}), 429
@@ -669,7 +675,6 @@ def scrape_website():
 
 @app.route("/upload-video", methods=["POST"])
 def upload_video():
-    """رفع وتحليل فيديو (استخراج الصورة الأولى + وصف)"""
     try:
         if not check_rate_limit(get_client_id()):
             return jsonify({"reply": "تم تجاوز حد الطلبات مؤقتاً."}), 429
@@ -748,7 +753,6 @@ def upload_video():
 
 @app.route("/upload", methods=["POST"])
 def upload():
-    """رفع وتحليل الملفات"""
     try:
         if not check_rate_limit(get_client_id()):
             return jsonify({"reply": "تم تجاوز حد الطلبات مؤقتاً."}), 429
@@ -816,7 +820,6 @@ def upload():
 
 @app.route("/voice", methods=["POST"])
 def voice():
-    """استقبال ملف صوتي → تحويله إلى نص (Whisper) → تمريره للذكاء"""
     try:
         if not check_rate_limit(get_client_id()):
             return jsonify({"reply": "تم تجاوز حد الطلبات مؤقتاً."}), 429
@@ -876,7 +879,6 @@ def voice():
 
 @app.route("/vision", methods=["POST"])
 def vision():
-    """استقبال صورة → تحليلها عبر Gemini Vision"""
     try:
         if not check_rate_limit(get_client_id()):
             return jsonify({"reply": "تم تجاوز حد الطلبات مؤقتاً."}), 429
@@ -919,7 +921,6 @@ def vision():
 
 @app.route("/ask", methods=["POST"])
 def ask():
-    """نقطة الدخول الرئيسية للمحادثة النصية"""
     data = None
     try:
         if not check_rate_limit(get_client_id()):
@@ -969,7 +970,6 @@ def ask():
 
 @app.route("/feedback", methods=["POST"])
 def feedback():
-    """استقبال تقييم المستخدم للجلسة (RLHF)"""
     try:
         data = request.get_json(force=True) or {}
         score = float(data.get("score", 0))
@@ -989,13 +989,11 @@ def feedback():
 
 @app.route("/clear", methods=["POST"])
 def clear():
-    """مسح تاريخ جلسة معينة مع تلخيصها وحفظها كمعرفة"""
     try:
         data = request.get_json(force=True) or {}
         session_id = data.get("session_id")
 
         if session_id:
-            # v10: تلخيص الجلسة قبل المسح
             safe_summarize_session(session_id)
 
         if memory and hasattr(memory, "clear_conversation_history"):
@@ -1012,7 +1010,6 @@ def clear():
 
 @app.route("/api/v1/status", methods=["GET"])
 def api_status():
-    """نقطة فحص حالة النظام"""
     try:
         return jsonify(
             {
@@ -1027,7 +1024,6 @@ def api_status():
 
 @app.route("/api/v1/health", methods=["GET"])
 def api_health():
-    """Health Check مبسط لـ Render"""
     return "OK", 200
 
 # ============================
