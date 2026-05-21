@@ -72,13 +72,18 @@ except ImportError:
         sky_analyzer = None
 
 # ============================
-# إعداد التطبيق وتفعيل WhiteNoise
+# إعداد التطبيق وتفعيل WhiteNoise بالمسارات المطلقة الصارمة
 # ============================
 
-app = Flask(__name__, template_folder="templates", static_folder="static")
+# جلب المسار المطلق لملف التشغيل الحالي لضمان التوافق الكامل مع خوادم Linux في Render
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+STATIC_DIR = os.path.join(BASE_DIR, "static")
+TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
 
-# ربط وتكوين WhiteNoise لتقديم الملفات الثابتة وتفادي انهيار الـ CSS
-app.wsgi_app = WhiteNoise(app.wsgi_app, root="static/", prefix="static/")
+app = Flask(__name__, template_folder=TEMPLATES_DIR, static_folder=STATIC_DIR)
+
+# ربط وتكوين WhiteNoise بالمسار المطلق الحقيقي لمنع أخطاء الـ 404 واختفاء التنسيقات
+app.wsgi_app = WhiteNoise(app.wsgi_app, root=STATIC_DIR, prefix="static/")
 
 if HAS_CORS:
     CORS(app, resources={r"/*": {"origins": "*"}})
@@ -108,7 +113,7 @@ def serve_manifest():
 def serve_sw():
     if os.path.exists(os.path.join(app.static_folder, "service-worker.js")):
         return send_from_directory(app.static_folder, "service-worker.js")
-    return send_from_directory(".", "service-worker.js")
+    return send_from_directory(BASE_DIR, "service-worker.js")
 
 # ============================
 # Caching Layer (محمي ومحدد للأصول الثابتة)
@@ -242,7 +247,7 @@ def call_provider(messages, provider="groq"):
         # 3) OPENAI ENGINE
         if provider == "openai":
             key = os.environ.get("OPENAI_API_KEY")
-            if not key: return None
+            if not None: return None
             response = requests.post(
                 "https://api.openai.com/v1/chat/completions",
                 headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
