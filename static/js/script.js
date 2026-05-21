@@ -10,7 +10,7 @@
   "use strict";
 
   const ENDPOINTS = (window.SKY_CONFIG && window.SKY_CONFIG.endpoints) || {
-    ask: "/ask",
+    ask: "/api/chat",
     upload: "/upload",
     voice: "/voice",
     vision: "/vision",
@@ -148,16 +148,18 @@
 
   function scrollToBottom(smooth = true) {
     if (!chatWindow) return;
-    chatWindow.scrollTo({
-      top: chatWindow.scrollHeight + 200,
-      behavior: smooth ? "smooth" : "auto",
-    });
+    setTimeout(() => {
+      chatWindow.scrollTo({
+        top: chatWindow.scrollHeight + 500,
+        behavior: smooth ? "smooth" : "auto",
+      });
+    }, 100);
   }
 
   function autoResizeTextarea(el) {
     if (!el) return;
     el.style.height = "auto";
-    el.style.height = Math.min(el.scrollHeight, 180) + "px";
+    el.style.height = Math.min(el.scrollHeight, 120) + "px";
   }
 
   function sanitizeAndFormat(text) {
@@ -349,6 +351,7 @@
       } else {
         arr.forEach(m => appendMessage(m.role, m.content));
       }
+      scrollToBottom(false);
     } catch {}
   }
 
@@ -367,6 +370,7 @@
         if (s.id === sessionId) return;
         setSession(s.id);
         loadLocalHistory();
+        if (sidebar) sidebar.classList.remove("mobile-show"); // إغلاق القائمة في الجوال بعد الاختيار
         showToast("تم تبديل الجلسة بنجاح", "success");
       });
       sessionListEl.appendChild(item);
@@ -442,17 +446,27 @@
     fd.append("file", file);
     fd.append("session_id", sessionId);
 
-    showToast("جارٍ رفع وتحليل الملف...", "info");
+    appendMessage("user", `📄 [تم اختيار مستند للرفع: ${file.name}]`);
+    showTypingIndicator();
+    showToast("جاري رفع وتحليل الملف...", "info");
+
     try {
       const res = await fetch(ENDPOINTS.upload, { method: "POST", body: fd });
+      hideTypingIndicator();
+      if (!res.ok) throw new Error(`كود الخطأ من السيرفر: ${res.status}`);
       const data = await res.json();
       if (data && data.reply) {
         appendMessage("assistant", data.reply);
+        addToHistoryLocal("user", `📄 [مستند: ${file.name}]`);
         addToHistoryLocal("assistant", data.reply);
         showToast("تم تحليل المستند بنجاح", "success");
+      } else {
+        appendMessage("assistant", "تم رفع الملف بنجاح ولكن لم يتم استلام استجابة تحليلية.");
       }
     } catch (e) {
+      hideTypingIndicator();
       console.error(e);
+      appendMessage("assistant", `❌ عذراً، فشلت عملية معالجة ورفع الملف. (تأكد من إعداد الـ Backend لـ ${ENDPOINTS.upload})`);
       showToast("فشل رفع الملف", "error");
     }
   }
@@ -463,17 +477,27 @@
     fd.append("audio", file);
     fd.append("session_id", sessionId);
 
-    showToast("جارٍ معالجة الصوت وتحويله لنص...", "info");
+    appendMessage("user", `🎙️ [جاري إرسال تسجيل صوتي...]`);
+    showTypingIndicator();
+    showToast("جاري معالجة الصوت وتحويله لنص...", "info");
+
     try {
       const res = await fetch(ENDPOINTS.voice, { method: "POST", body: fd });
+      hideTypingIndicator();
+      if (!res.ok) throw new Error(`كود الخطأ: ${res.status}`);
       const data = await res.json();
       if (data && data.reply) {
         appendMessage("assistant", data.reply);
+        addToHistoryLocal("user", `🎙️ [صوت سجل]`);
         addToHistoryLocal("assistant", data.reply);
         showToast("تم معالجة الصوت", "success");
+      } else {
+        appendMessage("assistant", "اكتمل رفع الصوت، وتلقيت استجابة فارغة.");
       }
     } catch (e) {
+      hideTypingIndicator();
       console.error(e);
+      appendMessage("assistant", `❌ فشل معالجة الملف الصوتي على المسار الحالي.`);
       showToast("فشل معالجة الملف الصوتي", "error");
     }
   }
@@ -484,17 +508,27 @@
     fd.append("image", file);
     fd.append("session_id", sessionId);
 
-    showToast("جارٍ فحص وتحليل الصورة...", "info");
+    appendMessage("user", `🖼️ [جاري رفع وتحليل الصورة: ${file.name}]`);
+    showTypingIndicator();
+    showToast("جاري فحص وتحليل الصورة...", "info");
+
     try {
       const res = await fetch(ENDPOINTS.vision, { method: "POST", body: fd });
+      hideTypingIndicator();
+      if (!res.ok) throw new Error(`كود الخطأ: ${res.status}`);
       const data = await res.json();
       if (data && data.reply) {
         appendMessage("assistant", data.reply);
+        addToHistoryLocal("user", `🖼️ [صورة: ${file.name}]`);
         addToHistoryLocal("assistant", data.reply);
         showToast("اكتمل تحليل الرؤية", "success");
+      } else {
+        appendMessage("assistant", "تم استقبال الصورة ولكن الـ Backend لم يرسل رد تحليل text.");
       }
     } catch (e) {
+      hideTypingIndicator();
       console.error(e);
+      appendMessage("assistant", `❌ فشل تحليل أو رفع الصورة. تأكد من تهيئة استقبال الصور في الـ Backend.`);
       showToast("فشل رفع الصورة", "error");
     }
   }
@@ -547,15 +581,17 @@
     const id = "s-" + Math.random().toString(36).slice(2, 12);
     setSession(id);
     loadLocalHistory();
+    if (sidebar) sidebar.classList.remove("mobile-show");
     showToast("تم فتح منفذ جلسة جديد", "success");
   }
 
   function clearCurrentSession() {
     if (confirm("هل تريد مسح ذاكرة هذه الجلسة بالكامل؟")) {
-      if (chatWindow) chatWindow.innerHTML = "";
       localStorage.removeItem(`sky_local_history_v10_${sessionId}`);
-      appendMessage("assistant", "✨ تم تهيئة الجلسة ومسح السجلات المحلية بنجاح.");
-      showToast("تم تصفية البيانات", "success");
+      if (chatWindow) chatWindow.innerHTML = "";
+      loadLocalHistory(); // تعيد طباعة الرسالة الترحيبية فورا
+      if (sidebar) sidebar.classList.remove("mobile-show");
+      showToast("تم تصفية البيانات بنجاح", "success");
     }
   }
 
@@ -616,9 +652,20 @@
     });
   }
 
+  // ميزة فتح وإغلاق القائمة الجانبية بنجاح على الجوال وسيرفر لايف
   if (menuToggleBtn && sidebar) {
-    menuToggleBtn.addEventListener("click", () => {
-      sidebar.classList.toggle("collapsed");
+    menuToggleBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      sidebar.classList.toggle("mobile-show");
+    });
+  }
+
+  // عند النقر على نافذة الدردشة تغلق القائمة الجانبية تلقائيا في الجوال لتسهيل التصفح
+  if (chatWindow) {
+    chatWindow.addEventListener("click", () => {
+      if (sidebar && sidebar.classList.contains("mobile-show")) {
+        sidebar.classList.remove("mobile-show");
+      }
     });
   }
 
