@@ -1,15 +1,16 @@
 {
-  "name": "SkyOS v9.0",
+  "name": "SkyOS v10.0 — Holographic Edition",
   "short_name": "SkyOS",
+  "description": "نظام ذكاء هجين واعٍ لإدارة الجلسات الذكية وتحليل البيانات",
   "lang": "ar",
   "dir": "rtl",
-  "start_url": "/static/splash.html",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "orientation": "portrait",
+  "orientation": "any",
   "theme_color": "#0a0a14",
   "background_color": "#0a0a14",
-
+  "categories": ["productivity", "utilities"],
   "icons": [
     {
       "src": "/static/icons/icon-192.png",
@@ -18,10 +19,22 @@
       "purpose": "any"
     },
     {
+      "src": "/static/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
       "src": "/static/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "/static/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
