@@ -1,42 +1,61 @@
-# 1) استخدام نسخة بايثون خفيفة ومستقرة ومناسبة للإنتاج
-FROM python:3.11-slim
+# ============================================================
+# SkyOS Backend — Dockerfile لـ Railway (معدل ومحسن)
+# متوافق مع Railway + يدعم جميع الميزات السابقة
+# ============================================================
 
-# منع بايثون من كتابة ملفات pyc لتقليل المساحة وضمان التدفق الفوري للـ Logs
+# 1) استخدام نسخة بايثون مستقرة مع Debian Bullseye (متوافق مع Railway)
+FROM python:3.11-slim-bullseye
+
+# منع بايثون من كتابة ملفات pyc وتفعيل الـ Logs الفورية
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# 2) تثبيت حزم النظام الأساسية (Tesseract OCR للمعالجة ومكتبات الـ OpenCV للرؤية)
+# تعيين منفذ Railway (يتم استبداله تلقائياً بـ $PORT)
+ENV PORT=8000
+
+# 2) تثبيت حزم النظام الأساسية (تم تصحيح الأخطاء لـ Railway)
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    # Tesseract OCR للتعرف على النصوص (يدعم العربية والإنجليزية)
     tesseract-ocr \
     tesseract-ocr-ara \
     tesseract-ocr-eng \
-    libgl1-mesa-glx \
+    # بديل libgl1-mesa-glx (غير متوفر في Bullseye)
+    libgl1 \
     libglib2.0-0 \
+    # أدوات التطوير الأساسية
     gcc \
     python3-dev \
+    # مكتبات إضافية لـ OpenCV والصور
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
 # 3) تحديد مجلد العمل الأساسي داخل الحاوية
 WORKDIR /app
 
-# 4) ترقية أداة تثبيت الحزم (Pip) لضمان التوافقية وسرعة البناء
+# 4) ترقية أداة تثبيت الحزم (Pip)
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
-# 5) نسخ ملف المتطلبات وتثبيته مستقلًا للاستفادة القصوى من الـ Docker Cache
+# 5) نسخ ملف المتطلبات وتثبيته (لاستخدام الـ Docker Cache)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 6) تثبيت Gunicorn صراحة داخل الحاوية لضمان عدم اعتماده على ملف المتطلبات الخارجي
+# 6) تثبيت Gunicorn صراحة (ضمان التوافق)
 RUN pip install --no-cache-dir gunicorn
 
-# 7) نسخ كافة ملفات المشروع ونظام التشغيل SkyOS إلى الحاوية
+# 7) نسخ كافة ملفات المشروع إلى الحاوية
 COPY . .
 
-# 8) إنشاء مجلد المرفقات والصور المؤقت مع منح الصلاحيات الكاملة للـ Workers
+# 8) إنشاء مجلد المرفقات والصور المؤقتة مع صلاحيات كاملة
 RUN mkdir -p /tmp/sky_uploads && chmod -R 777 /tmp/sky_uploads
 
-# 9) فتح المنفذ 10000 المخصص لمنصة Render السحابية
-EXPOSE 10000
+# 9) إنشاء مجلدات static إذا لم تكن موجودة
+RUN mkdir -p /app/static/css /app/static/js /app/static/icons
 
-# 10) أمر التشغيل الفائق والمستقر باستخدام Gunicorn (مع معالجة الوقت المستغرق للطلبات الثقيلة)
-CMD ["gunicorn", "--bind", "0.0.0.0:10000", "--workers", "2", "--threads", "2", "--timeout", "120", "app:app"]
+# 10) فتح المنفذ (Railway سيستخدم $PORT تلقائياً)
+EXPOSE 8000
+
+# 11) أمر التشغيل لـ Railway (يستخدم $PORT الديناميكي)
+CMD gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --threads 2 --timeout 120
