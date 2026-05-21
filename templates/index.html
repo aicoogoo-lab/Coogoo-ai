@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#0a0a14" />
   <meta name="description" content="SkyOS v10 — Holographic PWA Intelligence System" />
   <title>SkyOS v10 — Holographic Edition</title>
@@ -20,15 +20,14 @@
 
   <link rel="stylesheet" href="/static/css/style.css" />
 
-  <link rel="preload" href="/static/js/script.js" as="script" />
-
   <style>
-    /* فرض أبعاد الشاشة ومنع الاختفاء */
+    /* هندسة شاملة متجاوبة للجوال 2026 */
     html, body {
       height: 100% !important;
       margin: 0 !important;
       padding: 0 !important;
       overflow: hidden !important;
+      font-family: 'Cairo', sans-serif;
     }
 
     #sky-root {
@@ -52,7 +51,7 @@
       flex: 1;
       height: 100% !important;
       position: relative !important;
-      padding-bottom: 85px !important; /* مسافة لحماية حقل النص الثابت السفلي */
+      padding-bottom: 90px !important; /* حماية تمنع تداخل الرسائل مع الحقل السفلي */
       box-sizing: border-box;
     }
 
@@ -60,30 +59,66 @@
       flex: 1;
       overflow-y: auto !important;
       padding: 15px !important;
-      padding-bottom: 30px !important;
+      padding-bottom: 40px !important;
+      -webkit-overflow-scrolling: touch;
     }
 
-    /* تثبيت حقل الكتابة بقوة أسفل شاشة الهاتف وسطح المكتب */
+    /* إصلاح مشكلة ظهور واختفاء الكود على الجوال */
+    .sky-code-block {
+      background: #1e1e2f !important;
+      border-left: 4px solid #6366f1 !important;
+      padding: 12px !important;
+      margin: 10px 0 !important;
+      border-radius: 8px !important;
+      overflow-x: auto !important; /* تفعيل التمرير الأفقي */
+      display: block !important;
+      max-width: 100% !important;
+      box-sizing: border-box !important;
+    }
+
+    .sky-code-block code {
+      direction: ltr !important; /* إجبار الكود على البدء من اليسار */
+      text-align: left !important;
+      display: block !important;
+      white-space: pre !important;
+      font-family: 'Courier New', Courier, monospace !important;
+      color: #f8fafc !important;
+      font-size: 14px !important;
+    }
+
+    .sky-inline-code {
+      direction: ltr !important;
+      display: inline-block !important;
+      background: rgba(99, 102, 241, 0.2) !important;
+      padding: 2px 6px !important;
+      border-radius: 4px !important;
+      color: #f43f5e !important;
+      font-family: monospace !important;
+    }
+
+    /* تحديث حقل الكتابة السفلي ليكون مرتفعاً وآمناً من أزرار التنقل */
     .sky-input-bar {
       position: fixed !important;
-      bottom: 0 !important;
-      left: 0 !important;
-      right: 0 !important;
-      width: 100% !important;
-      z-index: 9995 !important; /* رفعه فوق كل طبقات التصميم */
-      background: #0a0a14 !important;
-      border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
-      padding: 10px 15px !important;
+      bottom: env(safe-area-inset-bottom, 15px) !important; /* حماية الجوالات الحديثة */
+      left: 10px !important;
+      right: 10px !important;
+      width: calc(100% - 20px) !important;
+      z-index: 9995 !important;
+      background: rgba(15, 15, 25, 0.95) !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      border-radius: 16px !important;
+      padding: 10px 12px !important;
       box-sizing: border-box !important;
       display: flex !important;
       align-items: center !important;
       gap: 10px !important;
-      box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.7) !important;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+      backdrop-filter: blur(10px);
     }
 
     body.light .sky-input-bar {
-      background: #ffffff !important;
-      border-top: 1px solid rgba(0, 0, 0, 0.1) !important;
+      background: rgba(255, 255, 255, 0.95) !important;
+      border: 1px solid rgba(0, 0, 0, 0.1) !important;
     }
 
     .sky-input {
@@ -92,10 +127,12 @@
       background: rgba(255, 255, 255, 0.05) !important;
       border: 1px solid rgba(255, 255, 255, 0.1) !important;
       color: inherit !important;
-      border-radius: 8px !important;
-      padding: 10px !important;
+      border-radius: 10px !important;
+      padding: 10px 12px !important;
       resize: none !important;
       font-family: 'Cairo', sans-serif !important;
+      font-size: 15px !important;
+      max-height: 150px !important; /* أقصى حد للتوسع لترك مساحة للمحادثة */
     }
 
     body.light .sky-input {
@@ -103,22 +140,92 @@
       border: 1px solid rgba(0, 0, 0, 0.1) !important;
     }
 
-    /* تنسيق متجاوب للقائمة الجانبية لإصلاحها على الجوال */
+    /* تكبير وتوضيح زر الإرسال بشكل سهم احترافي */
+    .sky-send-btn {
+      width: 46px !important;
+      height: 46px !important;
+      min-width: 46px !important;
+      background: #6366f1 !important;
+      color: #ffffff !important;
+      border: none !important;
+      border-radius: 50% !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      cursor: pointer !important;
+      transition: all 0.2s ease !important;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4) !important;
+    }
+
+    .sky-send-btn:hover {
+      background: #4f46e5 !important;
+      transform: scale(1.05);
+    }
+
+    .sky-send-btn span {
+      display: none !important; /* إخفاء الكلمة والاعتماد على السهم الأنيق */
+    }
+
+    .sky-send-btn i {
+      font-size: 18px !important;
+      transform: rotate(180deg); /* تعديل اتجاه السهم ليناسب الواجهة العربية */
+    }
+
+    /* أزرار التفاعل الإضافية داخل فقاعة الرسالة */
+    .msg-action-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .msg-action-btn {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 13px;
+      font-family: 'Cairo', sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: color 0.2s;
+    }
+
+    .msg-action-btn:hover {
+      color: #6366f1;
+    }
+
+    /* صندوق الإعدادات المطور الفعلي */
+    .sky-settings-box {
+      padding: 15px;
+      background: #111122;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      margin: 10px;
+      color: #fff;
+    }
+
+    .sky-settings-box h4 { margin: 0 0 10px 0; font-size: 16px; color: #6366f1; }
+    .settings-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .settings-row select { background: #22223b; color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 5px; border-radius: 6px; font-family: 'Cairo'; }
+
     @media (max-width: 768px) {
       .sky-sidebar {
         position: fixed !important;
         top: 60px !important;
-        right: -100% !important; /* مخفية خارج الشاشة يمينا افتراضياً */
+        right: -100% !important;
         width: 290px !important;
         height: calc(100vh - 60px) !important;
         z-index: 9999 !important;
         transition: right 0.3s ease-in-out !important;
-        background: rgba(10, 10, 20, 0.98) !important;
-        box-shadow: -5px 0 20px rgba(0,0,0,0.5) !important;
+        background: #090911 !important;
+        box-shadow: -5px 0 20px rgba(0,0,0,0.6) !important;
         display: block !important;
       }
 
-      /* الكلاس البرمجي المسؤول عن سحب القائمة للداخل عند الضغط على زر التحكم */
       .sky-sidebar.mobile-show {
         right: 0 !important;
       }
@@ -184,16 +291,6 @@
         </div>
 
         <div class="sky-sidebar-section">
-          <div class="sky-sidebar-title"><i class="fas fa-paperclip"></i> التحكم والملفات</div>
-          <label class="sky-btn-secondary full" style="display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;">
-            <i class="fas fa-upload"></i> رفع ملف عام
-            <input type="file" id="file-input" hidden />
-          </label>
-          <button class="sky-btn-secondary full" id="clear-chat-btn"><i class="fas fa-trash-alt"></i> مسح المحادثة</button>
-          <button class="sky-btn-secondary full" id="export-chat-btn"><i class="fas fa-file-export"></i> تصدير المحادثة</button>
-        </div>
-
-        <div class="sky-sidebar-section">
           <div class="sky-sidebar-title"><i class="fas fa-microphone"></i> الصوت والرؤية</div>
           <button class="sky-btn-secondary full" id="voice-btn"><i class="fas fa-microphone"></i> إرسال صوت</button>
           <button class="sky-btn-secondary full" id="vision-btn"><i class="fas fa-image"></i> إرسال صورة</button>
@@ -204,9 +301,47 @@
           <button class="sky-btn-secondary full" id="open-workspace-btn"><i class="fas fa-brain"></i> مساحة العمل</button>
         </div>
 
+        <div class="sky-sidebar-section" style="margin-top: auto; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
+          <div class="sky-sidebar-title"><i class="fas fa-tools"></i> إدارة النظام</div>
+          <label class="sky-btn-secondary full" style="display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;">
+            <i class="fas fa-upload"></i> رفع ملف عام
+            <input type="file" id="file-input" hidden />
+          </label>
+          <button class="sky-btn-secondary full" id="export-chat-btn"><i class="fas fa-file-export"></i> تصدير البيانات</button>
+          <button class="sky-btn-secondary full" id="clear-chat-btn" style="color: #ef4444; border-color: rgba(239,68,68,0.2);"><i class="fas fa-trash-alt"></i> مسح المحادثة بالكامل</button>
+        </div>
+
       </aside>
 
       <main class="sky-main">
+
+        <div id="settings-panel" class="sky-settings hidden">
+          <div class="sky-settings-box">
+            <h4><i class="fas fa-sliders-h"></i> إعدادات واجهة التفاعل</h4>
+            <div class="settings-row">
+              <span>حجم الخط في المحادثة</span>
+              <select id="setting-font-size">
+                <option value="14px">صغير</option>
+                <option value="16px" selected>متوسط</option>
+                <option value="18px">كبير</option>
+              </select>
+            </div>
+            <div class="settings-row">
+              <span>محرك المعالجة الافتراضي</span>
+              <select id="setting-ai-engine">
+                <option value="sky-live">SkyHybrid Core v10</option>
+                <option value="gpt-4">GPT Engine Optimized</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div id="workspace-panel" class="sky-workspace hidden">
+          <div class="sky-settings-box">
+            <h4><i class="fas fa-laptop-code"></i> بيئة التطوير والربط</h4>
+            <p style="font-size: 13px; color: #a1a1aa; margin: 0;">الخادم متصل حالياً ويعمل على معالجة البوتات الحية بشكل مستقل.</p>
+          </div>
+        </div>
 
         <div class="sky-chat-header glass-layer">
           <div>
@@ -233,7 +368,7 @@
           <button id="cancel-upload-btn" class="sky-cancel-btn"><i class="fas fa-times"></i></button>
         </div>
 
-        <footer class="sky-input-bar glass-layer">
+        <footer class="sky-input-bar">
           <div class="sky-input-tools">
             <button class="sky-icon-btn" id="mini-upload-btn" title="إرفاق ملف"><i class="fas fa-paperclip"></i></button>
             <button class="sky-icon-btn" id="mini-voice-btn" title="تسجيل صوتي"><i class="fas fa-microphone"></i></button>
@@ -243,7 +378,8 @@
           <textarea id="user-input" class="sky-input" placeholder="اكتب لـ سماء..." rows="1"></textarea>
 
           <button class="sky-send-btn" id="send-btn">
-            <i class="fas fa-paper-plane"></i> <span>إرسال</span>
+            <i class="fas fa-paper-plane"></i>
+            <span>إرسال</span>
           </button>
         </footer>
 
@@ -254,9 +390,6 @@
     <input type="file" id="hidden-image-input" accept="image/*" hidden />
 
     <div id="toast-container"></div>
-    
-    <div id="settings-panel" class="sky-settings hidden"></div>
-    <div id="workspace-panel" class="sky-workspace hidden"></div>
 
   </div>
 
@@ -276,16 +409,5 @@
   </script>
 
   <script src="/static/js/script.js" defer></script>
-
-  <script>
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register("/service-worker.js")
-          .then(reg => console.log("🚀 SkyOS Holographic Core PWA Ready! Scope:", reg.scope))
-          .catch(err => console.error("❌ PWA Worker Error:", err));
-      });
-    }
-  </script>
-
 </body>
 </html>
