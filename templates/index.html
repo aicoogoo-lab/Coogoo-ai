@@ -19,218 +19,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
   <link rel="stylesheet" href="/static/css/style.css" />
-
-  <style>
-    /* هندسة شاملة متجاوبة للجوال 2026 */
-    html, body {
-      height: 100% !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      overflow: hidden !important;
-      font-family: 'Cairo', sans-serif;
-    }
-
-    #sky-root {
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      width: 100%;
-    }
-
-    .sky-layout {
-      display: flex;
-      flex: 1;
-      height: calc(100vh - 60px);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .sky-main {
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-      height: 100% !important;
-      position: relative !important;
-      padding-bottom: 90px !important; /* حماية تمنع تداخل الرسائل مع الحقل السفلي */
-      box-sizing: border-box;
-    }
-
-    .sky-chat-window {
-      flex: 1;
-      overflow-y: auto !important;
-      padding: 15px !important;
-      padding-bottom: 40px !important;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    /* إصلاح مشكلة ظهور واختفاء الكود على الجوال */
-    .sky-code-block {
-      background: #1e1e2f !important;
-      border-left: 4px solid #6366f1 !important;
-      padding: 12px !important;
-      margin: 10px 0 !important;
-      border-radius: 8px !important;
-      overflow-x: auto !important; /* تفعيل التمرير الأفقي */
-      display: block !important;
-      max-width: 100% !important;
-      box-sizing: border-box !important;
-    }
-
-    .sky-code-block code {
-      direction: ltr !important; /* إجبار الكود على البدء من اليسار */
-      text-align: left !important;
-      display: block !important;
-      white-space: pre !important;
-      font-family: 'Courier New', Courier, monospace !important;
-      color: #f8fafc !important;
-      font-size: 14px !important;
-    }
-
-    .sky-inline-code {
-      direction: ltr !important;
-      display: inline-block !important;
-      background: rgba(99, 102, 241, 0.2) !important;
-      padding: 2px 6px !important;
-      border-radius: 4px !important;
-      color: #f43f5e !important;
-      font-family: monospace !important;
-    }
-
-    /* تحديث حقل الكتابة السفلي ليكون مرتفعاً وآمناً من أزرار التنقل */
-    .sky-input-bar {
-      position: fixed !important;
-      bottom: env(safe-area-inset-bottom, 15px) !important; /* حماية الجوالات الحديثة */
-      left: 10px !important;
-      right: 10px !important;
-      width: calc(100% - 20px) !important;
-      z-index: 9995 !important;
-      background: rgba(15, 15, 25, 0.95) !important;
-      border: 1px solid rgba(255, 255, 255, 0.1) !important;
-      border-radius: 16px !important;
-      padding: 10px 12px !important;
-      box-sizing: border-box !important;
-      display: flex !important;
-      align-items: center !important;
-      gap: 10px !important;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
-      backdrop-filter: blur(10px);
-    }
-
-    body.light .sky-input-bar {
-      background: rgba(255, 255, 255, 0.95) !important;
-      border: 1px solid rgba(0, 0, 0, 0.1) !important;
-    }
-
-    .sky-input {
-      flex: 1 !important;
-      min-width: 0 !important;
-      background: rgba(255, 255, 255, 0.05) !important;
-      border: 1px solid rgba(255, 255, 255, 0.1) !important;
-      color: inherit !important;
-      border-radius: 10px !important;
-      padding: 10px 12px !important;
-      resize: none !important;
-      font-family: 'Cairo', sans-serif !important;
-      font-size: 15px !important;
-      max-height: 150px !important; /* أقصى حد للتوسع لترك مساحة للمحادثة */
-    }
-
-    body.light .sky-input {
-      background: rgba(0, 0, 0, 0.03) !important;
-      border: 1px solid rgba(0, 0, 0, 0.1) !important;
-    }
-
-    /* تكبير وتوضيح زر الإرسال بشكل سهم احترافي */
-    .sky-send-btn {
-      width: 46px !important;
-      height: 46px !important;
-      min-width: 46px !important;
-      background: #6366f1 !important;
-      color: #ffffff !important;
-      border: none !important;
-      border-radius: 50% !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      cursor: pointer !important;
-      transition: all 0.2s ease !important;
-      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4) !important;
-    }
-
-    .sky-send-btn:hover {
-      background: #4f46e5 !important;
-      transform: scale(1.05);
-    }
-
-    .sky-send-btn span {
-      display: none !important; /* إخفاء الكلمة والاعتماد على السهم الأنيق */
-    }
-
-    .sky-send-btn i {
-      font-size: 18px !important;
-      transform: rotate(180deg); /* تعديل اتجاه السهم ليناسب الواجهة العربية */
-    }
-
-    /* أزرار التفاعل الإضافية داخل فقاعة الرسالة */
-    .msg-action-bar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 10px;
-      padding-top: 8px;
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .msg-action-btn {
-      background: none;
-      border: none;
-      color: #94a3b8;
-      cursor: pointer;
-      font-size: 13px;
-      font-family: 'Cairo', sans-serif;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      transition: color 0.2s;
-    }
-
-    .msg-action-btn:hover {
-      color: #6366f1;
-    }
-
-    /* صندوق الإعدادات المطور الفعلي */
-    .sky-settings-box {
-      padding: 15px;
-      background: #111122;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
-      margin: 10px;
-      color: #fff;
-    }
-
-    .sky-settings-box h4 { margin: 0 0 10px 0; font-size: 16px; color: #6366f1; }
-    .settings-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-    .settings-row select { background: #22223b; color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 5px; border-radius: 6px; font-family: 'Cairo'; }
-
-    @media (max-width: 768px) {
-      .sky-sidebar {
-        position: fixed !important;
-        top: 60px !important;
-        right: -100% !important;
-        width: 290px !important;
-        height: calc(100vh - 60px) !important;
-        z-index: 9999 !important;
-        transition: right 0.3s ease-in-out !important;
-        background: #090911 !important;
-        box-shadow: -5px 0 20px rgba(0,0,0,0.6) !important;
-        display: block !important;
-      }
-
-      .sky-sidebar.mobile-show {
-        right: 0 !important;
-      }
-    }
-  </style>
 </head>
 
 <body class="dark sky-mode-{{ ui_mode if ui_mode else 'holo' }}">
@@ -258,7 +46,7 @@
 
       <div class="sky-topbar-center">
         <div class="sky-status" id="connection-status">
-          <span class="sky-status-dot animated-pulse"></span>
+          <span class="sky-status-dot"></span>
           <span class="sky-status-text"><i class="fas fa-plug"></i> متصل • جاهز</span>
         </div>
       </div>
@@ -272,11 +60,11 @@
 
     <div class="sky-layout">
 
-      <aside class="sky-sidebar glass-layer" id="sidebar">
+      <aside class="sky-sidebar" id="sidebar">
 
         <div class="sky-sidebar-section">
           <div class="sky-sidebar-title"><i class="fas fa-plus-circle"></i> الجلسات</div>
-          <button class="sky-btn-primary full" id="new-session-btn">
+          <button class="sky-btn-primary" id="new-session-btn">
             <i class="fas fa-plus"></i> جلسة جديدة
           </button>
         </div>
@@ -292,23 +80,23 @@
 
         <div class="sky-sidebar-section">
           <div class="sky-sidebar-title"><i class="fas fa-microphone"></i> الصوت والرؤية</div>
-          <button class="sky-btn-secondary full" id="voice-btn"><i class="fas fa-microphone"></i> إرسال صوت</button>
-          <button class="sky-btn-secondary full" id="vision-btn"><i class="fas fa-image"></i> إرسال صورة</button>
+          <button class="sky-btn-secondary" id="voice-btn"><i class="fas fa-microphone"></i> إرسال صوت</button>
+          <button class="sky-btn-secondary" id="vision-btn"><i class="fas fa-image"></i> إرسال صورة</button>
         </div>
 
         <div class="sky-sidebar-section">
           <div class="sky-sidebar-title"><i class="fas fa-folder-open"></i> Workspace</div>
-          <button class="sky-btn-secondary full" id="open-workspace-btn"><i class="fas fa-brain"></i> مساحة العمل</button>
+          <button class="sky-btn-secondary" id="open-workspace-btn"><i class="fas fa-brain"></i> مساحة العمل</button>
         </div>
 
         <div class="sky-sidebar-section" style="margin-top: auto; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
           <div class="sky-sidebar-title"><i class="fas fa-tools"></i> إدارة النظام</div>
-          <label class="sky-btn-secondary full" style="display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;">
+          <label class="sky-btn-secondary" style="display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;">
             <i class="fas fa-upload"></i> رفع ملف عام
             <input type="file" id="file-input" hidden />
           </label>
-          <button class="sky-btn-secondary full" id="export-chat-btn"><i class="fas fa-file-export"></i> تصدير البيانات</button>
-          <button class="sky-btn-secondary full" id="clear-chat-btn" style="color: #ef4444; border-color: rgba(239,68,68,0.2);"><i class="fas fa-trash-alt"></i> مسح المحادثة بالكامل</button>
+          <button class="sky-btn-secondary" id="export-chat-btn"><i class="fas fa-file-export"></i> تصدير البيانات</button>
+          <button class="sky-btn-secondary" id="clear-chat-btn" style="color: #ef4444; border-color: rgba(239,68,68,0.2);"><i class="fas fa-trash-alt"></i> مسح النافذة والمحادثة</button>
         </div>
 
       </aside>
@@ -351,22 +139,17 @@
 
           <div class="sky-chat-meta">
             <div class="sky-chat-meta-item">
-              <span class="dot active"></span>
+              <span class="dot"></span>
               <span id="model-indicator"><i class="fas fa-microchip"></i> الموفر: تلقائي</span>
             </div>
             <div class="sky-chat-meta-item">
-              <span class="dot session"></span>
+              <span class="dot"></span>
               <span id="session-indicator"><i class="fas fa-id-card"></i> جلسة: افتراضية</span>
             </div>
           </div>
         </div>
 
         <section class="sky-chat-window" id="chat-window"></section>
-
-        <div id="file-preview-bar" class="sky-preview-bar hidden">
-          <span id="preview-file-name"></span>
-          <button id="cancel-upload-btn" class="sky-cancel-btn"><i class="fas fa-times"></i></button>
-        </div>
 
         <footer class="sky-input-bar">
           <div class="sky-input-tools">
@@ -379,7 +162,6 @@
 
           <button class="sky-send-btn" id="send-btn">
             <i class="fas fa-paper-plane"></i>
-            <span>إرسال</span>
           </button>
         </footer>
 
