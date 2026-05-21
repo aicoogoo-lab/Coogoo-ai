@@ -2,26 +2,26 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#0a0a14" />
-  <meta name="description" content="SkyOS v10 — Holographic PWA Intelligence System" />
-  <title>SkyOS v10 — Holographic Edition</title>
-
-  <link rel="manifest" href="/manifest.json" />
-
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-  <link rel="apple-touch-icon" href="/static/icons/icon-192.png" />
-
+  <title>SkyOS v10 — Holographic AI System</title>
+  
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-
   <link rel="stylesheet" href="/static/css/style.css" />
 </head>
+<body class="dark">
 
-<body class="dark sky-mode-{{ ui_mode if ui_mode else 'holo' }}">
+  <div id="sky-boot-screen">
+    <div class="boot-loader-container">
+      <div class="boot-logo"><i class="fas fa-brain"></i></div>
+      <div class="boot-title">SkyOS v10</div>
+      <div class="boot-status">INITIALIZING CORE LAYERS...</div>
+      <div class="boot-bar"><div class="boot-progress"></div></div>
+    </div>
+  </div>
 
   <div class="sky-background">
     <div class="sky-gradient"></div>
@@ -30,13 +30,10 @@
   </div>
 
   <div id="sky-root">
-
     <header class="sky-topbar glass-layer">
       <div class="sky-topbar-left">
         <div class="sky-brand">
-          <div class="sky-logo hologram">
-            <i class="fas fa-brain"></i>
-          </div>
+          <div class="sky-logo hologram"><i class="fas fa-brain"></i></div>
           <div class="sky-brand-text">
             <div class="sky-brand-title">SkyOS v10</div>
             <div class="sky-brand-subtitle">Holographic Intelligence</div>
@@ -47,149 +44,97 @@
       <div class="sky-topbar-center">
         <div class="sky-status" id="connection-status">
           <span class="sky-status-dot"></span>
-          <span class="sky-status-text"><i class="fas fa-plug"></i> متصل • جاهز</span>
+          <span class="sky-status-text">متصل • جاهز</span>
         </div>
       </div>
 
       <div class="sky-topbar-right">
-        <button class="sky-icon-btn" id="menu-toggle" title="القائمة"><i class="fas fa-bars"></i></button>
-        <button class="sky-icon-btn" id="toggle-theme-btn" title="المظهر"><i class="fas fa-moon"></i></button>
-        <button class="sky-icon-btn" id="open-settings-btn" title="الإعدادات"><i class="fas fa-cog"></i></button>
+        <button class="sky-icon-btn" id="menu-toggle" title="القائمة الجانبية"><i class="fas fa-bars"></i></button>
+        <button class="sky-icon-btn" id="toggle-theme-btn" title="تبديل الثيم"><i class="fas fa-moon"></i></button>
+        <button class="sky-icon-btn" id="open-settings-btn" title="الإعدادات المتقدمة"><i class="fas fa-cog"></i></button>
       </div>
     </header>
 
     <div class="sky-layout">
-
       <aside class="sky-sidebar" id="sidebar">
-
         <div class="sky-sidebar-section">
-          <div class="sky-sidebar-title"><i class="fas fa-plus-circle"></i> الجلسات</div>
+          <div class="sky-sidebar-title"><i class="fas fa-plus-circle"></i> إدارة الجلسات الحية</div>
           <button class="sky-btn-primary" id="new-session-btn">
             <i class="fas fa-plus"></i> جلسة جديدة
           </button>
         </div>
 
-        <div class="sky-sidebar-section">
-          <div class="sky-sidebar-title"><i class="fas fa-archive"></i> الأرشيف</div>
+        <div class="sky-sidebar-section" style="flex: 1; display: flex; flex-direction: column;">
+          <div class="sky-sidebar-title"><i class="fas fa-archive"></i> أرشيف الذاكرة المحلية</div>
           <div class="sky-session-list" id="session-list">
-            <div class="sky-session-empty">
-              <i class="fas fa-inbox"></i><br>لا يوجد أرشيف بعد
-            </div>
+            <div class="sky-session-empty">لا توجد جلسات مؤرشفة حالياً</div>
           </div>
         </div>
 
-        <div class="sky-sidebar-section">
-          <div class="sky-sidebar-title"><i class="fas fa-microphone"></i> الصوت والرؤية</div>
-          <button class="sky-btn-secondary" id="voice-btn"><i class="fas fa-microphone"></i> إرسال صوت</button>
-          <button class="sky-btn-secondary" id="vision-btn"><i class="fas fa-image"></i> إرسال صورة</button>
+        <div class="sky-sidebar-section tools-section">
+          <div class="sky-sidebar-title"><i class="fas fa-sliders-h"></i> وحدات الإدخال السريع</div>
+          <button class="sky-btn-secondary" id="voice-btn"><i class="fas fa-microphone"></i> إرسال صوت للمحرك</button>
+          <button class="sky-btn-secondary" id="vision-btn"><i class="fas fa-image"></i> معالجة بصرية وصور</button>
+          <button class="sky-btn-secondary" id="open-workspace-btn"><i class="fas fa-laptop-code"></i> مساحة عمل النظام</button>
         </div>
-
-        <div class="sky-sidebar-section">
-          <div class="sky-sidebar-title"><i class="fas fa-folder-open"></i> Workspace</div>
-          <button class="sky-btn-secondary" id="open-workspace-btn"><i class="fas fa-brain"></i> مساحة العمل</button>
-        </div>
-
-        <div class="sky-sidebar-section" style="margin-top: auto; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
-          <div class="sky-sidebar-title"><i class="fas fa-tools"></i> إدارة النظام</div>
-          <label class="sky-btn-secondary" style="display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;">
-            <i class="fas fa-upload"></i> رفع ملف عام
-            <input type="file" id="file-input" hidden />
-          </label>
-          <button class="sky-btn-secondary" id="export-chat-btn"><i class="fas fa-file-export"></i> تصدير البيانات</button>
-          <button class="sky-btn-secondary" id="clear-chat-btn" style="color: #ef4444; border-color: rgba(239,68,68,0.2);"><i class="fas fa-trash-alt"></i> مسح النافذة والمحادثة</button>
-        </div>
-
       </aside>
 
       <main class="sky-main">
-
-        <div id="settings-panel" class="sky-settings hidden">
-          <div class="sky-settings-box">
-            <h4><i class="fas fa-sliders-h"></i> إعدادات واجهة التفاعل</h4>
-            <div class="settings-row">
-              <span>حجم الخط في المحادثة</span>
-              <select id="setting-font-size">
-                <option value="14px">صغير</option>
-                <option value="16px" selected>متوسط</option>
-                <option value="18px">كبير</option>
-              </select>
-            </div>
-            <div class="settings-row">
-              <span>محرك المعالجة الافتراضي</span>
-              <select id="setting-ai-engine">
-                <option value="sky-live">SkyHybrid Core v10</option>
-                <option value="gpt-4">GPT Engine Optimized</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div id="workspace-panel" class="sky-workspace hidden">
-          <div class="sky-settings-box">
-            <h4><i class="fas fa-laptop-code"></i> بيئة التطوير والربط</h4>
-            <p style="font-size: 13px; color: #a1a1aa; margin: 0;">الخادم متصل حالياً ويعمل على معالجة البوتات الحية بشكل مستقل.</p>
-          </div>
-        </div>
-
         <div class="sky-chat-header glass-layer">
-          <div>
-            <div class="sky-chat-title"><i class="fas fa-comments"></i> جلسة مع سماء</div>
-            <div class="sky-chat-subtitle">ذكاء هجين واعٍ • يتذكر • يحلل • يتطور</div>
+          <div class="header-details">
+            <div class="sky-chat-title"><i class="fas fa-terminal"></i> بيئة النظام النشطة</div>
+            <div class="sky-chat-subtitle">مساعد هجين متكامل يدعم التعلم والتحليل الإحصائي المستمر</div>
           </div>
-
-          <div class="sky-chat-meta">
-            <div class="sky-chat-meta-item">
-              <span class="dot"></span>
-              <span id="model-indicator"><i class="fas fa-microchip"></i> الموفر: تلقائي</span>
-            </div>
-            <div class="sky-chat-meta-item">
-              <span class="dot"></span>
-              <span id="session-indicator"><i class="fas fa-id-card"></i> جلسة: افتراضية</span>
-            </div>
-          </div>
+          <button class="sky-icon-btn clear-active-btn" id="clear-active-chat" title="مسح محتوى النافذة الحالية">
+            <i class="fas fa-broom"></i> مسح النافذة
+          </button>
         </div>
 
         <section class="sky-chat-window" id="chat-window"></section>
 
         <footer class="sky-input-bar">
           <div class="sky-input-tools">
-            <button class="sky-icon-btn" id="mini-upload-btn" title="إرفاق ملف"><i class="fas fa-paperclip"></i></button>
-            <button class="sky-icon-btn" id="mini-voice-btn" title="تسجيل صوتي"><i class="fas fa-microphone"></i></button>
-            <button class="sky-icon-btn" id="mini-vision-btn" title="التقاط صورة"><i class="fas fa-camera"></i></button>
+            <button class="sky-icon-btn" id="mini-upload-btn" title="إرفاق وثيقة"><i class="fas fa-paperclip"></i></button>
+            <button class="sky-icon-btn" id="mini-voice-btn" title="إدخال صوتي"><i class="fas fa-microphone"></i></button>
           </div>
-
-          <textarea id="user-input" class="sky-input" placeholder="اكتب لـ سماء..." rows="1"></textarea>
-
+          <textarea id="user-input" class="sky-input" placeholder="اكتب أمراً أو استفساراً للنظام..." rows="1"></textarea>
           <button class="sky-send-btn" id="send-btn">
             <i class="fas fa-paper-plane"></i>
           </button>
         </footer>
-
       </main>
     </div>
 
-    <input type="file" id="hidden-audio-input" accept="audio/*" hidden />
-    <input type="file" id="hidden-image-input" accept="image/*" hidden />
+    <div id="settings-panel" class="sky-settings hidden">
+      <div class="panel-header"><h4><i class="fas fa-sliders-h"></i> لوحة تحكم التخصيص</h4></div>
+      <div class="settings-row">
+        <span>خط واجهة العرض</span>
+        <select id="setting-font-size">
+          <option value="14px">دقيق (14px)</option>
+          <option value="16px" selected>قياسي (16px)</option>
+          <option value="18px">عريض (18px)</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="workspace-panel" class="sky-workspace hidden">
+      <div class="panel-header"><h4><i class="fas fa-network-wired"></i> حالة البيئة والمحرك</h4></div>
+      <p style="font-size: 12px; color: var(--text-muted); text-align: justify; line-height: 1.5;">النظام متصل حالياً بقواعد البيانات المركزية المحمية، ويتم عزل وتشفير الجلسات محلياً طبقاً لبروتوكول الأمان الصارم للنظام.</p>
+    </div>
 
     <div id="toast-container"></div>
-
+    <input type="file" id="file-input" hidden />
   </div>
 
   <script>
     const SKY_CONFIG = {
-      ui_mode: "{{ ui_mode if ui_mode else 'holo' }}",
       endpoints: {
         ask: "/api/chat",
         upload: "/upload",
-        voice: "/voice",
-        vision: "/vision",
-        feedback: "/feedback",
-        clear: "/clear",
-        status: "/api/v1/status"
+        clear: "/clear"
       }
     };
   </script>
-
   <script src="/static/js/script.js" defer></script>
 </body>
 </html>
