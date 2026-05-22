@@ -1,5 +1,5 @@
 // ======================================================
-// SkyOS v10 — Core Engine (النسخة النهائية)
+// SkyOS v10 — Core Engine (النسخة الثورية المتكاملة)
 // ======================================================
 
 const SkyCore = {
@@ -24,7 +24,6 @@ const SkyCore = {
     const menuToggle = document.getElementById('menu-toggle');
     const sidebar = document.getElementById('sidebar');
 
-    // أحداث أساسية
     if (sendBtn) sendBtn.addEventListener('click', () => this.sendMessage());
     if (newSessionBtn) newSessionBtn.addEventListener('click', () => this.createNewSession());
     if (voiceBtn) voiceBtn.addEventListener('click', () => this.startVoiceInput());
@@ -42,12 +41,10 @@ const SkyCore = {
     // زر القائمة على الجوال
     if (menuToggle && sidebar) {
       menuToggle.style.display = 'flex';
-
       menuToggle.addEventListener('click', () => {
         sidebar.classList.toggle('mobile-open');
       });
 
-      // إغلاق القائمة عند النقر خارجها
       document.addEventListener('click', (e) => {
         if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
           sidebar.classList.remove('mobile-open');
@@ -141,7 +138,6 @@ const SkyCore = {
     this.loadCurrentSessionMessages();
     this.updateHeaderTitle();
 
-    // إغلاق القائمة على الجوال بعد اختيار جلسة
     const sidebar = document.getElementById('sidebar');
     if (sidebar) sidebar.classList.remove('mobile-open');
   },
@@ -206,6 +202,11 @@ const SkyCore = {
     input.value = '';
     input.style.height = 'auto';
 
+    // تفعيل تأثير التفكير على العقل الثلاثي الأبعاد
+    if (window.SkyMind3D) {
+      window.SkyMind3D.triggerThinking();
+    }
+
     const current = this.state.sessions.find(s => s.id === this.state.currentSessionId);
     if (current) {
       current.messages.push({ role: 'user', content: text });
@@ -230,6 +231,7 @@ const SkyCore = {
       if (data.reply) {
         SkyUI.addMessage('assistant', data.reply);
         if (current) current.messages.push({ role: 'assistant', content: data.reply });
+        if (window.SkyMind3D) window.SkyMind3D.triggerThinking();
         SkyMind.increaseConfidence(1);
       }
       this.saveSessionsToStorage();
