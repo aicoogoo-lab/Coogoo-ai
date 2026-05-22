@@ -1,10 +1,6 @@
-/* ============================================================
-   SkyOS v10.0 — Unified Autonomous Architecture Engine
-   ============================================================ */
-
 document.addEventListener("DOMContentLoaded", () => {
   
-  // دالة محاكاة تسلسل الإقلاع الأساسي (Boot Sequence) طبقاً للبند 4
+  // دالة محاكاة تسلسل الإقلاع الأساسي (Boot Sequence)
   setTimeout(() => {
     const bootScreen = document.getElementById("sky-boot-screen");
     if (bootScreen) {
@@ -12,7 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }, 1400);
 
-  // مستودع الحالة المعزول للنظام (Isolated Memory State)
+  // مستودع الحالة المعزول للنظام
   const SkyState = {
     theme: localStorage.getItem("sky-theme") || "dark",
     sessions: JSON.parse(localStorage.getItem("sky-sessions")) || [],
@@ -38,7 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const fontSizeSelect = document.getElementById("setting-font-size");
 
   // ------------------------------
-  // محرك معالجة النصوص والأكواد (Markdown Parser)
+  // محرك معالجة النصوص والأكواد
   // ------------------------------
   function parseMarkdown(text) {
     if (!text) return "";
@@ -47,7 +43,6 @@ document.addEventListener("DOMContentLoaded", () => {
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;");
 
-    // الكتل البرمجية الكبيرة الثلاثية ```
     const codeBlockRegex = /```(\w*)\n([\s\S]*?)```/g;
     escaped = escaped.replace(codeBlockRegex, (match, lang, code) => {
       const language = lang || "code";
@@ -60,16 +55,10 @@ document.addEventListener("DOMContentLoaded", () => {
               </div>`;
     });
 
-    // الأكواد المضمنة السريعة `
     escaped = escaped.replace(/`([^`]+)`/g, '<span class="sky-inline-code">$1</span>');
-    
-    // الأسطر الجديدة
     return escaped.replace(/\n/g, "<br>");
   }
 
-  // ------------------------------
-  // نظام الإشعارات الداخلي (Toast Center)
-  // ------------------------------
   function showToast(message) {
     const container = document.getElementById("toast-container");
     const toast = document.createElement("div");
@@ -79,9 +68,6 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => { toast.remove(); }, 3000);
   }
 
-  // ------------------------------
-  // محرك إدارة النوافذ والرسائل والنسخ
-  // ------------------------------
   window.SkyEngine = {
     copyCode(button) {
       const container = button.closest(".sky-code-container");
@@ -99,7 +85,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     copyMessage(button) {
       const bubble = button.closest(".message-bubble");
-      // استنساخ لتجنب نسخ كود شريط الأدوات السفلي
       const clone = bubble.cloneNode(true);
       const actionBar = clone.querySelector(".msg-action-bar");
       if (actionBar) actionBar.remove();
@@ -108,7 +93,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const codeText = c.querySelector(".sky-code-block code")?.innerText || "";
         c.replaceWith(codeText);
       });
-
       const cleanText = clone.innerText.trim();
       navigator.clipboard.writeText(cleanText).then(() => {
         showToast("تم نسخ الرسالة بالكامل");
@@ -133,7 +117,6 @@ document.addEventListener("DOMContentLoaded", () => {
     content.innerHTML = parseMarkdown(text);
     bubble.appendChild(content);
 
-    // بناء شريط أدوات الرسالة أسفل المحتوى طبقاً للطلب
     const actionBar = document.createElement("div");
     actionBar.className = "msg-action-bar";
     actionBar.innerHTML = `
@@ -149,15 +132,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ------------------------------
-  // محرك مسح وإدارة الجلسات الحية والمؤرشفة
+  // محرك إدارة الجلسات
   // ------------------------------
   function initEngine() {
     document.body.className = SkyState.theme;
     fontSizeSelect.value = SkyState.fontSize;
     renderSessions();
 
-    if (!SkyState.currentSessionId && SkyState.sessions.length > 0) {
-      SkyState.currentSessionId = SkyState.sessions[0].id;
+    // === الإصلاح الرئيسي: إنشاء جلسة تلقائياً إذا لم توجد ===
+    if (!SkyState.currentSessionId) {
+      createNewSession();
     }
     loadCurrentSession();
   }
@@ -179,7 +163,6 @@ document.addEventListener("DOMContentLoaded", () => {
       titleSpan.innerHTML = `<i class="far fa-comments"></i> ${session.title}`;
       titleSpan.addEventListener("click", () => switchSession(session.id));
 
-      // زر الحذف المنفصل لكل جلسة مؤرشفة في القائمة الجانبية
       const deleteBtn = document.createElement("button");
       deleteBtn.className = "delete-session-btn";
       deleteBtn.innerHTML = '<i class="far fa-trash-alt"></i>';
@@ -220,7 +203,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // دالة مسح المحادثة المؤرشفة المحددة من الشريط الجانبي
   function deleteArchivedSession(id) {
     SkyState.sessions = SkyState.sessions.filter(s => s.id !== id);
     if (SkyState.currentSessionId === id) {
@@ -244,7 +226,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // مسح محتوى محادثة النافذة النشطة الحالية بالكامل
   clearActiveChatBtn.addEventListener("click", () => {
     if (!SkyState.currentSessionId) return;
     const current = SkyState.sessions.find(s => s.id === SkyState.currentSessionId);
@@ -264,7 +245,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ------------------------------
-  // تدفق الإرسال والاتصال بالسيرفر
+  // تدفق الإرسال
   // ------------------------------
   async function handleSendMessage() {
     const text = userInput.value.trim();
@@ -274,11 +255,9 @@ document.addEventListener("DOMContentLoaded", () => {
     userInput.value = "";
     userInput.style.height = "auto";
 
-    // حفظ رسالة المستخدم
     const current = SkyState.sessions.find(s => s.id === SkyState.currentSessionId);
     if (current) {
       current.messages.push({ role: "user", content: text });
-      // تحديث تلقائي لعنوان الجلسة بناء على أول سؤال
       if (current.messages.length === 1) {
         current.title = text.substring(0, 24) + "...";
         renderSessions();
@@ -286,7 +265,6 @@ document.addEventListener("DOMContentLoaded", () => {
       saveState();
     }
 
-    // إرسال الطلب للسيرفر الفعلي
     try {
       const response = await fetch(SKY_CONFIG.endpoints.ask, {
         method: "POST",
@@ -303,12 +281,78 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     } catch (error) {
       console.error(error);
-      appendMessage("assistant", "خطأ: فشل الاتصال بخادم المحرك المحرك الذكي. يرجى مراجعة حالة الربط.");
+      appendMessage("assistant", "خطأ: فشل الاتصال بخادم المحرك الذكي.");
     }
   }
 
   // ------------------------------
-  // روابط أحداث الواجهة التفاعلية
+  // الإصلاحات الجديدة: الصوت + رفع الملفات
+  // ------------------------------
+  function startVoiceRecognition() {
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRec) {
+      showToast("المتصفح لا يدعم الإدخال الصوتي. استخدم Chrome أو Edge.");
+      return;
+    }
+    const recognition = new SpeechRec();
+    recognition.lang = 'ar-SA';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript.trim();
+      if (transcript) {
+        userInput.value = transcript;
+        showToast("تم التعرف على الصوت ✓");
+        handleSendMessage();
+      }
+    };
+    recognition.onerror = (e) => showToast("خطأ صوتي: " + e.error);
+    try {
+      recognition.start();
+      showToast("🎤 جاري الاستماع... تحدث الآن");
+    } catch (_) {
+      showToast("تعذر تشغيل الميكروفون");
+    }
+  }
+
+  function handleFileSelection() {
+    const fileInput = document.getElementById("file-input");
+    if (!fileInput) return;
+
+    fileInput.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file || !SkyState.currentSessionId) return;
+
+      showToast(`جاري معالجة ${file.name}...`);
+
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        let content = `📎 ملف مرفوع: ${file.name} (${(file.size / 1024).toFixed(1)} كيلوبايت)`;
+        if (file.type.startsWith("text/") || /\.(md|py|js|txt|json|csv)$/i.test(file.name)) {
+          content += `\n\n${ev.target.result.substring(0, 2500)}`;
+        } else if (file.type.startsWith("image/")) {
+          content += "\n\n[صورة — جاهزة للتحليل البصري]";
+        }
+        appendMessage("user", content);
+        showToast("تم إضافة الملف إلى السياق");
+      };
+
+      if (file.type.startsWith("text/") || /\.(md|py|js|txt)$/i.test(file.name)) {
+        reader.readAsText(file);
+      } else {
+        reader.readAsDataURL(file);
+        setTimeout(() => {
+          appendMessage("user", `📎 ${file.name} — جاهز للتحليل`);
+        }, 400);
+      }
+      fileInput.value = "";
+    };
+    fileInput.click();
+  }
+
+  // ------------------------------
+  // روابط الأحداث
   // ------------------------------
   sendBtn.addEventListener("click", handleSendMessage);
   userInput.addEventListener("keydown", (e) => {
@@ -318,7 +362,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // تكبير تلقائي مرن لحقل الإدخال السفلي
   userInput.addEventListener("input", () => {
     userInput.style.height = "auto";
     userInput.style.height = Math.min(userInput.scrollHeight, 100) + "px";
@@ -354,6 +397,22 @@ document.addEventListener("DOMContentLoaded", () => {
     loadCurrentSession();
   });
 
-  // تشغيل المحرك لأول مرة
+  // === ربط أزرار الصوت ورفع الملفات (الإصلاح الرئيسي) ===
+  const voiceBtn = document.getElementById("voice-btn");
+  if (voiceBtn) voiceBtn.addEventListener("click", startVoiceRecognition);
+
+  const miniVoiceBtn = document.getElementById("mini-voice-btn");
+  if (miniVoiceBtn) miniVoiceBtn.addEventListener("click", startVoiceRecognition);
+
+  const miniUploadBtn = document.getElementById("mini-upload-btn");
+  if (miniUploadBtn) miniUploadBtn.addEventListener("click", handleFileSelection);
+
+  const visionBtn = document.getElementById("vision-btn");
+  if (visionBtn) visionBtn.addEventListener("click", () => {
+    showToast("وضع الرؤية مفعّل");
+    handleFileSelection();
+  });
+
+  // تشغيل المحرك
   initEngine();
 });
