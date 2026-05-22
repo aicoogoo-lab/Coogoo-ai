@@ -1,5 +1,5 @@
 // ======================================================
-// SkyOS v10 — UI Controller
+// SkyOS v10 — UI Controller (محسّن)
 // ======================================================
 
 const SkyUI = {
@@ -9,7 +9,7 @@ const SkyUI = {
     this.chatMessages = document.getElementById('chat-messages');
   },
 
-  // إضافة رسالة جديدة
+  // إضافة رسالة جديدة مع دعم أفضل للكود
   addMessage(role, content) {
     if (!this.chatMessages) this.init();
 
@@ -18,39 +18,65 @@ const SkyUI = {
 
     const contentDiv = document.createElement('div');
     contentDiv.className = 'message-content';
-    contentDiv.innerHTML = this.parseContent(content);
+    contentDiv.innerHTML = this.parseMarkdown(content);
 
     messageDiv.appendChild(contentDiv);
     this.chatMessages.appendChild(messageDiv);
 
-    // التمرير للأسفل
     this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
   },
 
-  // تحويل النص (يدعم الكود حاليًا بشكل بسيط)
-  parseContent(text) {
-    // يمكن تطويرها لاحقًا لدعم markdown أفضل
+  // تحويل النص مع دعم الكود
+  parseMarkdown(text) {
+    if (!text) return '';
+
+    // دعم كتل الكود
+    text = text.replace(/```([\s\S]*?)```/g, (match, code) => {
+      return `<div class="sky-code-container">
+                <div class="sky-code-header">
+                  <span><i class="fas fa-code"></i> كود</span>
+                  <button onclick="SkyUI.copyCode(this)" class="sky-code-copy-btn">
+                    <i class="far fa-copy"></i> نسخ
+                  </button>
+                </div>
+                <pre class="sky-code-block"><code>${code.trim()}</code></pre>
+              </div>`;
+    });
+
+    // تحويل الأسطر الجديدة
     return text.replace(/\n/g, '<br>');
   },
 
-  // إظهار حالة "جاري التفكير"
+  // نسخ الكود
+  copyCode(button) {
+    const codeBlock = button.closest('.sky-code-container').querySelector('code');
+    if (codeBlock) {
+      navigator.clipboard.writeText(codeBlock.innerText).then(() => {
+        const originalText = button.innerHTML;
+        button.innerHTML = `<i class="fas fa-check"></i> تم النسخ`;
+        setTimeout(() => {
+          button.innerHTML = originalText;
+        }, 2000);
+      });
+    }
+  },
+
   showThinking() {
     if (!this.chatMessages) this.init();
 
-    const thinkingDiv = document.createElement('div');
-    thinkingDiv.id = 'thinking-indicator';
-    thinkingDiv.className = 'message assistant';
-    thinkingDiv.innerHTML = `
+    const thinking = document.createElement('div');
+    thinking.id = 'thinking-indicator';
+    thinking.className = 'message assistant';
+    thinking.innerHTML = `
       <div class="message-content">
         <i class="fas fa-circle-notch fa-spin"></i> 
-        <span style="margin-right: 8px;">أفكر...</span>
+        <span style="margin-right:8px;">أفكر بعمق...</span>
       </div>
     `;
-    this.chatMessages.appendChild(thinkingDiv);
+    this.chatMessages.appendChild(thinking);
     this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
   },
 
-  // إخفاء حالة التفكير
   hideThinking() {
     const thinking = document.getElementById('thinking-indicator');
     if (thinking) thinking.remove();
@@ -62,16 +88,13 @@ const SkyUI = {
 
     const toast = document.createElement('div');
     toast.className = 'toast';
-    toast.textContent = message;
+    toast.innerHTML = message;
     container.appendChild(toast);
 
-    setTimeout(() => {
-      toast.remove();
-    }, 3000);
+    setTimeout(() => toast.remove(), 3200);
   }
 };
 
-// تهيئة واجهة المستخدم
 document.addEventListener('DOMContentLoaded', () => {
   SkyUI.init();
 });
