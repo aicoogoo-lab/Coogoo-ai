@@ -1,5 +1,5 @@
 // ======================================================
-// SkyOS v10 — Core Engine (رفع ملفات حقيقي)
+// SkyOS v10 — Core Engine (نهائي)
 // ======================================================
 
 const SkyCore = {
@@ -37,10 +37,17 @@ const SkyCore = {
     }
   },
 
+  updateHeaderTitle() {
+    const current = this.state.sessions.find(s => s.id === this.state.currentSessionId);
+    const header = document.querySelector('.sky-chat-title');
+    if (header && current) {
+      header.innerHTML = `<i class="fas fa-terminal"></i> ${current.title}`;
+    }
+  },
+
   handleFileUpload() {
     const input = document.createElement('input');
     input.type = 'file';
-
     input.onchange = async (e) => {
       const file = e.target.files[0];
       if (!file || !this.state.currentSessionId) return;
@@ -51,27 +58,23 @@ const SkyCore = {
       formData.append('file', file);
 
       try {
-        const res = await fetch(window.SKY_CONFIG.endpoints.upload || '/upload', {
+        const res = await fetch('/upload', {
           method: 'POST',
           body: formData
         });
-
         const data = await res.json();
 
         if (data.success) {
-          let message = `✅ تم رفع الملف: ${file.name}`;
-          if (data.analysis?.description) {
-            message += `\n\nتحليل الصورة:\n${data.analysis.description}`;
-          }
-          SkyUI.addMessage('assistant', message);
+          let msg = `✅ تم رفع الملف: ${file.name}`;
+          if (data.analysis?.description) msg += `\n\n${data.analysis.description}`;
+          SkyUI.addMessage('assistant', msg);
         } else {
-          SkyUI.addMessage('assistant', `فشل رفع الملف: ${data.error || 'خطأ غير معروف'}`);
+          SkyUI.addMessage('assistant', `فشل رفع الملف`);
         }
-      } catch (err) {
+      } catch {
         SkyUI.addMessage('assistant', 'حدث خطأ أثناء رفع الملف.');
       }
     };
-
     input.click();
   },
 
@@ -81,17 +84,14 @@ const SkyCore = {
       SkyUI.showToast("المتصفح لا يدعم الإدخال الصوتي");
       return;
     }
-
     const recognition = new SpeechRecognition();
     recognition.lang = 'ar-SA';
     recognition.interimResults = false;
 
     recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      document.getElementById('user-input').value = transcript;
+      document.getElementById('user-input').value = event.results[0][0].transcript;
       this.sendMessage();
     };
-
     recognition.onerror = () => SkyUI.showToast("حدث خطأ أثناء الاستماع");
     recognition.start();
     SkyUI.showToast("جاري الاستماع...");
@@ -105,12 +105,12 @@ const SkyCore = {
       messages: [],
       createdAt: new Date()
     };
-
     this.state.sessions.unshift(newSession);
     this.state.currentSessionId = id;
     this.saveSessionsToStorage();
     this.renderSessions();
     this.clearChat();
+    this.updateHeaderTitle();
   },
 
   switchSession(id) {
@@ -118,6 +118,7 @@ const SkyCore = {
     this.saveSessionsToStorage();
     this.renderSessions();
     this.loadCurrentSessionMessages();
+    this.updateHeaderTitle();
   },
 
   renderSessions() {
@@ -132,17 +133,14 @@ const SkyCore = {
         <span>${session.title}</span>
         <button class="delete-btn"><i class="fas fa-trash"></i></button>
       `;
-
       div.addEventListener('click', (e) => {
         if (!e.target.closest('.delete-btn')) this.switchSession(session.id);
       });
-
       const delBtn = div.querySelector('.delete-btn');
       delBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         this.deleteSession(session.id);
       });
-
       container.appendChild(div);
     });
   },
@@ -155,6 +153,7 @@ const SkyCore = {
     this.saveSessionsToStorage();
     this.renderSessions();
     this.loadCurrentSessionMessages();
+    this.updateHeaderTitle();
   },
 
   loadCurrentSessionMessages() {
@@ -164,6 +163,7 @@ const SkyCore = {
     if (current?.messages) {
       current.messages.forEach(msg => SkyUI.addMessage(msg.role, msg.content));
     }
+    this.updateHeaderTitle();
   },
 
   async sendMessage() {
@@ -195,7 +195,6 @@ const SkyCore = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: text, session_id: this.state.currentSessionId })
       });
-
       const data = await res.json();
       SkyUI.hideThinking();
 
@@ -204,7 +203,6 @@ const SkyCore = {
         if (current) current.messages.push({ role: 'assistant', content: data.reply });
         SkyMind.increaseConfidence(1);
       }
-
       this.saveSessionsToStorage();
     } catch {
       SkyUI.hideThinking();
@@ -222,6 +220,7 @@ const SkyCore = {
       this.renderSessions();
       this.loadCurrentSessionMessages();
     }
+    this.updateHeaderTitle();
   },
 
   loadSessionsFromStorage() {
