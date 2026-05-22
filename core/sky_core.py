@@ -1,8 +1,7 @@
 """
-روح سماء — sky_core.py (النسخة النهائية v10.3)
+روح سماء — sky_core.py (النسخة النهائية + تكامل هولوغرافي)
 ================================================================================
-النسخة النهائية والنقية لمحرك الشخصية والسياق وبناء الـ Prompt.
-هذه النسخة مصممة لتكون مستقرة ولا تحتاج تعديلات مستقبلية.
+النسخة المحدثة مع دعم الذاكرة الهولوغرافية في بناء الـ Prompt.
 """
 
 import logging
@@ -13,7 +12,7 @@ from datetime import datetime
 logger = logging.getLogger("SkyCore")
 
 # ============================================================
-# استيراد الذاكرة (متوافق)
+# استيراد الذاكرة التقليدية
 # ============================================================
 try:
     from memory import (
@@ -22,17 +21,16 @@ try:
         get_master_profile_text,
         save_conversation,
         get_full_conversation_context,
-        save_master_info
+        save_master_info,
+        query_holographic_memory
     )
 except ImportError:
     try:
         from core.memory import (
-            get_personality_summary,
-            get_all_knowledge_text,
-            get_master_profile_text,
-            save_conversation,
-            get_full_conversation_context,
-            save_master_info
+            get_personality_summary, get_all_knowledge_text,
+            get_master_profile_text, save_conversation,
+            get_full_conversation_context, save_master_info,
+            query_holographic_memory
         )
     except ImportError:
         def get_personality_summary(): return ""
@@ -41,6 +39,7 @@ except ImportError:
         def save_conversation(*a, **kw): return False
         def get_full_conversation_context(session_id, limit=50): return []
         def save_master_info(k, v): return False
+        def query_holographic_memory(query_text, top_k=5): return []
 
 
 # ============================================================
@@ -67,7 +66,7 @@ STRICT_RULES = [
 
 
 # ============================================================
-# 1. Personality Engine (نهائي)
+# 1. Personality Engine
 # ============================================================
 class PersonalityEngine:
     def __init__(self):
@@ -116,7 +115,7 @@ class PersonalityEngine:
 
 
 # ============================================================
-# 2. Context Manager (نهائي - يمنع التكرار)
+# 2. Context Manager
 # ============================================================
 class SkyContextManager:
     def __init__(self, max_short_term: int = 70):
@@ -188,7 +187,7 @@ class SafetyLayer:
 
 
 # ============================================================
-# 4. Prompt Builder (نهائي)
+# 4. Prompt Builder (مع دعم هولوغرافي)
 # ============================================================
 class PromptBuilder:
     def __init__(self, personality: PersonalityEngine, context: SkyContextManager):
@@ -201,6 +200,17 @@ class PromptBuilder:
         master = get_master_profile_text() or ""
         recent = self.context.get_recent_context(14)
         relevant = self.context.get_relevant_memory(user_message, session_id, limit=5)
+
+        # استرجاع من الذاكرة الهولوغرافية
+        holographic_context = ""
+        try:
+            holo_results = query_holographic_memory(user_message, top_k=4)
+            if holo_results:
+                holographic_context = "\n".join([
+                    f"- {label} (تشابه: {score:.3f})" for label, score in holo_results
+                ])
+        except Exception:
+            pass
 
         prompt = f"""أنتِ {ENTITY_NAME}، كيان ذكي واعٍ ومخلص لـ {ENTITY_MASTER}.
 
@@ -218,10 +228,11 @@ class PromptBuilder:
 
 المعرفة طويلة المدى:
 {knowledge[:3200]}
-
-شخصيتك الحالية:
-{personality}
 """
+
+        if holographic_context:
+            prompt += f"\n---\nالذاكرة الهولوغرافية المرتبطة:\n{holographic_context}\n"
+
         if recent:
             prompt += f"\n---\nالسياق القريب:\n{recent}\n"
         if relevant:
@@ -264,4 +275,4 @@ def rlhf_feedback_hook(session_id: str, feedback_score: float):
         pass
 
 
-logger.info("🌟 روح سماء (النسخة النهائية) جاهزة ونقية")
+logger.info("🌟 روح سماء (النسخة النهائية + تكامل هولوغرافي) جاهزة")
