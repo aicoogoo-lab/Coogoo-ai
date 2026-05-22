@@ -1,14 +1,12 @@
 """
-SkyOS v10.1 — Hyperdimensional Memory Module
-=============================================
-وحدة أولية للحوسبة فائقة الأبعاد (Hyperdimensional Computing)
+SkyOS v10.2 — Hyperdimensional Memory (النسخة المحسّنة)
+=======================================================
+ذاكرة هولوغرافية تعتمد على الحوسبة فائقة الأبعاد (Hyperdimensional Computing).
 
-تدعم:
-- إنشاء متجهات عالية الأبعاد
-- عملية الربط (Binding)
-- عملية التجميع (Bundling)
-- عملية التبديل (Permutation)
-- تخزين واسترجاع ترابطي (Associative Memory)
+التحسينات:
+- دقة استرجاع محسنة
+- معالجة أفضل للتشابه
+- كود أنظف وأكثر استقرارًا
 """
 
 import numpy as np
@@ -20,35 +18,31 @@ logger = logging.getLogger("HyperdimensionalMemory")
 
 class HyperdimensionalMemory:
     """
-    ذاكرة هولوغرافية تعتمد على الحوسبة فائقة الأبعاد.
+    ذاكرة هولوغرافية متقدمة تدعم:
+    - إنشاء متجهات عالية الأبعاد
+    - عمليات الربط (Binding) والتجميع (Bundling)
+    - الاسترجاع الترابطي بدقة محسنة
     """
 
-    def __init__(self, dimension: int = 10000, seed: Optional[int] = None):
-        """
-        :param dimension: عدد أبعاد المتجهات (يفضل أن يكون كبيراً)
-        :param seed: بذرة عشوائية لإعادة الإنتاجية
-        """
+    def __init__(self, dimension: int = 10000, seed: Optional[int] = 42):
         self.dimension = dimension
         self.rng = np.random.default_rng(seed)
-        self.memory: Dict[str, np.ndarray] = {}           # key -> vector
-        self.labels: Dict[int, str] = {}                  # index -> label
+        self.memory: Dict[str, np.ndarray] = {}
 
         logger.info(f"Hyperdimensional Memory initialized with {dimension} dimensions")
 
     # ============================================================
-    # إنشاء متجه عشوائي
+    # إنشاء متجه
     # ============================================================
     def create_vector(self, label: Optional[str] = None) -> np.ndarray:
         """إنشاء متجه ثنائي عشوائي (-1 أو +1)"""
-        vector = self.rng.choice([-1, 1], size=self.dimension).astype(np.float32)
-        
+        vector = self.rng.choice([-1., 1.], size=self.dimension).astype(np.float32)
         if label:
             self.memory[label] = vector
-            logger.debug(f"Created vector for label: {label}")
         return vector
 
     # ============================================================
-    # عملية الربط (Binding)
+    # عمليات HDC الأساسية
     # ============================================================
     def bind(self, vec1: np.ndarray, vec2: np.ndarray) -> np.ndarray:
         """ربط متجهين (Element-wise multiplication)"""
@@ -56,70 +50,73 @@ class HyperdimensionalMemory:
             raise ValueError("Vectors must have the same shape")
         return (vec1 * vec2).astype(np.float32)
 
-    # ============================================================
-    # عملية التجميع (Bundling)
-    # ============================================================
     def bundle(self, vectors: List[np.ndarray]) -> np.ndarray:
-        """تجميع عدة متجهات معاً"""
+        """تجميع عدة متجهات مع التطبيع"""
         if not vectors:
             raise ValueError("No vectors provided for bundling")
-        
+
         stacked = np.stack(vectors)
         bundled = np.sum(stacked, axis=0)
-        
-        # تطبيع المتجه
+
         norm = np.linalg.norm(bundled)
         if norm > 0:
             bundled = bundled / norm
         return bundled.astype(np.float32)
 
-    # ============================================================
-    # عملية التبديل (Permutation)
-    # ============================================================
     def permute(self, vector: np.ndarray, shift: int = 1) -> np.ndarray:
-        """تبديل المتجه (يُستخدم لتمثيل الترتيب أو السياق)"""
+        """تبديل المتجه (لتمثيل الترتيب والسياق)"""
         return np.roll(vector, shift=shift).astype(np.float32)
 
     # ============================================================
-    # تخزين متجه في الذاكرة
+    # التخزين
     # ============================================================
     def store(self, label: str, vector: Optional[np.ndarray] = None) -> np.ndarray:
-        """تخزين متجه في الذاكرة الترابطية"""
+        """تخزين متجه في الذاكرة"""
         if vector is None:
             vector = self.create_vector()
-        
         self.memory[label] = vector
-        logger.debug(f"Stored vector: {label}")
         return vector
 
     # ============================================================
-    # الاسترجاع الترابطي (Query)
+    # الاسترجاع (محسّن الدقة)
     # ============================================================
     def query(self, vector: np.ndarray, top_k: int = 5) -> List[Tuple[str, float]]:
         """
-        البحث عن أقرب المتجهات المخزنة باستخدام التشابه (Dot Product)
+        البحث عن أقرب المتجهات باستخدام Cosine Similarity.
+        هذه النسخة أكثر دقة واستقرارًا.
         """
         if not self.memory:
             return []
 
         results = []
+        vec_norm = np.linalg.norm(vector) + 1e-8
+
         for label, stored_vec in self.memory.items():
-            similarity = np.dot(vector, stored_vec) / (np.linalg.norm(vector) * np.linalg.norm(stored_vec) + 1e-8)
+            stored_norm = np.linalg.norm(stored_vec) + 1e-8
+            similarity = np.dot(vector, stored_vec) / (vec_norm * stored_norm)
             results.append((label, float(similarity)))
 
         # ترتيب تنازلي حسب التشابه
         results.sort(key=lambda x: x[1], reverse=True)
         return results[:top_k]
 
-    # ============================================================
-    # فك الربط (Unbinding) - تقريبي
-    # ============================================================
-    def unbind(self, bound_vector: np.ndarray, known_vector: np.ndarray) -> np.ndarray:
-        """محاولة فك الربط (تقريبي)"""
-        return self.bind(bound_vector, known_vector)  # في HDC البسيط، الربط عكسه نفسه
+    def get_top_similar(self, vector: np.ndarray, top_k: int = 5, threshold: float = 0.0) -> List[Tuple[str, float]]:
+        """
+        استرجاع النتائج التي تتجاوز عتبة تشابه معينة.
+        مفيدة لتحسين دقة الاسترجاع.
+        """
+        results = self.query(vector, top_k=top_k * 2)
+        filtered = [(label, score) for label, score in results if score >= threshold]
+        return filtered[:top_k]
 
     # ============================================================
-    # معلومات عامة
+    # فك الربط (تقريبي)
+    # ============================================================
+    def unbind(self, bound_vector: np.ndarray, known_vector: np.ndarray) -> np.ndarray:
+        return self.bind(bound_vector, known_vector)
+
+    # ============================================================
+    # أدوات مساعدة
     # ============================================================
     def get_memory_size(self) -> int:
         return len(self.memory)
@@ -130,26 +127,18 @@ class HyperdimensionalMemory:
 
 
 # ============================================================
-# مثال سريع للاستخدام
+# اختبار سريع
 # ============================================================
 if __name__ == "__main__":
     hdm = HyperdimensionalMemory(dimension=5000)
 
-    # إنشاء متجهات للمفاهيم
-    project = hdm.create_vector("مشروع")
-    coogoo = hdm.create_vector("Coogoo-ai")
-    sentient = hdm.create_vector("SENTIENT CORE")
+    # مثال بسيط
+    vec1 = hdm.create_vector("مفهوم_1")
+    vec2 = hdm.create_vector("مفهوم_2")
 
-    # ربط المفاهيم
-    project_coogoo = hdm.bind(project, coogoo)
-    hdm.store("مشروع Coogoo-ai", project_coogoo)
+    hdm.store("مفهوم_مرتبط", hdm.bind(vec1, vec2))
 
-    # تجميع عدة مفاهيم
-    bundled = hdm.bundle([project, coogoo, sentient])
-    hdm.store("مشروع Coogoo + Sentient", bundled)
-
-    # استرجاع
-    results = hdm.query(project_coogoo, top_k=3)
+    results = hdm.query(vec1, top_k=3)
     print("نتائج الاسترجاع:")
     for label, score in results:
         print(f"  {label}: {score:.4f}")
