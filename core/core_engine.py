@@ -1,32 +1,20 @@
 """
 SkyOS v10.0 — Core Engine + Digital Mind (النواة الأساسية + العقل الرقمي)
 ================================================================================
-هذا الملف هو قلب النظام الذكي.
-
-وظائفه الرئيسية:
-- تصنيف نية المستخدم (Intent Classification)
-- توجيه الأوامر إلى الوحدات المناسبة (Command Orchestration)
-- الحفاظ على حالة العقل الرقمي (Digital Mind State)
-- نظام وحدات قابل للتوسعة (Modules System)
-- حلقة تأمل ذاتي بسيطة (Self-Reflection)
-
-المطور: Grok + Driving
-التاريخ: 2026
+المحرك المركزي المسؤول عن فهم الأوامر وتوجيهها إلى الوحدات المناسبة.
 """
 
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 from datetime import datetime
 
 logger = logging.getLogger("CoreEngine")
 
 
 # ============================================================
-# 1. حالة العقل الرقمي (Digital Mind State)
+# 1. حالة العقل الرقمي
 # ============================================================
 class DigitalMindState:
-    """تمثل الحالة الذهنية الداخلية للعقل الرقمي"""
-
     def __init__(self):
         self.goals: List[str] = []
         self.current_plan: List[Dict[str, Any]] = []
@@ -54,11 +42,9 @@ class DigitalMindState:
 
 
 # ============================================================
-# 2. الوحدة الأساسية (Base Module)
+# 2. الوحدة الأساسية
 # ============================================================
 class BaseModule:
-    """الكلاس الأساسي الذي ترث منه كل الوحدات"""
-
     name: str = "base"
     description: str = "وحدة أساسية"
 
@@ -66,53 +52,36 @@ class BaseModule:
         return False
 
     def execute(self, user_input: str, context: Dict[str, Any]) -> Dict[str, Any]:
-        raise NotImplementedError("يجب تنفيذ دالة execute في الوحدة الفرعية")
+        raise NotImplementedError
 
 
 # ============================================================
 # 3. النواة الأساسية (Core Engine)
 # ============================================================
 class CoreEngine:
-    """
-    المحرك المركزي المسؤول عن:
-    - فهم نية المستخدم
-    - توجيه الطلب للوحدة المناسبة
-    - تحديث حالة العقل الرقمي
-    """
-
     def __init__(self):
         self.modules: Dict[str, BaseModule] = {}
         self.mind = DigitalMindState()
         self.command_history: List[Dict[str, Any]] = []
-        logger.info("🧠 Core Engine + Digital Mind تم تهيئته بنجاح")
+        logger.info("🧠 Core Engine + Digital Mind تم تهيئته")
 
     def register_module(self, module: BaseModule):
-        """تسجيل وحدة جديدة في النظام"""
-        if module.name in self.modules:
-            logger.warning(f"الوحدة {module.name} مسجلة مسبقاً، سيتم استبدالها.")
         self.modules[module.name] = module
-        logger.info(f"✅ تم تسجيل الوحدة: {module.name} — {module.description}")
+        logger.info(f"✅ تم تسجيل الوحدة: {module.name}")
 
     def _classify_intent(self, user_input: str) -> str:
-        """تصنيف بسيط وسريع لنية المستخدم (يمكن تطويره لاحقاً بـ LLM)"""
         text = user_input.lower()
-
-        if any(word in text for word in ["صورة", "صور", "vision", "analyze image", "ocr"]):
+        if any(w in text for w in ["صورة", "صور", "vision", "analyze image"]):
             return "vision"
-        if any(word in text for word in ["رابط", "http", "analyze", "scrape", "website"]):
+        if any(w in text for w in ["رابط", "http", "analyze url"]):
             return "web_analysis"
-        if any(word in text for word in ["كود", "python", "execute", "run code", "sandbox"]):
+        if any(w in text for w in ["كود", "python", "execute"]):
             return "code_execution"
-        if any(word in text for word in ["ذاكرة", "تذكر", "memory", "knowledge"]):
+        if any(w in text for w in ["ذاكرة", "memory"]):
             return "memory_query"
-        if any(word in text for word in ["خطة", "خطط", "plan", "goal"]):
-            return "planning"
         return "dialogue"
 
     def process_command(self, user_input: str, session_id: str, extra_context: str = "") -> Dict[str, Any]:
-        """
-        النقطة الرئيسية التي تستقبل كل الأوامر وتوجهها.
-        """
         intent = self._classify_intent(user_input)
         self.mind.session_context["last_intent"] = intent
 
@@ -124,7 +93,6 @@ class CoreEngine:
             "mind_state": self.mind.snapshot()
         }
 
-        # محاولة معالجة الطلب من خلال الوحدات المسجلة
         handled = False
         for module_name, module in self.modules.items():
             if module.can_handle(intent, user_input):
@@ -139,63 +107,63 @@ class CoreEngine:
                     handled = True
                     break
                 except Exception as e:
-                    logger.error(f"خطأ في تنفيذ الوحدة {module_name}: {e}")
+                    logger.error(f"خطأ في الوحدة {module_name}: {e}")
                     result["success"] = False
-                    result["error"] = str(e)
 
         if not handled:
             result["handled_by"] = "dialogue_fallback"
-            result["response"] = "[سيتم معالجة الطلب عبر محرك الحوار الرئيسي]"
 
-        # تحديث حالة العقل الرقمي
-        self._reflect(user_input, result, session_id)
+        self._reflect(user_input, result)
         self.command_history.append({
             "timestamp": datetime.utcnow().isoformat(),
-            "session_id": session_id,
-            "input": user_input[:200],
+            "input": user_input[:150],
             "intent": intent,
             "handled_by": result["handled_by"]
         })
-
         return result
 
-    def _reflect(self, user_input: str, result: Dict[str, Any], session_id: str):
-        """حلقة التأمل الذاتي (Self-Reflection)"""
-        current_confidence = self.mind.confidence
+    def _reflect(self, user_input: str, result: Dict[str, Any]):
         if result.get("success"):
-            new_confidence = min(0.98, current_confidence + 0.015)
+            self.mind.update(confidence=min(0.98, self.mind.confidence + 0.01))
         else:
-            new_confidence = max(0.6, current_confidence - 0.03)
-
-        self.mind.update(confidence=new_confidence)
+            self.mind.update(confidence=max(0.65, self.mind.confidence - 0.02))
 
     def get_mind_state(self) -> Dict[str, Any]:
         return self.mind.snapshot()
 
 
 # ============================================================
-# 4. وحدة الحوار الافتراضية (Dialogue Module)
+# 4. وحدة الحوار الافتراضية
 # ============================================================
 class DialogueModule(BaseModule):
     name = "dialogue"
-    description = "وحدة الحوار والتفاعل الرئيسية"
+    description = "وحدة الحوار الرئيسية"
 
     def can_handle(self, intent: str, user_input: str = "") -> bool:
         return intent == "dialogue"
 
     def execute(self, user_input: str, context: Dict[str, Any]) -> Dict[str, Any]:
         return {
-            "response": "تم توجيه الطلب إلى محرك الحوار المتقدم.",
+            "response": "تم توجيه الطلب إلى محرك الحوار.",
             "success": True
         }
 
 
 # ============================================================
-# 5. إنشاء النسخة العالمية الجاهزة للاستخدام
+# 5. إنشاء النسخة العالمية
 # ============================================================
 core_engine = CoreEngine()
-
-# تسجيل الوحدة الافتراضية
 core_engine.register_module(DialogueModule())
 
-logger.info("🌟 SkyOS Core Engine + Digital Mind جاهز للعمل والتوسعة")
+# ============================================================
+# 6. تسجيل الوحدات الإضافية تلقائياً
+# ============================================================
+try:
+    from vision_module import vision_module
+    core_engine.register_module(vision_module)
+    logger.info("👁️ Vision Module تم تسجيلها بنجاح")
+except ImportError:
+    logger.warning("⚠️ لم يتم العثور على vision_module.py")
+
+
+logger.info("🌟 SkyOS Core Engine + Digital Mind جاهز ومتصل بالوحدات")
