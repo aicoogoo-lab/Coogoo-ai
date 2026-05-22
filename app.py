@@ -1,8 +1,8 @@
 """
-SkyOS Backend — النسخة النهائية v10.4
+SkyOS Backend — النسخة النهائية v10.5
 ================================================================================
 قلب المشروع وعموده الفقري
-تكامل كامل مع Core Engine + Digital Mind + Quantum Holographic Memory
+تكامل كامل مع Core Engine + Digital Mind
 """
 
 import os
@@ -20,6 +20,8 @@ try:
     HAS_CORS = True
 except ImportError:
     HAS_CORS = False
+
+from requests import post
 
 # ============================
 # إعداد المسارات
@@ -55,7 +57,7 @@ try:
 except ImportError:
     CORE_ENGINE_AVAILABLE = False
     core_engine = None
-    logger.warning("Core Engine غير متاح")
+    logger.warning("⚠️ Core Engine غير متاح")
 
 try:
     import sky_core
@@ -97,7 +99,46 @@ def init_memory():
 init_memory()
 
 # ============================
-# المسارات الرئيسية
+# توليد رد ذكي (LLM)
+# ============================
+def generate_llm_response(user_message: str, session_id: str, extra_context: str = "") -> str:
+    system_prompt = safe_get_system_prompt(user_message, session_id, extra_context)
+
+    messages = [{"role": "system", "content": system_prompt}]
+    messages.append({"role": "user", "content": user_message})
+
+    providers = ["groq", "gemini", "openai"]
+    reply = None
+
+    for provider in providers:
+        try:
+            if provider == "groq":
+                key = os.environ.get("GROQ_API_KEY")
+                if key:
+                    r = post(
+                        "https://api.groq.com/openai/v1/chat/completions",
+                        headers={"Authorization": f"Bearer {key}"},
+                        json={
+                            "model": "llama-3.3-70b-versatile",
+                            "messages": messages,
+                            "temperature": 0.4
+                        },
+                        timeout=35
+                    )
+                    if r.status_code == 200:
+                        reply = r.json()["choices"][0]["message"]["content"].strip()
+                        break
+        except Exception as e:
+            logger.warning(f"فشل مزود {provider}: {e}")
+            continue
+
+    if not reply:
+        reply = "⚠️ تعذر الاتصال بمزودي الذكاء حالياً. يرجى المحاولة لاحقاً."
+
+    return reply
+
+# ============================
+# المسارات
 # ============================
 @app.route("/")
 def home():
@@ -112,7 +153,7 @@ def serve_sw():
     return send_from_directory(STATIC_DIR, "service-worker.js")
 
 # ============================
-# مسار الدردشة الرئيسي (متكامل مع Core Engine)
+# مسار الدردشة الرئيسي (مصحح)
 # ============================
 @app.route("/api/chat", methods=["POST"])
 def api_chat():
@@ -120,7 +161,6 @@ def api_chat():
         data = request.json or {}
         user_message = data.get("message", "").strip()
         session_id = data.get("session_id", "default_sky_session")
-        provider = data.get("provider", "groq")
 
         if not user_message:
             return jsonify({"status": "error", "reply": "الرسالة فارغة."}), 400
@@ -128,7 +168,7 @@ def api_chat():
         handled_by = "dialogue"
         reply = ""
 
-        # استخدام Core Engine إن وجد
+        # === استخدام Core Engine للتوجيه ===
         if CORE_ENGINE_AVAILABLE and core_engine:
             try:
                 result = core_engine.process_command(
@@ -140,9 +180,10 @@ def api_chat():
             except Exception as e:
                 logger.error(f"خطأ في Core Engine: {e}")
 
-        # إذا لم يتم معالجة الطلب من النواة
-        if not reply:
-            reply = "تم استلام رسالتك. النظام يعمل في الوضع المتكامل."
+        # === إذا كان الرد عام أو من Dialogue Module، نولد رد ذكي ===
+        if not reply or handled_by in ["dialogue", "dialogue_fallback"]:
+            reply = generate_llm_response(user_message, session_id)
+            handled_by = "llm"
 
         safe_add_to_history("user", user_message, session_id)
         safe_add_to_history("assistant", reply, session_id)
@@ -161,7 +202,7 @@ def api_chat():
 
 
 # ============================
-# مسار رفع الملفات (متكامل)
+# مسار رفع الملفات
 # ============================
 @app.route("/upload", methods=["POST"])
 def upload_file():
@@ -183,11 +224,10 @@ def upload_file():
             analysis = sky_analyzer.analyze_file(str(filepath), filename)
             result["analysis"] = analysis
 
-            # حفظ في الذاكرة
             if memory:
                 try:
                     memory.save_knowledge(
-                        topic=f"ملف: {filename}",
+                        topic=f"ملف مرفوع: {filename}",
                         content=str(analysis.get("text", ""))[:1200],
                         source=filename,
                         importance=0.7
