@@ -21,7 +21,10 @@ const SkyCore = {
     const newSessionBtn = document.getElementById('new-session-btn');
     const voiceBtn = document.getElementById('voice-btn');
     const uploadBtn = document.getElementById('upload-btn');
+    const menuToggle = document.getElementById('menu-toggle');
+    const sidebar = document.getElementById('sidebar');
 
+    // أحداث أساسية
     if (sendBtn) sendBtn.addEventListener('click', () => this.sendMessage());
     if (newSessionBtn) newSessionBtn.addEventListener('click', () => this.createNewSession());
     if (voiceBtn) voiceBtn.addEventListener('click', () => this.startVoiceInput());
@@ -32,6 +35,22 @@ const SkyCore = {
         if (e.key === 'Enter' && !e.shiftKey) {
           e.preventDefault();
           this.sendMessage();
+        }
+      });
+    }
+
+    // زر القائمة على الجوال
+    if (menuToggle && sidebar) {
+      menuToggle.style.display = 'flex';
+
+      menuToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('mobile-open');
+      });
+
+      // إغلاق القائمة عند النقر خارجها
+      document.addEventListener('click', (e) => {
+        if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+          sidebar.classList.remove('mobile-open');
         }
       });
     }
@@ -66,7 +85,9 @@ const SkyCore = {
 
         if (data.success) {
           let msg = `✅ تم رفع الملف: ${file.name}`;
-          if (data.analysis?.description) msg += `\n\n${data.analysis.description}`;
+          if (data.analysis?.description) {
+            msg += `\n\n${data.analysis.description}`;
+          }
           SkyUI.addMessage('assistant', msg);
         } else {
           SkyUI.addMessage('assistant', `فشل رفع الملف`);
@@ -119,6 +140,10 @@ const SkyCore = {
     this.renderSessions();
     this.loadCurrentSessionMessages();
     this.updateHeaderTitle();
+
+    // إغلاق القائمة على الجوال بعد اختيار جلسة
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) sidebar.classList.remove('mobile-open');
   },
 
   renderSessions() {
@@ -214,7 +239,7 @@ const SkyCore = {
     } finally {
       this.state.isProcessing = false;
       if (sendBtn) sendBtn.disabled = false;
-      input.focus(); // التركيز التلقائي بعد الإرسال
+      input.focus();
     }
   },
 
