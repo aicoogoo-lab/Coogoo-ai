@@ -1,7 +1,12 @@
 """
-SkyOS v10.0 — Core Engine + Digital Mind (النواة الأساسية + العقل الرقمي)
+SkyOS v10.1 — Core Engine + Digital Mind (النواة الأساسية + العقل الرقمي)
 ================================================================================
 المحرك المركزي المسؤول عن فهم الأوامر وتوجيهها إلى الوحدات المناسبة.
+
+الوحدات المدعومة حالياً:
+- Dialogue Module
+- Vision Module
+- Holographic Memory Module (Hyperdimensional Computing)
 """
 
 import logging
@@ -12,7 +17,7 @@ logger = logging.getLogger("CoreEngine")
 
 
 # ============================================================
-# 1. حالة العقل الرقمي
+# 1. حالة العقل الرقمي (Digital Mind State)
 # ============================================================
 class DigitalMindState:
     def __init__(self):
@@ -42,7 +47,7 @@ class DigitalMindState:
 
 
 # ============================================================
-# 2. الوحدة الأساسية
+# 2. الوحدة الأساسية (Base Module)
 # ============================================================
 class BaseModule:
     name: str = "base"
@@ -52,7 +57,7 @@ class BaseModule:
         return False
 
     def execute(self, user_input: str, context: Dict[str, Any]) -> Dict[str, Any]:
-        raise NotImplementedError
+        raise NotImplementedError("يجب تنفيذ دالة execute في الوحدة الفرعية")
 
 
 # ============================================================
@@ -63,21 +68,21 @@ class CoreEngine:
         self.modules: Dict[str, BaseModule] = {}
         self.mind = DigitalMindState()
         self.command_history: List[Dict[str, Any]] = []
-        logger.info("🧠 Core Engine + Digital Mind تم تهيئته")
+        logger.info("🧠 Core Engine + Digital Mind تم تهيئته بنجاح")
 
     def register_module(self, module: BaseModule):
         self.modules[module.name] = module
-        logger.info(f"✅ تم تسجيل الوحدة: {module.name}")
+        logger.info(f"✅ تم تسجيل الوحدة: {module.name} — {module.description}")
 
     def _classify_intent(self, user_input: str) -> str:
         text = user_input.lower()
-        if any(w in text for w in ["صورة", "صور", "vision", "analyze image"]):
+        if any(w in text for w in ["صورة", "صور", "vision", "analyze image", "ocr"]):
             return "vision"
-        if any(w in text for w in ["رابط", "http", "analyze url"]):
+        if any(w in text for w in ["رابط", "http", "analyze url", "scrape"]):
             return "web_analysis"
-        if any(w in text for w in ["كود", "python", "execute"]):
+        if any(w in text for w in ["كود", "python", "execute", "run code"]):
             return "code_execution"
-        if any(w in text for w in ["ذاكرة", "memory"]):
+        if any(w in text for w in ["ذاكرة", "memory", "تذكر", "استرجع", "holographic"]):
             return "memory_query"
         return "dialogue"
 
@@ -109,24 +114,27 @@ class CoreEngine:
                 except Exception as e:
                     logger.error(f"خطأ في الوحدة {module_name}: {e}")
                     result["success"] = False
+                    result["error"] = str(e)
 
         if not handled:
             result["handled_by"] = "dialogue_fallback"
+            result["response"] = "تم توجيه الطلب إلى محرك الحوار الرئيسي."
 
         self._reflect(user_input, result)
         self.command_history.append({
             "timestamp": datetime.utcnow().isoformat(),
-            "input": user_input[:150],
+            "input": user_input[:200],
             "intent": intent,
-            "handled_by": result["handled_by"]
+            "handled_by": result.get("handled_by", "unknown")
         })
+
         return result
 
     def _reflect(self, user_input: str, result: Dict[str, Any]):
         if result.get("success"):
             self.mind.update(confidence=min(0.98, self.mind.confidence + 0.01))
         else:
-            self.mind.update(confidence=max(0.65, self.mind.confidence - 0.02))
+            self.mind.update(confidence=max(0.60, self.mind.confidence - 0.03))
 
     def get_mind_state(self) -> Dict[str, Any]:
         return self.mind.snapshot()
@@ -137,33 +145,76 @@ class CoreEngine:
 # ============================================================
 class DialogueModule(BaseModule):
     name = "dialogue"
-    description = "وحدة الحوار الرئيسية"
+    description = "وحدة الحوار والتفاعل الرئيسية"
 
     def can_handle(self, intent: str, user_input: str = "") -> bool:
         return intent == "dialogue"
 
     def execute(self, user_input: str, context: Dict[str, Any]) -> Dict[str, Any]:
         return {
-            "response": "تم توجيه الطلب إلى محرك الحوار.",
+            "response": "تم توجيه الطلب إلى محرك الحوار المتقدم.",
             "success": True
         }
 
 
 # ============================================================
-# 5. إنشاء النسخة العالمية
+# 5. إنشاء النسخة العالمية + تسجيل الوحدات
 # ============================================================
 core_engine = CoreEngine()
+
 core_engine.register_module(DialogueModule())
 
-# ============================================================
-# 6. تسجيل الوحدات الإضافية تلقائياً
-# ============================================================
+# Vision Module
 try:
     from vision_module import vision_module
     core_engine.register_module(vision_module)
-    logger.info("👁️ Vision Module تم تسجيلها بنجاح")
 except ImportError:
     logger.warning("⚠️ لم يتم العثور على vision_module.py")
 
+# Holographic Memory Module
+try:
+    from holographic_memory_module import HolographicMemoryModule
+    holographic_memory_module = HolographicMemoryModule(dimension=8000)
+    core_engine.register_module(holographic_memory_module)
+except ImportError:
+    logger.warning("⚠️ لم يتم العثور على holographic_memory_module.py")
 
-logger.info("🌟 SkyOS Core Engine + Digital Mind جاهز ومتصل بالوحدات")
+
+logger.info("🌟 SkyOS Core Engine + Digital Mind جاهز ومتصل بجميع الوحدات")
+
+
+# ============================================================
+# مثال عملي قوي (للتجربة والاختبار)
+# ============================================================
+if __name__ == "__main__":
+    print("\n" + "="*60)
+    print("مثال عملي على Core Engine + Holographic Memory")
+    print("="*60 + "\n")
+
+    # تجربة 1: طلب عادي (حوار)
+    result1 = core_engine.process_command(
+        user_input="كيف حالك اليوم؟",
+        session_id="session_001"
+    )
+    print(f"[Dialogue] Intent: {result1['intent']} | Handled by: {result1['handled_by']}")
+    print(f"الرد: {result1['response']}\n")
+
+    # تجربة 2: استخدام الذاكرة الهولوغرافية (تخزين)
+    result2 = core_engine.process_command(
+        user_input="احفظ هذه المعلومة: أنا أعمل على مشروع SkyOS",
+        session_id="session_001"
+    )
+    print(f"[Memory] Intent: {result2['intent']} | Handled by: {result2['handled_by']}")
+    print(f"الرد: {result2['response']}\n")
+
+    # تجربة 3: استرجاع من الذاكرة الهولوغرافية
+    result3 = core_engine.process_command(
+        user_input="تذكر المعلومات السابقة عن المشروع",
+        session_id="session_001"
+    )
+    print(f"[Memory] Intent: {result3['intent']} | Handled by: {result3['handled_by']}")
+    print(f"الرد: {result3['response']}\n")
+
+    print("="*60)
+    print("انتهى المثال العملي")
+    print("="*60)
