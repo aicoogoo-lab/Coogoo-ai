@@ -1,12 +1,7 @@
 """
-SkyOS Memory v10.4 — الذاكرة الشاملة والمتقدمة (النسخة النهائية)
-================================================================================
-نسخة نهائية مقوّاة ومتكاملة تدعم:
-- الذاكرة التقليدية (SQLite)
-- الذاكرة الهولوغرافية (مع Encoding حقيقي)
-- ملف السيد (Master Profile)
-- نظام RLHF
-- تحليل الروابط والملفات
+SkyOS Memory v10.5 — الذاكرة الشاملة والمتقدمة (النسخة النهائية + تخزين تلقائي هولوغرافي)
+========================================================================================
+نسخة نهائية قوية ومتكاملة مع دعم التخزين التلقائي في الذاكرة الهولوغرافية.
 """
 
 import sqlite3
@@ -19,6 +14,11 @@ from typing import List, Dict, Optional, Any
 logger = logging.getLogger(__name__)
 
 DB_PATH = Path(__file__).parent / "sky_memory.db"
+
+# ============================================================
+# إعدادات التخزين الهولوغرافي
+# ============================================================
+ENABLE_HOLOGRAPHIC_STORAGE = True   # يمكنك تغييرها إلى False لتعطيل التخزين التلقائي
 
 
 # ============================================================
@@ -106,7 +106,7 @@ def init_db() -> None:
 
     conn.commit()
     conn.close()
-    logger.info("✅ ذاكرة SkyOS v10.4 (النسخة النهائية) جاهزة")
+    logger.info("✅ ذاكرة SkyOS v10.5 جاهزة (مع تخزين هولوغرافي تلقائي)")
 
 
 # ============================================================
@@ -221,7 +221,7 @@ def clear_conversation_history(session_id: Optional[str] = None):
 
 
 # ============================================================
-# 5. المعرفة طويلة المدى
+# 5. المعرفة طويلة المدى (مع تخزين هولوغرافي تلقائي)
 # ============================================================
 def save_knowledge(topic: str, content: str, source: str = "محادثة", importance: float = 1.0) -> bool:
     try:
@@ -232,7 +232,21 @@ def save_knowledge(topic: str, content: str, source: str = "محادثة", impor
             VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
         ''', (topic, content, source, importance))
         conn.commit()
+
+        # === التخزين التلقائي في الذاكرة الهولوغرافية ===
+        if ENABLE_HOLOGRAPHIC_STORAGE:
+            try:
+                if holographic_encoder and _hdm:
+                    text_to_encode = f"{topic}. {content}"
+                    vector = holographic_encoder.encode_text(text_to_encode)
+                    label = f"knowledge_{topic[:60]}"
+                    _hdm.store(label, vector)
+                    logger.info(f"[Holographic] تم التخزين التلقائي: {topic}")
+            except Exception as e:
+                logger.warning(f"[Holographic] فشل التخزين التلقائي: {e}")
+
         return True
+
     except Exception as e:
         logger.error(f"فشل حفظ المعرفة: {e}")
         return False
@@ -360,7 +374,7 @@ def add_to_history(role: str, content: str, session_id: str, importance: float =
 
 
 # ============================================================
-# 9. التكامل مع الذاكرة الهولوغرافية (النسخة النهائية)
+# 9. التكامل مع الذاكرة الهولوغرافية
 # ============================================================
 try:
     from holographic_encoder import holographic_encoder
@@ -376,23 +390,21 @@ except ImportError:
 
 
 def store_knowledge_holographically(topic: str, content: str) -> bool:
-    """تخزين معرفة في الذاكرة الهولوغرافية باستخدام Encoding"""
-    if not HOLOGRAPHIC_MEMORY_ENABLED or not holographic_encoder:
+    if not HOLOGRAPHIC_MEMORY_ENABLED or not holographic_encoder or not _hdm:
         return False
     try:
         text_to_encode = f"{topic}. {content}"
         vector = holographic_encoder.encode_text(text_to_encode)
-        label = f"knowledge_{topic[:50]}"
+        label = f"knowledge_{topic[:60]}"
         _hdm.store(label, vector)
-        logger.info(f"تم تخزين المعرفة هولوغرافيًا: {topic}")
+        logger.info(f"[Holographic] تم تخزين المعرفة: {topic}")
         return True
     except Exception as e:
-        logger.error(f"فشل التخزين الهولوغرافي: {e}")
+        logger.error(f"[Holographic] فشل التخزين: {e}")
         return False
 
 
 def query_holographic_memory(query_text: str, top_k: int = 5):
-    """استرجاع من الذاكرة الهولوغرافية باستخدام Encoding"""
     if not HOLOGRAPHIC_MEMORY_ENABLED or not holographic_encoder or not _hdm:
         return []
     try:
@@ -400,13 +412,12 @@ def query_holographic_memory(query_text: str, top_k: int = 5):
         results = _hdm.query(query_vector, top_k=top_k)
         return results
     except Exception as e:
-        logger.error(f"فشل الاسترجاع الهولوغرافي: {e}")
+        logger.error(f"[Holographic] فشل الاسترجاع: {e}")
         return []
 
 
 def store_conversation_holographically(role: str, content: str, session_id: str) -> bool:
-    """تخزين محادثة في الذاكرة الهولوغرافية"""
-    if not HOLOGRAPHIC_MEMORY_ENABLED or not holographic_encoder:
+    if not HOLOGRAPHIC_MEMORY_ENABLED or not holographic_encoder or not _hdm:
         return False
     try:
         text = f"{role}: {content}"
@@ -415,7 +426,7 @@ def store_conversation_holographically(role: str, content: str, session_id: str)
         _hdm.store(label, vector)
         return True
     except Exception as e:
-        logger.error(f"فشل تخزين المحادثة هولوغرافيًا: {e}")
+        logger.error(f"[Holographic] فشل تخزين المحادثة: {e}")
         return False
 
 
