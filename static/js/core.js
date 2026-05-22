@@ -1,5 +1,5 @@
 // ======================================================
-// SkyOS v10 — Core Engine (مع الإدخال الصوتي)
+// SkyOS v10 — Core Engine (مع رفع الملفات)
 // ======================================================
 
 const SkyCore = {
@@ -20,9 +20,12 @@ const SkyCore = {
     const userInput = document.getElementById('user-input');
     const newSessionBtn = document.getElementById('new-session-btn');
     const voiceBtn = document.getElementById('voice-btn');
+    const uploadBtn = document.getElementById('upload-btn');
 
     if (sendBtn) sendBtn.addEventListener('click', () => this.sendMessage());
     if (newSessionBtn) newSessionBtn.addEventListener('click', () => this.createNewSession());
+    if (voiceBtn) voiceBtn.addEventListener('click', () => this.startVoiceInput());
+    if (uploadBtn) uploadBtn.addEventListener('click', () => this.handleFileUpload());
 
     if (userInput) {
       userInput.addEventListener('keydown', (e) => {
@@ -32,11 +35,25 @@ const SkyCore = {
         }
       });
     }
+  },
 
-    // زر الصوت
-    if (voiceBtn) {
-      voiceBtn.addEventListener('click', () => this.startVoiceInput());
-    }
+  handleFileUpload() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file || !this.state.currentSessionId) return;
+
+      SkyUI.addMessage('user', `📎 تم رفع الملف: ${file.name}`);
+
+      // يمكن تطوير هذا الجزء لاحقًا لإرسال الملف فعليًا للخادم
+      const current = this.state.sessions.find(s => s.id === this.state.currentSessionId);
+      if (current) {
+        current.messages.push({ role: 'user', content: `ملف مرفوع: ${file.name}` });
+        this.saveSessionsToStorage();
+      }
+    };
+    input.click();
   },
 
   startVoiceInput() {
@@ -57,10 +74,7 @@ const SkyCore = {
       this.sendMessage();
     };
 
-    recognition.onerror = () => {
-      SkyUI.showToast("حدث خطأ أثناء الاستماع");
-    };
-
+    recognition.onerror = () => SkyUI.showToast("حدث خطأ أثناء الاستماع");
     recognition.start();
     SkyUI.showToast("جاري الاستماع...");
   },
