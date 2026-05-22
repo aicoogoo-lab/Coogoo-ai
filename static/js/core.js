@@ -1,19 +1,17 @@
 // ======================================================
-// SkyOS v10 — Core Engine (Frontend)
+// SkyOS v10 — Core Engine (محسّن)
 // ======================================================
 
 const SkyCore = {
   state: {
     currentSessionId: null,
-    messages: [],
     isProcessing: false,
   },
 
-  // تهيئة المحرك
   init() {
     this.bindEvents();
     this.loadInitialState();
-    console.log('%c[SkyCore] Frontend Core initialized', 'color:#6366f1');
+    console.log('%c[SkyCore] Core Engine initialized', 'color:#6366f1');
   },
 
   bindEvents() {
@@ -32,7 +30,6 @@ const SkyCore = {
         }
       });
 
-      // Auto resize textarea
       userInput.addEventListener('input', () => {
         userInput.style.height = 'auto';
         userInput.style.height = Math.min(userInput.scrollHeight, 140) + 'px';
@@ -47,7 +44,6 @@ const SkyCore = {
     const text = input.value.trim();
     if (!text) return;
 
-    // عرض الرسالة فورًا
     SkyUI.addMessage('user', text);
     input.value = '';
     input.style.height = 'auto';
@@ -61,23 +57,23 @@ const SkyCore = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: text,
-          session_id: this.state.currentSessionId || 'default'
+          session_id: this.state.currentSessionId
         })
       });
 
       const data = await response.json();
-
       SkyUI.hideThinking();
 
       if (data.reply) {
         SkyUI.addMessage('assistant', data.reply);
+        SkyMind.increaseConfidence(1); // زيادة الثقة عند الرد الناجح
       } else {
-        SkyUI.addMessage('assistant', 'لم أتلقَ ردًا واضحًا من النواة.');
+        SkyUI.addMessage('assistant', 'لم أتلق ردًا واضحًا.');
       }
 
     } catch (error) {
       SkyUI.hideThinking();
-      SkyUI.addMessage('assistant', 'حدث خطأ في الاتصال بالعقل الرقمي.');
+      SkyUI.addMessage('assistant', 'فشل الاتصال بالعقل الرقمي.');
       console.error(error);
     } finally {
       this.state.isProcessing = false;
@@ -85,12 +81,10 @@ const SkyCore = {
   },
 
   loadInitialState() {
-    // يمكن تطويرها لاحقًا لتحميل الجلسة السابقة
     this.state.currentSessionId = 'session_' + Date.now();
   }
 };
 
-// تشغيل المحرك عند تحميل الصفحة
 document.addEventListener('DOMContentLoaded', () => {
   SkyCore.init();
 });
