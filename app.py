@@ -1,8 +1,8 @@
 """
-SkyOS Backend — النسخة النهائية v10.5
+SkyOS Backend — النسخة النهائية v10.6
 ================================================================================
 قلب المشروع وعموده الفقري
-تكامل كامل مع Core Engine + Digital Mind
+تكامل كامل مع Core Engine + Digital Mind + Gemini Vision
 """
 
 import os
@@ -103,7 +103,6 @@ init_memory()
 # ============================
 def generate_llm_response(user_message: str, session_id: str, extra_context: str = "") -> str:
     system_prompt = safe_get_system_prompt(user_message, session_id, extra_context)
-
     messages = [{"role": "system", "content": system_prompt}]
     messages.append({"role": "user", "content": user_message})
 
@@ -153,7 +152,7 @@ def serve_sw():
     return send_from_directory(STATIC_DIR, "service-worker.js")
 
 # ============================
-# مسار الدردشة الرئيسي (مصحح)
+# مسار الدردشة الرئيسي
 # ============================
 @app.route("/api/chat", methods=["POST"])
 def api_chat():
@@ -168,7 +167,6 @@ def api_chat():
         handled_by = "dialogue"
         reply = ""
 
-        # === استخدام Core Engine للتوجيه ===
         if CORE_ENGINE_AVAILABLE and core_engine:
             try:
                 result = core_engine.process_command(
@@ -180,7 +178,6 @@ def api_chat():
             except Exception as e:
                 logger.error(f"خطأ في Core Engine: {e}")
 
-        # === إذا كان الرد عام أو من Dialogue Module، نولد رد ذكي ===
         if not reply or handled_by in ["dialogue", "dialogue_fallback"]:
             reply = generate_llm_response(user_message, session_id)
             handled_by = "llm"
@@ -202,7 +199,7 @@ def api_chat():
 
 
 # ============================
-# مسار رفع الملفات
+# مسار رفع الملفات (محسّن مع Gemini Vision)
 # ============================
 @app.route("/upload", methods=["POST"])
 def upload_file():
@@ -217,12 +214,41 @@ def upload_file():
     filepath = UPLOAD_FOLDER / filename
     file.save(filepath)
 
-    try:
-        result = {"success": True, "filename": filename}
+    file_type = file.content_type or ""
+    result = {"success": True, "filename": filename}
 
-        if sky_analyzer:
+    try:
+        # === تحليل الصور باستخدام Gemini Vision ===
+        if file_type.startswith("image/"):
+            gemini_key = os.environ.get("GEMINI_API_KEY")
+
+            if gemini_key and sky_analyzer:
+                vision_result = sky_analyzer.analyze_image_with_gemini(str(filepath), gemini_key)
+                result["analysis"] = vision_result
+                result["handled_by"] = "gemini_vision"
+
+                if memory:
+                    try:
+                        memory.save_knowledge(
+                            topic=f"تحليل صورة: {filename}",
+                            content=vision_result.get("description", "")[:1500],
+                            source=filename,
+                            importance=0.85
+                        )
+                    except Exception:
+                        pass
+            else:
+                result["analysis"] = {
+                    "success": True,
+                    "note": "تم رفع الصورة. Gemini Vision غير مفعّل حالياً."
+                }
+                result["handled_by"] = "basic_image"
+
+        # === تحليل باقي أنواع الملفات ===
+        elif sky_analyzer:
             analysis = sky_analyzer.analyze_file(str(filepath), filename)
             result["analysis"] = analysis
+            result["handled_by"] = "sky_analyzer"
 
             if memory:
                 try:
@@ -234,12 +260,15 @@ def upload_file():
                     )
                 except Exception:
                     pass
-
-        return jsonify(result)
+        else:
+            result["note"] = "تم حفظ الملف."
 
     except Exception as e:
-        logger.error(f"خطأ في معالجة الملف: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        logger.error(f"خطأ أثناء معالجة الملف: {e}")
+        result["error"] = str(e)
+        result["success"] = False
+
+    return jsonify(result)
 
 
 if __name__ == "__main__":
