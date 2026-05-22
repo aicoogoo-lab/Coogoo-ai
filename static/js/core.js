@@ -1,5 +1,5 @@
 // ======================================================
-// SkyOS v10 — Core Engine (النسخة النهائية)
+// SkyOS v10 — Core Engine (النسخة النهائية المحسّنة)
 // ======================================================
 
 const SkyCore = {
@@ -66,9 +66,7 @@ const SkyCore = {
 
         if (data.success) {
           let msg = `✅ تم رفع الملف: ${file.name}`;
-          if (data.analysis?.description) {
-            msg += `\n\n${data.analysis.description}`;
-          }
+          if (data.analysis?.description) msg += `\n\n${data.analysis.description}`;
           SkyUI.addMessage('assistant', msg);
         } else {
           SkyUI.addMessage('assistant', `فشل رفع الملف`);
@@ -170,10 +168,15 @@ const SkyCore = {
 
   async sendMessage() {
     const input = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+
     if (!input || this.state.isProcessing || !this.state.currentSessionId) return;
 
     const text = input.value.trim();
     if (!text) return;
+
+    // تعطيل الزر أثناء المعالجة
+    if (sendBtn) sendBtn.disabled = true;
 
     SkyUI.addMessage('user', text);
     input.value = '';
@@ -211,6 +214,7 @@ const SkyCore = {
       SkyUI.addMessage('assistant', 'فشل الاتصال بالعقل الرقمي.');
     } finally {
       this.state.isProcessing = false;
+      if (sendBtn) sendBtn.disabled = false;
     }
   },
 
