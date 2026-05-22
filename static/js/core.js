@@ -1,5 +1,5 @@
 // ======================================================
-// SkyOS v10 — Core Engine (نهائي)
+// SkyOS v10 — Core Engine (النسخة النهائية)
 // ======================================================
 
 const SkyCore = {
@@ -66,7 +66,9 @@ const SkyCore = {
 
         if (data.success) {
           let msg = `✅ تم رفع الملف: ${file.name}`;
-          if (data.analysis?.description) msg += `\n\n${data.analysis.description}`;
+          if (data.analysis?.description) {
+            msg += `\n\n${data.analysis.description}`;
+          }
           SkyUI.addMessage('assistant', msg);
         } else {
           SkyUI.addMessage('assistant', `فشل رفع الملف`);
