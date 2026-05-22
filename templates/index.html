@@ -4,7 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#0a0a14" />
-  <title>SkyOS v10 — Holographic AI System</title>
+  <meta name="description" content="SkyOS v10 — العقل الرقمي الهولوغرافي | نظام ذكاء واعٍ ذاتي التطور" />
+  <title>SkyOS v10 — العقل الرقمي الهولوغرافي</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -14,11 +15,12 @@
 </head>
 <body class="dark">
 
+  <!-- شاشة الإقلاع -->
   <div id="sky-boot-screen">
     <div class="boot-loader-container">
       <div class="boot-logo"><i class="fas fa-brain"></i></div>
       <div class="boot-title">SkyOS v10</div>
-      <div class="boot-status">INITIALIZING CORE LAYERS...</div>
+      <div class="boot-status">INITIALIZING DIGITAL MIND CORE...</div>
       <div class="boot-bar"><div class="boot-progress"></div></div>
     </div>
   </div>
@@ -36,7 +38,7 @@
           <div class="sky-logo hologram"><i class="fas fa-brain"></i></div>
           <div class="sky-brand-text">
             <div class="sky-brand-title">SkyOS v10</div>
-            <div class="sky-brand-subtitle">Holographic Intelligence</div>
+            <div class="sky-brand-subtitle">Digital Mind • Sovereign Intelligence</div>
           </div>
         </div>
       </div>
@@ -44,7 +46,7 @@
       <div class="sky-topbar-center">
         <div class="sky-status" id="connection-status">
           <span class="sky-status-dot"></span>
-          <span class="sky-status-text">متصل • جاهز</span>
+          <span class="sky-status-text">متصل • العقل الرقمي نشط</span>
         </div>
       </div>
 
@@ -83,7 +85,7 @@
         <div class="sky-chat-header glass-layer">
           <div class="header-details">
             <div class="sky-chat-title"><i class="fas fa-terminal"></i> بيئة النظام النشطة</div>
-            <div class="sky-chat-subtitle">مساعد هجين متكامل يدعم التعلم والتحليل الإحصائي المستمر</div>
+            <div class="sky-chat-subtitle">العقل الرقمي الهولوغرافي — وعي • تخطيط • تنفيذ ذاتي</div>
           </div>
           <button class="sky-icon-btn clear-active-btn" id="clear-active-chat" title="مسح محتوى النافذة الحالية">
             <i class="fas fa-broom"></i> مسح النافذة
@@ -97,7 +99,7 @@
             <button class="sky-icon-btn" id="mini-upload-btn" title="إرفاق وثيقة"><i class="fas fa-paperclip"></i></button>
             <button class="sky-icon-btn" id="mini-voice-btn" title="إدخال صوتي"><i class="fas fa-microphone"></i></button>
           </div>
-          <textarea id="user-input" class="sky-input" placeholder="اكتب أمراً أو استفساراً للنظام..." rows="1"></textarea>
+          <textarea id="user-input" class="sky-input" placeholder="اكتب أمراً أو استفساراً للعقل الرقمي..." rows="1"></textarea>
           <button class="sky-send-btn" id="send-btn">
             <i class="fas fa-paper-plane"></i>
           </button>
@@ -105,6 +107,7 @@
       </main>
     </div>
 
+    <!-- لوحة الإعدادات -->
     <div id="settings-panel" class="sky-settings hidden">
       <div class="panel-header"><h4><i class="fas fa-sliders-h"></i> لوحة تحكم التخصيص</h4></div>
       <div class="settings-row">
@@ -117,9 +120,13 @@
       </div>
     </div>
 
+    <!-- لوحة مساحة العمل -->
     <div id="workspace-panel" class="sky-workspace hidden">
       <div class="panel-header"><h4><i class="fas fa-network-wired"></i> حالة البيئة والمحرك</h4></div>
-      <p style="font-size: 12px; color: var(--text-muted); text-align: justify; line-height: 1.5;">النظام متصل حالياً بقواعد البيانات المركزية المحمية، ويتم عزل وتشفير الجلسات محلياً طبقاً لبروتوكول الأمان الصارم للنظام.</p>
+      <p style="font-size: 12px; color: var(--text-muted); text-align: justify; line-height: 1.5;">
+        العقل الرقمي متصل حالياً بطبقة الذاكرة الدائمة والوحدات الذكية. 
+        جميع الجلسات معزولة ومشفرة وفق بروتوكول الأمان السيادي.
+      </p>
     </div>
 
     <div id="toast-container"></div>
