@@ -332,7 +332,58 @@ def add_to_history(role: str, content: str, session_id: str, importance: float =
 
 
 # ============================================================
-# 9. تشغيل تلقائي
+# 9. التكامل مع Quantum Holographic Memory (محاكاة كمية)
+# ============================================================
+try:
+    from quantum_holographic_memory import QuantumHolographicMemory
+    _quantum_memory = QuantumHolographicMemory(dimension=8000)
+    QUANTUM_MEMORY_ENABLED = True
+except ImportError:
+    _quantum_memory = None
+    QUANTUM_MEMORY_ENABLED = False
+    logger.warning("⚠️ QuantumHolographicMemory غير متاحة. سيتم استخدام الذاكرة التقليدية فقط.")
+
+
+def store_in_holographic_memory(label: str):
+    """تخزين معلومة في الذاكرة الهولوغرافية الكمية"""
+    if not QUANTUM_MEMORY_ENABLED or _quantum_memory is None:
+        return False
+    try:
+        vector = _quantum_memory.create_vector()
+        _quantum_memory.store(label, vector)
+        return True
+    except Exception as e:
+        logger.error(f"فشل التخزين في الذاكرة الهولوغرافية: {e}")
+        return False
+
+
+def query_holographic_memory(top_k: int = 5, use_entanglement: bool = True):
+    """استرجاع ذكي من الذاكرة الهولوغرافية الكمية"""
+    if not QUANTUM_MEMORY_ENABLED or _quantum_memory is None:
+        return []
+    try:
+        query_vector = _quantum_memory.create_vector()
+        results = _quantum_memory.query(query_vector, top_k=top_k, use_entanglement=use_entanglement)
+        return results
+    except Exception as e:
+        logger.error(f"فشل الاسترجاع من الذاكرة الهولوغرافية: {e}")
+        return []
+
+
+def entangle_memories(label1: str, label2: str):
+    """ربط ذاكرتين في الذاكرة الهولوغرافية (محاكاة التشابك الكمي)"""
+    if not QUANTUM_MEMORY_ENABLED or _quantum_memory is None:
+        return False
+    try:
+        _quantum_memory.entangle(label1, label2)
+        return True
+    except Exception as e:
+        logger.error(f"فشل ربط الذاكرتين: {e}")
+        return False
+
+
+# ============================================================
+# 10. تشغيل تلقائي
 # ============================================================
 if __name__ == "__main__" or not DB_PATH.exists():
     init_db()
