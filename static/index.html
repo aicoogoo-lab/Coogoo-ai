@@ -13,11 +13,19 @@
 
   <!-- Mind Status -->
   <div class="mind-status">
-    <div>
-      <strong>SkyOS v10</strong>
-      <span style="color:#64748b; margin: 0 8px;">•</span>
-      <span style="color:#64748b;">العقل الرقمي نشط</span>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <!-- زر القائمة (يظهر فقط على الجوال) -->
+      <button class="sky-icon-btn" id="menu-toggle" style="display: none;">
+        <i class="fas fa-bars"></i>
+      </button>
+
+      <div>
+        <strong>SkyOS v10</strong>
+        <span style="color:#64748b; margin: 0 8px;">•</span>
+        <span style="color:#64748b;">العقل الرقمي نشط</span>
+      </div>
     </div>
+
     <div class="mind-metrics">
       <div><i class="fas fa-brain"></i> <span id="mind-confidence">94</span>%</div>
       <div><i class="fas fa-database"></i> <span id="memory-count">128</span></div>
@@ -27,7 +35,7 @@
   <div class="main-container">
 
     <!-- Sidebar -->
-    <aside class="sky-sidebar">
+    <aside class="sky-sidebar" id="sidebar">
       <div class="sidebar-section">
         <button class="sky-btn-primary" id="new-session-btn">
           <i class="fas fa-plus"></i> جلسة جديدة
@@ -38,9 +46,7 @@
         <div style="font-size:0.75rem; color:#64748b; margin-bottom:8px; padding-right:4px;">
           <i class="fas fa-archive"></i> الجلسات المحفوظة
         </div>
-        <div id="session-list">
-          <!-- الجلسات تُضاف ديناميكيًا -->
-        </div>
+        <div id="session-list"></div>
       </div>
     </aside>
 
