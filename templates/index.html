@@ -1,1 +1,85 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <title>SkyOS • v10</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/core.css">
+</head>
+<body>
 
+  <!-- Mind Status -->
+  <div class="mind-status">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <!-- زر القائمة (يظهر فقط على الجوال) -->
+      <button class="sky-icon-btn" id="menu-toggle" style="display: none;">
+        <i class="fas fa-bars"></i>
+      </button>
+
+      <div>
+        <strong>SkyOS v10</strong>
+        <span style="color:#64748b; margin: 0 8px;">•</span>
+        <span style="color:#64748b;">العقل الرقمي نشط</span>
+      </div>
+    </div>
+
+    <div class="mind-metrics">
+      <div><i class="fas fa-brain"></i> <span id="mind-confidence">94</span>%</div>
+      <div><i class="fas fa-database"></i> <span id="memory-count">128</span></div>
+    </div>
+  </div>
+
+  <div class="main-container">
+
+    <!-- Sidebar -->
+    <aside class="sky-sidebar" id="sidebar">
+      <div class="sidebar-section">
+        <button class="sky-btn-primary" id="new-session-btn">
+          <i class="fas fa-plus"></i> جلسة جديدة
+        </button>
+      </div>
+
+      <div class="sidebar-section" style="flex:1; overflow-y:auto;">
+        <div style="font-size:0.75rem; color:#64748b; margin-bottom:8px; padding-right:4px;">
+          <i class="fas fa-archive"></i> الجلسات المحفوظة
+        </div>
+        <div id="session-list"></div>
+      </div>
+    </aside>
+
+    <!-- Chat Area -->
+    <div class="chat-container">
+      <div class="chat-messages" id="chat-messages"></div>
+
+      <div class="input-area">
+        <button class="sky-icon-btn" id="voice-btn"><i class="fas fa-microphone"></i></button>
+        <button class="sky-icon-btn" id="upload-btn"><i class="fas fa-paperclip"></i></button>
+        
+        <textarea id="user-input" placeholder="اكتب أمرًا أو استفسارًا..." rows="1"></textarea>
+        
+        <button class="send-button" id="send-btn">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script>
+    window.SKY_CONFIG = {
+      endpoints: {
+        chat: "/api/chat"
+      }
+    };
+  </script>
+
+  <script src="/static/js/core.js"></script>
+  <script src="/static/js/ui.js"></script>
+  <script src="/static/js/mind.js"></script>
+</body>
+</html>
