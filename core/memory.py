@@ -1,12 +1,12 @@
 """
-SkyOS Memory v10.1 — الذاكرة الشاملة والمتقدمة (Holographic Memory)
-================================================================================
+SkyOS Memory v10.2 — الذاكرة الشاملة والمتقدمة (Holographic + Digital Mind)
+==============================================================================
 نسخة جبارة وشاملة تدعم:
 - الذاكرة قصيرة وطويلة المدى
 - ملف السيد (Master Profile)
 - نظام RLHF متقدم
 - المعرفة المستخرجة
-- التكامل مع Digital Mind State
+- التكامل مع Digital Mind State و Core Engine
 - جلسات ذكية ومنظمة
 """
 
@@ -35,13 +35,12 @@ def get_connection() -> sqlite3.Connection:
 
 
 # ============================================================
-# 2. تهيئة الجداول (محسنة)
+# 2. تهيئة الجداول
 # ============================================================
 def init_db() -> None:
     conn = get_connection()
     cursor = conn.cursor()
 
-    # المحادثات
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS conversations (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -57,7 +56,6 @@ def init_db() -> None:
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_conv_session ON conversations(session_id)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_conv_time ON conversations(timestamp DESC)')
 
-    # FTS للبحث السريع
     try:
         cursor.execute('''
             CREATE VIRTUAL TABLE IF NOT EXISTS conversations_fts 
@@ -66,7 +64,6 @@ def init_db() -> None:
     except Exception:
         pass
 
-    # المعرفة طويلة المدى
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS knowledge (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -78,7 +75,6 @@ def init_db() -> None:
         )
     ''')
 
-    # ملف السيد (Master Profile)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS master_profile (
             key TEXT PRIMARY KEY,
@@ -87,7 +83,6 @@ def init_db() -> None:
         )
     ''')
 
-    # الملفات المرفوعة
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS uploaded_files (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -100,7 +95,6 @@ def init_db() -> None:
         )
     ''')
 
-    # التغذية الراجعة (RLHF)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS feedback (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -113,11 +107,11 @@ def init_db() -> None:
 
     conn.commit()
     conn.close()
-    logger.info("✅ ذاكرة SkyOS v10.1 جاهزة وتعمل بكفاءة عالية")
+    logger.info("✅ ذاكرة SkyOS v10.2 جاهزة ومتكاملة")
 
 
 # ============================================================
-# 3. Master Profile (ملف السيد)
+# 3. Master Profile
 # ============================================================
 def save_master_info(key: str, value: str) -> bool:
     try:
@@ -141,8 +135,7 @@ def get_master_profile() -> Dict[str, str]:
         conn = get_connection()
         cursor = conn.cursor()
         cursor.execute('SELECT key, value FROM master_profile ORDER BY updated_at DESC')
-        rows = cursor.fetchall()
-        return {row['key']: row['value'] for row in rows}
+        return {row['key']: row['value'] for row in cursor.fetchall()}
     finally:
         conn.close()
 
@@ -157,7 +150,8 @@ def get_master_profile_text() -> str:
 # ============================================================
 # 4. المحادثات والجلسات
 # ============================================================
-def save_conversation(role: str, content: str, session_id: Optional[str] = None, metadata: Dict = None) -> bool:
+def save_conversation(role: str, content: str, session_id: Optional[str] = None, 
+                      importance: float = 1.0, metadata: Dict = None) -> bool:
     try:
         conn = get_connection()
         cursor = conn.cursor()
@@ -165,8 +159,8 @@ def save_conversation(role: str, content: str, session_id: Optional[str] = None,
 
         cursor.execute('''
             INSERT INTO conversations (role, content, session_id, importance, metadata)
-            VALUES (?, ?, ?, 1.0, ?)
-        ''', (role, content, session_id, meta_json))
+            VALUES (?, ?, ?, ?, ?)
+        ''', (role, content, session_id, importance, meta_json))
 
         try:
             cursor.execute('INSERT INTO conversations_fts (content, session_id) VALUES (?, ?)',
@@ -204,7 +198,7 @@ def get_full_conversation_context(session_id: str, limit: int = 50) -> List[Dict
         conn = get_connection()
         cursor = conn.cursor()
         cursor.execute('''
-            SELECT role, content, timestamp 
+            SELECT role, content, timestamp, importance, reward 
             FROM conversations 
             WHERE session_id = ? 
             ORDER BY id DESC LIMIT ?
@@ -247,7 +241,7 @@ def save_knowledge(topic: str, content: str, source: str = "محادثة", impor
         conn.close()
 
 
-def get_all_knowledge_text(limit: int = 30) -> str:
+def get_all_knowledge_text(limit: int = 40) -> str:
     try:
         conn = get_connection()
         cursor = conn.cursor()
@@ -258,7 +252,7 @@ def get_all_knowledge_text(limit: int = 30) -> str:
         rows = cursor.fetchall()
         if not rows:
             return ""
-        return "\n\n".join([f"📌 {row['topic']}:\n{row['content'][:800]}" for row in rows])
+        return "\n\n".join([f"📌 {row['topic']}:\n{row['content'][:900]}" for row in rows])
     finally:
         conn.close()
 
@@ -266,7 +260,8 @@ def get_all_knowledge_text(limit: int = 30) -> str:
 # ============================================================
 # 6. الملفات المرفوعة
 # ============================================================
-def save_uploaded_file(filename: str, original_name: str, file_type: str, size: int, extracted_text: str = "") -> bool:
+def save_uploaded_file(filename: str, original_name: str, file_type: str, 
+                       size: int, extracted_text: str = "") -> bool:
     try:
         conn = get_connection()
         cursor = conn.cursor()
@@ -284,7 +279,7 @@ def save_uploaded_file(filename: str, original_name: str, file_type: str, size: 
 
 
 # ============================================================
-# 7. نظام التغذية الراجعة (RLHF) - محسن
+# 7. نظام التغذية الراجعة (RLHF)
 # ============================================================
 def process_feedback(user_message: str, ai_reply: str, feedback_score: float,
                      session_id: str = None, comment: str = "") -> bool:
@@ -297,7 +292,6 @@ def process_feedback(user_message: str, ai_reply: str, feedback_score: float,
             VALUES (?, ?, ?)
         ''', (session_id, feedback_score, comment))
 
-        # تحديث مكافأة آخر رد من المساعد
         if session_id:
             cursor.execute('''
                 UPDATE conversations 
@@ -319,7 +313,7 @@ def process_feedback(user_message: str, ai_reply: str, feedback_score: float,
 
 
 # ============================================================
-# 8. دوال مساعدة جديدة للعقل الرقمي
+# 8. دوال مساعدة للعقل الرقمي
 # ============================================================
 def get_personality_summary() -> str:
     profile = get_master_profile()
@@ -332,9 +326,9 @@ def get_personality_summary() -> str:
 • آخر نشاط مسجل: {last_activity}"""
 
 
-def add_to_history(role: str, content: str, session_id: str):
-    """دالة توافقية مع النواة الجديدة"""
-    save_conversation(role, content, session_id)
+def add_to_history(role: str, content: str, session_id: str, importance: float = 1.0):
+    """دالة توافقية مع الـ Core Engine"""
+    save_conversation(role, content, session_id, importance=importance)
 
 
 # ============================================================
