@@ -11,6 +11,9 @@ whitenoise==6.7.0
 flask-jwt-extended==4.6.0
 flask-limiter==3.8.0
 
+# ====================== Telegram Bot Engine ======================
+pyTelegramBotAPI>=4.15.0
+
 # ====================== AI & Embeddings (Render Safe Build) ======================
 torch==2.2.2
 sentence-transformers==3.1.1
