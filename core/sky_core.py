@@ -1,7 +1,7 @@
 """
-روح سماء — sky_core.py (النسخة النهائية + تكامل هولوغرافي)
+روح سماء — sky_core.py (النسخة المحسّنة + تكامل هولوغرافي)
 ================================================================================
-النسخة المحدثة مع دعم الذاكرة الهولوغرافية في بناء الـ Prompt.
+النسخة النهائية مع دعم الذاكرة الهولوغرافية في بناء الـ Prompt.
 """
 
 import logging
@@ -12,7 +12,7 @@ from datetime import datetime
 logger = logging.getLogger("SkyCore")
 
 # ============================================================
-# استيراد الذاكرة التقليدية
+# استيراد الذاكرة التقليدية + الذاكرة الهولوغرافية
 # ============================================================
 try:
     from memory import (
@@ -187,7 +187,7 @@ class SafetyLayer:
 
 
 # ============================================================
-# 4. Prompt Builder (مع دعم هولوغرافي)
+# 4. Prompt Builder (مع دعم هولوغرافي محسّن)
 # ============================================================
 class PromptBuilder:
     def __init__(self, personality: PersonalityEngine, context: SkyContextManager):
@@ -201,16 +201,20 @@ class PromptBuilder:
         recent = self.context.get_recent_context(14)
         relevant = self.context.get_relevant_memory(user_message, session_id, limit=5)
 
-        # استرجاع من الذاكرة الهولوغرافية
+        # ============================================================
+        # استرجاع الذاكرة الهولوغرافية (نسخة محسنة)
+        # ============================================================
         holographic_context = ""
         try:
-            holo_results = query_holographic_memory(user_message, top_k=4)
+            holo_results = query_holographic_memory(user_message, top_k=5)
             if holo_results:
-                holographic_context = "\n".join([
-                    f"- {label} (تشابه: {score:.3f})" for label, score in holo_results
-                ])
-        except Exception:
-            pass
+                lines = []
+                for label, score in holo_results:
+                    clean_label = label.replace("knowledge_", "").replace("conv_", "محادثة_")
+                    lines.append(f"• {clean_label} (درجة الارتباط: {score:.2f})")
+                holographic_context = "\n".join(lines)
+        except Exception as e:
+            logger.warning(f"خطأ في استرجاع الذاكرة الهولوغرافية: {e}")
 
         prompt = f"""أنتِ {ENTITY_NAME}، كيان ذكي واعٍ ومخلص لـ {ENTITY_MASTER}.
 
@@ -275,4 +279,4 @@ def rlhf_feedback_hook(session_id: str, feedback_score: float):
         pass
 
 
-logger.info("🌟 روح سماء (النسخة النهائية + تكامل هولوغرافي) جاهزة")
+logger.info("🌟 روح سماء (النسخة المحسّنة + تكامل هولوغرافي) جاهزة")
