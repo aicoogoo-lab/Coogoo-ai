@@ -1,13 +1,13 @@
 """
-SkyOS Memory v10.2 — الذاكرة الشاملة والمتقدمة (Holographic + Digital Mind)
-==============================================================================
-نسخة جبارة وشاملة تدعم:
+SkyOS Memory v10.3 — الذاكرة الشاملة والمتقدمة (نسخة مقوّاة)
+================================================================================
+نسخة محسنة ومستقرة تدعم:
 - الذاكرة قصيرة وطويلة المدى
 - ملف السيد (Master Profile)
 - نظام RLHF متقدم
 - المعرفة المستخرجة
-- التكامل مع Digital Mind State و Core Engine
-- جلسات ذكية ومنظمة
+- تحليل الروابط
+- التكامل مع الذاكرة الهولوغرافية
 """
 
 import sqlite3
@@ -23,7 +23,7 @@ DB_PATH = Path(__file__).parent / "sky_memory.db"
 
 
 # ============================================================
-# 1. اتصال قاعدة البيانات
+# 1. اتصال قاعدة البيانات (محسّن)
 # ============================================================
 def get_connection() -> sqlite3.Connection:
     conn = sqlite3.connect(str(DB_PATH), timeout=30, check_same_thread=False)
@@ -107,7 +107,7 @@ def init_db() -> None:
 
     conn.commit()
     conn.close()
-    logger.info("✅ ذاكرة SkyOS v10.2 جاهزة ومتكاملة")
+    logger.info("✅ ذاكرة SkyOS v10.3 جاهزة ومتكاملة")
 
 
 # ============================================================
@@ -222,7 +222,7 @@ def clear_conversation_history(session_id: Optional[str] = None):
 
 
 # ============================================================
-# 5. المعرفة طويلة المدى
+# 5. المعرفة طويلة المدى (محسّنة)
 # ============================================================
 def save_knowledge(topic: str, content: str, source: str = "محادثة", importance: float = 1.0) -> bool:
     try:
@@ -241,6 +241,28 @@ def save_knowledge(topic: str, content: str, source: str = "محادثة", impor
         conn.close()
 
 
+def save_url_analysis(url: str, title: str, content: str, importance: float = 0.8) -> bool:
+    """
+    حفظ نتيجة تحليل رابط (مضافة في النسخة المقوّاة)
+    """
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        topic = f"رابط: {title}"
+        cursor.execute('''
+            INSERT OR REPLACE INTO knowledge (topic, content, source, importance, updated_at)
+            VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+        ''', (topic, content[:2000], url, importance))
+        conn.commit()
+        logger.info(f"تم حفظ تحليل الرابط: {title}")
+        return True
+    except Exception as e:
+        logger.error(f"فشل حفظ تحليل الرابط: {e}")
+        return False
+    finally:
+        conn.close()
+
+
 def get_all_knowledge_text(limit: int = 40) -> str:
     try:
         conn = get_connection()
@@ -253,6 +275,18 @@ def get_all_knowledge_text(limit: int = 40) -> str:
         if not rows:
             return ""
         return "\n\n".join([f"📌 {row['topic']}:\n{row['content'][:900]}" for row in rows])
+    finally:
+        conn.close()
+
+
+def get_knowledge_by_topic(topic: str) -> Optional[str]:
+    """استرجاع معرفة محددة حسب الموضوع"""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT content FROM knowledge WHERE topic = ?', (topic,))
+        row = cursor.fetchone()
+        return row['content'] if row else None
     finally:
         conn.close()
 
@@ -332,7 +366,7 @@ def add_to_history(role: str, content: str, session_id: str, importance: float =
 
 
 # ============================================================
-# 9. التكامل مع Quantum Holographic Memory (محاكاة كمية)
+# 9. التكامل مع Quantum Holographic Memory
 # ============================================================
 try:
     from quantum_holographic_memory import QuantumHolographicMemory
@@ -345,7 +379,6 @@ except ImportError:
 
 
 def store_in_holographic_memory(label: str):
-    """تخزين معلومة في الذاكرة الهولوغرافية الكمية"""
     if not QUANTUM_MEMORY_ENABLED or _quantum_memory is None:
         return False
     try:
@@ -358,7 +391,6 @@ def store_in_holographic_memory(label: str):
 
 
 def query_holographic_memory(top_k: int = 5, use_entanglement: bool = True):
-    """استرجاع ذكي من الذاكرة الهولوغرافية الكمية"""
     if not QUANTUM_MEMORY_ENABLED or _quantum_memory is None:
         return []
     try:
@@ -371,7 +403,6 @@ def query_holographic_memory(top_k: int = 5, use_entanglement: bool = True):
 
 
 def entangle_memories(label1: str, label2: str):
-    """ربط ذاكرتين في الذاكرة الهولوغرافية (محاكاة التشابك الكمي)"""
     if not QUANTUM_MEMORY_ENABLED or _quantum_memory is None:
         return False
     try:
