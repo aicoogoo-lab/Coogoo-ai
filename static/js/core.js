@@ -1,5 +1,5 @@
 // ======================================================
-// SkyOS v10 — Core Engine (النسخة النهائية المحسّنة)
+// SkyOS v10 — Core Engine (النسخة النهائية)
 // ======================================================
 
 const SkyCore = {
@@ -175,7 +175,6 @@ const SkyCore = {
     const text = input.value.trim();
     if (!text) return;
 
-    // تعطيل الزر أثناء المعالجة
     if (sendBtn) sendBtn.disabled = true;
 
     SkyUI.addMessage('user', text);
@@ -215,6 +214,7 @@ const SkyCore = {
     } finally {
       this.state.isProcessing = false;
       if (sendBtn) sendBtn.disabled = false;
+      input.focus(); // التركيز التلقائي بعد الإرسال
     }
   },
 
