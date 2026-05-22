@@ -1,5 +1,5 @@
 // ======================================================
-// SkyOS v10 — Core Engine (مع رفع الملفات)
+// SkyOS v10 — Core Engine (رفع ملفات حقيقي)
 // ======================================================
 
 const SkyCore = {
@@ -40,19 +40,38 @@ const SkyCore = {
   handleFileUpload() {
     const input = document.createElement('input');
     input.type = 'file';
+
     input.onchange = async (e) => {
       const file = e.target.files[0];
       if (!file || !this.state.currentSessionId) return;
 
-      SkyUI.addMessage('user', `📎 تم رفع الملف: ${file.name}`);
+      SkyUI.addMessage('user', `📎 جاري رفع الملف: ${file.name}...`);
 
-      // يمكن تطوير هذا الجزء لاحقًا لإرسال الملف فعليًا للخادم
-      const current = this.state.sessions.find(s => s.id === this.state.currentSessionId);
-      if (current) {
-        current.messages.push({ role: 'user', content: `ملف مرفوع: ${file.name}` });
-        this.saveSessionsToStorage();
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const res = await fetch(window.SKY_CONFIG.endpoints.upload || '/upload', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          let message = `✅ تم رفع الملف: ${file.name}`;
+          if (data.analysis?.description) {
+            message += `\n\nتحليل الصورة:\n${data.analysis.description}`;
+          }
+          SkyUI.addMessage('assistant', message);
+        } else {
+          SkyUI.addMessage('assistant', `فشل رفع الملف: ${data.error || 'خطأ غير معروف'}`);
+        }
+      } catch (err) {
+        SkyUI.addMessage('assistant', 'حدث خطأ أثناء رفع الملف.');
       }
     };
+
     input.click();
   },
 
@@ -69,8 +88,7 @@ const SkyCore = {
 
     recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript;
-      const input = document.getElementById('user-input');
-      input.value = transcript;
+      document.getElementById('user-input').value = transcript;
       this.sendMessage();
     };
 
