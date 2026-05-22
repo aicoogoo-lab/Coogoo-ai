@@ -8,7 +8,6 @@ import sys
 import logging
 from pathlib import Path
 from datetime import datetime, timezone
-from functools import wraps
 from concurrent.futures import ThreadPoolExecutor
 
 from flask import Flask, request, jsonify, render_template, send_from_directory
@@ -53,7 +52,7 @@ logger = logging.getLogger("SkyOS")
 # استيراد النواة الجديدة (Core Engine + Digital Mind)
 # ============================
 try:
-    from core_engine import core_engine, DigitalMindState
+    from core.core_engine import core_engine
     CORE_ENGINE_AVAILABLE = True
     logger.info("🧠 Core Engine + Digital Mind تم تحميله بنجاح")
 except ImportError as e:
@@ -102,14 +101,13 @@ def safe_init_db():
 safe_init_db()
 
 # ============================
-# معالجة الروابط والملفات
+# معالجة الروابط
 # ============================
 def _quick_url_context(user_message, session_id=None):
     import re
     urls = re.findall(r"https?://[^\s]+", user_message)
     if not urls:
         return "", []
-    # يمكن تطويرها لاحقاً لتمريرها للـ Core Engine
     return "", urls
 
 # ============================
@@ -118,7 +116,6 @@ def _quick_url_context(user_message, session_id=None):
 def generate_ai_response(session_id, user_message, ai_type="groq", ui_mode="holo"):
     extra_context, urls = _quick_url_context(user_message, session_id)
 
-    # === تفعيل العقل الرقمي (Core Engine) ===
     intent = "dialogue"
     handled_by = "llm"
 
@@ -142,7 +139,7 @@ def generate_ai_response(session_id, user_message, ai_type="groq", ui_mode="holo
     )
 
     messages = [{"role": "system", "content": system_prompt}]
-    
+
     if sky_core and hasattr(sky_core, "_context_manager"):
         history = sky_core._context_manager.buffer[-20:] if hasattr(sky_core._context_manager, "buffer") else []
     else:
@@ -153,10 +150,9 @@ def generate_ai_response(session_id, user_message, ai_type="groq", ui_mode="holo
             "role": "user" if h.get("role") == "user" else "assistant",
             "content": h.get("content", "")
         })
-        
+
     messages.append({"role": "user", "content": user_message})
 
-    # استدعاء المزودين
     from requests import post
     reply = None
     providers = [ai_type, "groq", "gemini", "openai"]
@@ -173,11 +169,6 @@ def generate_ai_response(session_id, user_message, ai_type="groq", ui_mode="holo
                     if r.status_code == 200:
                         reply = r.json()["choices"][0]["message"]["content"].strip()
                         break
-            elif prov == "gemini":
-                key = os.environ.get("GEMINI_API_KEY")
-                if key:
-                    # يمكن تطوير الاستدعاء هنا
-                    pass
         except Exception:
             continue
 
@@ -228,6 +219,10 @@ def api_chat():
         logger.error(f"خطأ في /api/chat: {e}")
         return jsonify({"status": "error", "reply": "حدث خطأ في العقل الرقمي."}), 500
 
+
+# ============================================================
+# مسار رفع الملفات المحسّن (مرتبط بـ Core Engine + Vision Module)
+# ============================================================
 @app.route("/upload", methods=["POST"])
 def upload_file():
     if 'file' not in request.files:
@@ -241,19 +236,57 @@ def upload_file():
     filepath = UPLOAD_FOLDER / filename
     file.save(filepath)
 
-    try:
-        if sky_analyzer:
-            result = sky_analyzer.analyze_file(str(filepath), filename)
-        else:
-            result = {"success": True, "note": "تم حفظ الملف (المحلل غير متاح حالياً)"}
+    file_type = file.content_type or ""
+    result = {"success": True, "filename": filename}
 
-        return jsonify({
-            "success": True,
-            "filename": filename,
-            "analysis": result
-        })
+    try:
+        # === ربط ذكي مع Vision Module عند رفع الصور ===
+        if file_type.startswith("image/"):
+            if CORE_ENGINE_AVAILABLE and core_engine:
+                vision_mod = core_engine.modules.get("vision")
+                if vision_mod and hasattr(vision_mod, "analyze_image"):
+                    analysis = vision_mod.analyze_image(str(filepath))
+                    result["analysis"] = analysis
+                    result["handled_by"] = "vision_module"
+                else:
+                    if sky_analyzer:
+                        analysis = sky_analyzer.analyze_file(str(filepath), filename)
+                        result["analysis"] = analysis
+                        result["handled_by"] = "sky_analyzer_fallback"
+            else:
+                if sky_analyzer:
+                    analysis = sky_analyzer.analyze_file(str(filepath), filename)
+                    result["analysis"] = analysis
+
+        elif file_type.startswith("text/") or filename.endswith(('.py', '.js', '.md', '.txt', '.json', '.csv')):
+            if sky_analyzer:
+                analysis = sky_analyzer.analyze_file(str(filepath), filename)
+                result["analysis"] = analysis
+                result["handled_by"] = "sky_analyzer"
+
+        else:
+            result["note"] = "تم حفظ الملف. نوع الملف غير مدعوم للتحليل التلقائي حالياً."
+
+        # حفظ الملف في الذاكرة إن أمكن
+        if memory and hasattr(memory, "save_uploaded_file"):
+            try:
+                memory.save_uploaded_file(
+                    filename=filename,
+                    original_name=file.filename,
+                    file_type=file_type,
+                    size=os.path.getsize(filepath),
+                    extracted_text=str(result.get("analysis", ""))
+                )
+            except Exception:
+                pass
+
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        logger.error(f"خطأ أثناء معالجة الملف: {e}")
+        result["error"] = str(e)
+        result["success"] = False
+
+    return jsonify(result)
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
