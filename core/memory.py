@@ -1,13 +1,12 @@
 """
-SkyOS Memory v10.3 — الذاكرة الشاملة والمتقدمة (نسخة مقوّاة)
+SkyOS Memory v10.4 — الذاكرة الشاملة والمتقدمة (النسخة النهائية)
 ================================================================================
-نسخة محسنة ومستقرة تدعم:
-- الذاكرة قصيرة وطويلة المدى
+نسخة نهائية مقوّاة ومتكاملة تدعم:
+- الذاكرة التقليدية (SQLite)
+- الذاكرة الهولوغرافية (مع Encoding حقيقي)
 - ملف السيد (Master Profile)
-- نظام RLHF متقدم
-- المعرفة المستخرجة
-- تحليل الروابط
-- التكامل مع الذاكرة الهولوغرافية
+- نظام RLHF
+- تحليل الروابط والملفات
 """
 
 import sqlite3
@@ -23,7 +22,7 @@ DB_PATH = Path(__file__).parent / "sky_memory.db"
 
 
 # ============================================================
-# 1. اتصال قاعدة البيانات (محسّن)
+# 1. اتصال قاعدة البيانات
 # ============================================================
 def get_connection() -> sqlite3.Connection:
     conn = sqlite3.connect(str(DB_PATH), timeout=30, check_same_thread=False)
@@ -107,7 +106,7 @@ def init_db() -> None:
 
     conn.commit()
     conn.close()
-    logger.info("✅ ذاكرة SkyOS v10.3 جاهزة ومتكاملة")
+    logger.info("✅ ذاكرة SkyOS v10.4 (النسخة النهائية) جاهزة")
 
 
 # ============================================================
@@ -222,7 +221,7 @@ def clear_conversation_history(session_id: Optional[str] = None):
 
 
 # ============================================================
-# 5. المعرفة طويلة المدى (محسّنة)
+# 5. المعرفة طويلة المدى
 # ============================================================
 def save_knowledge(topic: str, content: str, source: str = "محادثة", importance: float = 1.0) -> bool:
     try:
@@ -242,9 +241,6 @@ def save_knowledge(topic: str, content: str, source: str = "محادثة", impor
 
 
 def save_url_analysis(url: str, title: str, content: str, importance: float = 0.8) -> bool:
-    """
-    حفظ نتيجة تحليل رابط (مضافة في النسخة المقوّاة)
-    """
     try:
         conn = get_connection()
         cursor = conn.cursor()
@@ -280,7 +276,6 @@ def get_all_knowledge_text(limit: int = 40) -> str:
 
 
 def get_knowledge_by_topic(topic: str) -> Optional[str]:
-    """استرجاع معرفة محددة حسب الموضوع"""
     try:
         conn = get_connection()
         cursor = conn.cursor()
@@ -313,7 +308,7 @@ def save_uploaded_file(filename: str, original_name: str, file_type: str,
 
 
 # ============================================================
-# 7. نظام التغذية الراجعة (RLHF)
+# 7. نظام RLHF
 # ============================================================
 def process_feedback(user_message: str, ai_reply: str, feedback_score: float,
                      session_id: str = None, comment: str = "") -> bool:
@@ -347,7 +342,7 @@ def process_feedback(user_message: str, ai_reply: str, feedback_score: float,
 
 
 # ============================================================
-# 8. دوال مساعدة للعقل الرقمي
+# 8. دوال مساعدة
 # ============================================================
 def get_personality_summary() -> str:
     profile = get_master_profile()
@@ -361,55 +356,66 @@ def get_personality_summary() -> str:
 
 
 def add_to_history(role: str, content: str, session_id: str, importance: float = 1.0):
-    """دالة توافقية مع الـ Core Engine"""
     save_conversation(role, content, session_id, importance=importance)
 
 
 # ============================================================
-# 9. التكامل مع Quantum Holographic Memory
+# 9. التكامل مع الذاكرة الهولوغرافية (النسخة النهائية)
 # ============================================================
 try:
-    from quantum_holographic_memory import QuantumHolographicMemory
-    _quantum_memory = QuantumHolographicMemory(dimension=8000)
-    QUANTUM_MEMORY_ENABLED = True
+    from holographic_encoder import holographic_encoder
+    from hyperdimensional_memory import HyperdimensionalMemory
+
+    _hdm = HyperdimensionalMemory(dimension=10000)
+    HOLOGRAPHIC_MEMORY_ENABLED = True
 except ImportError:
-    _quantum_memory = None
-    QUANTUM_MEMORY_ENABLED = False
-    logger.warning("⚠️ QuantumHolographicMemory غير متاحة. سيتم استخدام الذاكرة التقليدية فقط.")
+    holographic_encoder = None
+    _hdm = None
+    HOLOGRAPHIC_MEMORY_ENABLED = False
+    logger.warning("⚠️ الذاكرة الهولوغرافية غير متاحة حالياً.")
 
 
-def store_in_holographic_memory(label: str):
-    if not QUANTUM_MEMORY_ENABLED or _quantum_memory is None:
+def store_knowledge_holographically(topic: str, content: str) -> bool:
+    """تخزين معرفة في الذاكرة الهولوغرافية باستخدام Encoding"""
+    if not HOLOGRAPHIC_MEMORY_ENABLED or not holographic_encoder:
         return False
     try:
-        vector = _quantum_memory.create_vector()
-        _quantum_memory.store(label, vector)
+        text_to_encode = f"{topic}. {content}"
+        vector = holographic_encoder.encode_text(text_to_encode)
+        label = f"knowledge_{topic[:50]}"
+        _hdm.store(label, vector)
+        logger.info(f"تم تخزين المعرفة هولوغرافيًا: {topic}")
         return True
     except Exception as e:
-        logger.error(f"فشل التخزين في الذاكرة الهولوغرافية: {e}")
+        logger.error(f"فشل التخزين الهولوغرافي: {e}")
         return False
 
 
-def query_holographic_memory(top_k: int = 5, use_entanglement: bool = True):
-    if not QUANTUM_MEMORY_ENABLED or _quantum_memory is None:
+def query_holographic_memory(query_text: str, top_k: int = 5):
+    """استرجاع من الذاكرة الهولوغرافية باستخدام Encoding"""
+    if not HOLOGRAPHIC_MEMORY_ENABLED or not holographic_encoder or not _hdm:
         return []
     try:
-        query_vector = _quantum_memory.create_vector()
-        results = _quantum_memory.query(query_vector, top_k=top_k, use_entanglement=use_entanglement)
+        query_vector = holographic_encoder.encode_text(query_text)
+        results = _hdm.query(query_vector, top_k=top_k)
         return results
     except Exception as e:
-        logger.error(f"فشل الاسترجاع من الذاكرة الهولوغرافية: {e}")
+        logger.error(f"فشل الاسترجاع الهولوغرافي: {e}")
         return []
 
 
-def entangle_memories(label1: str, label2: str):
-    if not QUANTUM_MEMORY_ENABLED or _quantum_memory is None:
+def store_conversation_holographically(role: str, content: str, session_id: str) -> bool:
+    """تخزين محادثة في الذاكرة الهولوغرافية"""
+    if not HOLOGRAPHIC_MEMORY_ENABLED or not holographic_encoder:
         return False
     try:
-        _quantum_memory.entangle(label1, label2)
+        text = f"{role}: {content}"
+        vector = holographic_encoder.encode_text(text)
+        label = f"conv_{session_id}_{len(_hdm.memory)}"
+        _hdm.store(label, vector)
         return True
     except Exception as e:
-        logger.error(f"فشل ربط الذاكرتين: {e}")
+        logger.error(f"فشل تخزين المحادثة هولوغرافيًا: {e}")
         return False
 
 
