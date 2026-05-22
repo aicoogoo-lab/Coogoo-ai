@@ -1,5 +1,5 @@
 // ======================================================
-// SkyOS v10 — Digital Mind Controller
+// SkyOS v10 — Digital Mind State (النسخة الثورية)
 // ======================================================
 
 const SkyMind = {
@@ -22,10 +22,14 @@ const SkyMind = {
     if (memoryEl) memoryEl.textContent = this.metrics.memoryCount;
   },
 
-  // يمكن تطوير هذه الدوال لاحقًا لتحديث الحالة الذهنية
   increaseConfidence(amount = 1) {
     this.metrics.confidence = Math.min(99, this.metrics.confidence + amount);
     this.updateMetricsUI();
+
+    // تفعيل تأثير بصري على العقل الثلاثي الأبعاد
+    if (window.SkyMind3D) {
+      window.SkyMind3D.triggerThinking();
+    }
   },
 
   decreaseConfidence(amount = 2) {
