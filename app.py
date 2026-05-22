@@ -1,8 +1,7 @@
 """
-SkyOS Backend — النسخة النهائية v10.6
+SkyOS Backend — النسخة النهائية v10.7 (مع تسجيل مفصل)
 ================================================================================
-قلب المشروع وعموده الفقري
-تكامل كامل مع Core Engine + Digital Mind + Gemini Vision
+قلب المشروع + تسجيل تفصيلي لتحليل الصور بـ Gemini Vision
 """
 
 import os
@@ -57,7 +56,6 @@ try:
 except ImportError:
     CORE_ENGINE_AVAILABLE = False
     core_engine = None
-    logger.warning("⚠️ Core Engine غير متاح")
 
 try:
     import sky_core
@@ -114,16 +112,10 @@ def generate_llm_response(user_message: str, session_id: str, extra_context: str
             if provider == "groq":
                 key = os.environ.get("GROQ_API_KEY")
                 if key:
-                    r = post(
-                        "https://api.groq.com/openai/v1/chat/completions",
-                        headers={"Authorization": f"Bearer {key}"},
-                        json={
-                            "model": "llama-3.3-70b-versatile",
-                            "messages": messages,
-                            "temperature": 0.4
-                        },
-                        timeout=35
-                    )
+                    r = post("https://api.groq.com/openai/v1/chat/completions",
+                             headers={"Authorization": f"Bearer {key}"},
+                             json={"model": "llama-3.3-70b-versatile", "messages": messages, "temperature": 0.4},
+                             timeout=35)
                     if r.status_code == 200:
                         reply = r.json()["choices"][0]["message"]["content"].strip()
                         break
@@ -132,7 +124,7 @@ def generate_llm_response(user_message: str, session_id: str, extra_context: str
             continue
 
     if not reply:
-        reply = "⚠️ تعذر الاتصال بمزودي الذكاء حالياً. يرجى المحاولة لاحقاً."
+        reply = "⚠️ تعذر الاتصال بمزودي الذكاء حالياً."
 
     return reply
 
@@ -151,9 +143,6 @@ def serve_manifest():
 def serve_sw():
     return send_from_directory(STATIC_DIR, "service-worker.js")
 
-# ============================
-# مسار الدردشة الرئيسي
-# ============================
 @app.route("/api/chat", methods=["POST"])
 def api_chat():
     try:
@@ -169,10 +158,7 @@ def api_chat():
 
         if CORE_ENGINE_AVAILABLE and core_engine:
             try:
-                result = core_engine.process_command(
-                    user_input=user_message,
-                    session_id=session_id
-                )
+                result = core_engine.process_command(user_input=user_message, session_id=session_id)
                 handled_by = result.get("handled_by", "dialogue")
                 reply = result.get("response", "")
             except Exception as e:
@@ -198,9 +184,9 @@ def api_chat():
         return jsonify({"status": "error", "reply": "حدث خطأ في العقل الرقمي."}), 500
 
 
-# ============================
-# مسار رفع الملفات (محسّن مع Gemini Vision)
-# ============================
+# ============================================================
+# مسار رفع الملفات مع تسجيل مفصل لـ Gemini Vision
+# ============================================================
 @app.route("/upload", methods=["POST"])
 def upload_file():
     if 'file' not in request.files:
@@ -218,14 +204,17 @@ def upload_file():
     result = {"success": True, "filename": filename}
 
     try:
-        # === تحليل الصور باستخدام Gemini Vision ===
+        # === تحليل الصور ===
         if file_type.startswith("image/"):
             gemini_key = os.environ.get("GEMINI_API_KEY")
+            logger.info(f"تم رفع صورة: {filename} | Gemini Key موجود: {bool(gemini_key)}")
 
             if gemini_key and sky_analyzer:
+                logger.info("جاري استدعاء Gemini Vision...")
                 vision_result = sky_analyzer.analyze_image_with_gemini(str(filepath), gemini_key)
                 result["analysis"] = vision_result
                 result["handled_by"] = "gemini_vision"
+                logger.info(f"تم استدعاء Gemini Vision بنجاح. النتيجة: {vision_result.get('success', False)}")
 
                 if memory:
                     try:
@@ -238,13 +227,11 @@ def upload_file():
                     except Exception:
                         pass
             else:
-                result["analysis"] = {
-                    "success": True,
-                    "note": "تم رفع الصورة. Gemini Vision غير مفعّل حالياً."
-                }
+                logger.warning("Gemini Vision غير مفعّل (المفتاح غير موجود أو sky_analyzer غير متاح)")
+                result["analysis"] = {"success": True, "note": "تم رفع الصورة. Gemini Vision غير مفعّل."}
                 result["handled_by"] = "basic_image"
 
-        # === تحليل باقي أنواع الملفات ===
+        # === باقي الملفات ===
         elif sky_analyzer:
             analysis = sky_analyzer.analyze_file(str(filepath), filename)
             result["analysis"] = analysis
@@ -264,7 +251,7 @@ def upload_file():
             result["note"] = "تم حفظ الملف."
 
     except Exception as e:
-        logger.error(f"خطأ أثناء معالجة الملف: {e}")
+        logger.error(f"خطأ أثناء معالجة الملف {filename}: {e}")
         result["error"] = str(e)
         result["success"] = False
 
