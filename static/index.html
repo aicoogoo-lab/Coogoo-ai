@@ -2,86 +2,77 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#050507">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SkyOS • v10</title>
-  
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/core.css">
 </head>
 <body>
 
-  <!-- Mind Status Bar -->
+  <!-- Mind Status -->
   <div class="mind-status">
-    <div class="mind-status-left">
-      <div class="status-dot"></div>
-      <div>
-        <strong>SkyOS v10</strong>
-        <span style="color: var(--text-muted); margin-right: 8px;">•</span>
-        <span style="color: var(--text-muted);">العقل الرقمي نشط</span>
-      </div>
+    <div>
+      <strong>SkyOS v10</strong>
+      <span style="color:#64748b; margin: 0 8px;">•</span>
+      <span style="color:#64748b;">العقل الرقمي نشط</span>
     </div>
-
     <div class="mind-metrics">
-      <div><i class="fas fa-brain"></i> <span id="mind-confidence">94</span>% ثقة</div>
-      <div><i class="fas fa-link"></i> <span id="memory-count">128</span> ذاكرة</div>
+      <div><i class="fas fa-brain"></i> <span id="mind-confidence">94</span>%</div>
+      <div><i class="fas fa-database"></i> <span id="memory-count">128</span></div>
     </div>
   </div>
 
-  <!-- Main Container -->
-  <div id="app">
-    <div class="main-container">
+  <div class="main-container">
 
-      <!-- Chat Area -->
-      <div class="chat-container">
-        
-        <!-- Messages -->
-        <div class="chat-messages" id="chat-messages">
-          <!-- الرسائل ستُضاف ديناميكيًا من JavaScript -->
-        </div>
-
-        <!-- Input Area -->
-        <div class="input-area">
-          <button class="sky-icon-btn" id="voice-btn" title="إدخال صوتي">
-            <i class="fas fa-microphone"></i>
-          </button>
-          <button class="sky-icon-btn" id="upload-btn" title="رفع ملف">
-            <i class="fas fa-paperclip"></i>
-          </button>
-
-          <textarea 
-            id="user-input" 
-            placeholder="اكتب أمرًا أو استفسارًا للعقل الرقمي..." 
-            rows="1"></textarea>
-
-          <button class="send-button" id="send-btn">
-            <i class="fas fa-paper-plane"></i>
-          </button>
-        </div>
-
+    <!-- Sidebar -->
+    <aside class="sky-sidebar">
+      <div class="sidebar-section">
+        <button class="sky-btn-primary" id="new-session-btn">
+          <i class="fas fa-plus"></i> جلسة جديدة
+        </button>
       </div>
 
+      <div class="sidebar-section" style="flex:1; overflow-y:auto;">
+        <div style="font-size:0.75rem; color:#64748b; margin-bottom:8px; padding-right:4px;">
+          <i class="fas fa-archive"></i> الجلسات المحفوظة
+        </div>
+        <div id="session-list">
+          <!-- الجلسات تُضاف ديناميكيًا -->
+        </div>
+      </div>
+    </aside>
+
+    <!-- Chat Area -->
+    <div class="chat-container">
+      <div class="chat-messages" id="chat-messages"></div>
+
+      <div class="input-area">
+        <button class="sky-icon-btn" id="voice-btn"><i class="fas fa-microphone"></i></button>
+        <button class="sky-icon-btn" id="upload-btn"><i class="fas fa-paperclip"></i></button>
+        
+        <textarea id="user-input" placeholder="اكتب أمرًا أو استفسارًا..." rows="1"></textarea>
+        
+        <button class="send-button" id="send-btn">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
     </div>
+
   </div>
 
-  <!-- Toast Container -->
   <div id="toast-container"></div>
 
-  <!-- Config -->
   <script>
     window.SKY_CONFIG = {
       endpoints: {
-        chat: "/api/chat",
-        upload: "/upload"
+        chat: "/api/chat"
       }
     };
   </script>
 
-  <!-- Main Scripts -->
-  <script src="/static/js/core.js" defer></script>
-  <script src="/static/js/mind.js" defer></script>
-  <script src="/static/js/ui.js" defer></script>
-
+  <script src="/static/js/core.js"></script>
+  <script src="/static/js/ui.js"></script>
+  <script src="/static/js/mind.js"></script>
 </body>
 </html>
