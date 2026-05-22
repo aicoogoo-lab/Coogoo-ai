@@ -1,5 +1,5 @@
 // ======================================================
-// SkyOS v10 — UI Controller (متقدم)
+// SkyOS v10 — UI Controller (محسّن)
 // ======================================================
 
 const SkyUI = {
@@ -19,7 +19,6 @@ const SkyUI = {
     contentDiv.className = 'message-content';
     contentDiv.innerHTML = this.parseMarkdown(content);
 
-    // إضافة الوقت
     const time = document.createElement('div');
     time.style.fontSize = '0.7rem';
     time.style.color = '#64748b';
@@ -32,7 +31,6 @@ const SkyUI = {
     messageDiv.appendChild(contentDiv);
     messageDiv.appendChild(time);
     this.chatMessages.appendChild(messageDiv);
-
     this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
   },
 
@@ -65,13 +63,14 @@ const SkyUI = {
 
   showThinking() {
     if (!this.chatMessages) this.init();
+
     const thinking = document.createElement('div');
     thinking.id = 'thinking-indicator';
-    thinking.className = 'message assistant';
+    thinking.className = 'message assistant thinking';
     thinking.innerHTML = `
-      <div class="message-content">
-        <i class="fas fa-circle-notch fa-spin"></i> 
-        <span style="margin-right:8px;">أفكر...</span>
+      <div class="message-content" style="display:flex; align-items:center; gap:10px;">
+        <i class="fas fa-brain fa-pulse" style="color:#a78bfa;"></i>
+        <span>أفكر بعمق في سياقك...</span>
       </div>
     `;
     this.chatMessages.appendChild(thinking);
@@ -90,7 +89,7 @@ const SkyUI = {
     toast.className = 'toast';
     toast.textContent = message;
     container.appendChild(toast);
-    setTimeout(() => toast.remove(), 3000);
+    setTimeout(() => toast.remove(), 3200);
   }
 };
 
