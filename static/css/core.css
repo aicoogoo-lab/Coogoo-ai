@@ -1,3 +1,7 @@
+/* ======================================================
+   سماء • التصميم الأساسي (النسخة النهائية المتكاملة)
+   ====================================================== */
+
 :root {
   --bg-deep: #050507;
   --bg-panel: #0a0a0f;
@@ -11,6 +15,9 @@
   --success: #4ade80;
   --warning: #f59e0b;
   --error: #ef4444;
+  
+  /* متغيرات الثيمات */
+  --theme-transition: all 0.3s ease;
 }
 
 * {
@@ -25,9 +32,36 @@ body {
   font-family: "Cairo", system-ui, sans-serif;
   height: 100dvh;
   overflow: hidden;
+  transition: var(--theme-transition);
 }
 
-/* Custom Scrollbar */
+/* ==================== الثيمات ==================== */
+body.theme-galaxy {
+  --bg-deep: #050507;
+  --bg-panel: #0a0a0f;
+  --accent: #6366f1;
+  --accent-2: #a78bfa;
+}
+
+body.theme-dark {
+  --bg-deep: #000000;
+  --bg-panel: #0c0c12;
+  --accent: #3b82f6;
+  --accent-2: #60a5fa;
+}
+
+body.theme-focus {
+  --bg-deep: #f5f5f7;
+  --bg-panel: #ffffff;
+  --border: rgba(0, 0, 0, 0.08);
+  --text: #1a1a2e;
+  --text-muted: #64748b;
+  --accent: #4f46e5;
+  --accent-2: #818cf8;
+  --glass: rgba(0, 0, 0, 0.02);
+}
+
+/* ==================== سكرول بار مخصص ==================== */
 ::-webkit-scrollbar {
   width: 5px;
   height: 5px;
@@ -43,9 +77,9 @@ body {
   background: var(--accent-2);
 }
 
-/* Mind Status Bar */
+/* ==================== شريط الحالة العلوي ==================== */
 .mind-status {
-  height: 52px;
+  height: 56px;
   background: var(--bg-panel);
   border-bottom: 1px solid var(--border);
   display: flex;
@@ -54,12 +88,13 @@ body {
   padding: 0 20px;
   font-size: 0.85rem;
   backdrop-filter: blur(10px);
-  z-index: 10;
+  z-index: 100;
+  position: relative;
 }
 
 .mind-metrics {
   display: flex;
-  gap: 20px;
+  gap: 12px;
   font-size: 0.75rem;
   color: var(--text-muted);
 }
@@ -68,7 +103,7 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: rgba(255,255,255,0.02);
+  background: rgba(255, 255, 255, 0.02);
   padding: 4px 10px;
   border-radius: 20px;
 }
@@ -82,14 +117,14 @@ body {
   background: rgba(99, 102, 241, 0.1);
 }
 
-/* Main Layout */
+/* ==================== التخطيط الرئيسي ==================== */
 .main-container {
   display: flex;
-  height: calc(100dvh - 52px);
+  height: calc(100dvh - 56px);
   position: relative;
 }
 
-/* Sidebar */
+/* ==================== الشريط الجانبي ==================== */
 .sky-sidebar {
   width: 280px;
   background: var(--bg-panel);
@@ -156,40 +191,39 @@ body {
   background: rgba(239, 68, 68, 0.1);
 }
 
-/* Chat Container */
+.load-more-sessions {
+  text-align: center;
+  padding: 10px;
+  color: var(--accent-2);
+  cursor: pointer;
+  font-size: 0.8rem;
+  margin-top: 10px;
+  transition: all 0.2s;
+}
+
+.load-more-sessions:hover {
+  background: rgba(99, 102, 241, 0.1);
+  border-radius: 12px;
+}
+
+/* ==================== منطقة المحادثة ==================== */
 .chat-container {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-width: 0;
-}
-
-/* 3D Mind Container */
-#mind-container {
-  width: 100%;
-  height: 420px;
-  background: #000000;
-  border-radius: 20px;
-  overflow: hidden;
   position: relative;
-  border: 1px solid var(--border);
-  box-shadow: 0 0 30px var(--accent-glow);
-  transition: all 0.3s ease;
 }
 
-#mind-container:hover {
-  border-color: var(--accent);
-  box-shadow: 0 0 40px rgba(99, 102, 241, 0.25);
-}
-
-/* Messages */
+/* ==================== الرسائل ==================== */
 .chat-messages {
   flex: 1;
-  padding: 20px 20px;
+  padding: 20px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  padding-bottom: 20px;
 }
 
 .message {
@@ -240,7 +274,37 @@ body {
   gap: 8px;
 }
 
-/* Thinking Indicator */
+/* أزرار الإجراءات على الرسائل */
+.message-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  justify-content: flex-end;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.message:hover .message-actions {
+  opacity: 1;
+}
+
+.msg-action {
+  background: var(--glass);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  transition: all 0.2s;
+}
+
+.msg-action:hover {
+  color: var(--accent-2);
+  border-color: var(--accent);
+}
+
+/* ==================== مؤشر التفكير ==================== */
 .thinking {
   background: rgba(99, 102, 241, 0.05);
   border: 1px solid rgba(99, 102, 241, 0.2);
@@ -252,7 +316,7 @@ body {
   50% { opacity: 1; }
 }
 
-/* Input Area */
+/* ==================== منطقة الإدخال ==================== */
 .input-area {
   padding: 12px 20px;
   background: var(--bg-panel);
@@ -260,6 +324,26 @@ body {
   display: flex;
   gap: 12px;
   align-items: flex-end;
+  position: relative;
+  z-index: 10;
+}
+
+/* إصلاح مشكلة لوحة المفاتيح على الجوال */
+@media (max-width: 768px) {
+  .input-area {
+    position: sticky;
+    bottom: 0;
+    background: var(--bg-panel);
+    padding: 10px 12px;
+  }
+  
+  body:focus-within .input-area {
+    transform: translateY(0);
+  }
+  
+  .chat-messages {
+    padding-bottom: 10px;
+  }
 }
 
 .input-area textarea {
@@ -267,11 +351,11 @@ body {
   background: var(--bg-deep);
   border: 1px solid var(--border);
   color: var(--text);
-  border-radius: 20px;
+  border-radius: 24px;
   padding: 12px 18px;
   font-size: 0.95rem;
   resize: none;
-  min-height: 48px;
+  min-height: 44px;
   max-height: 120px;
   outline: none;
   transition: border-color 0.2s;
@@ -283,12 +367,12 @@ body {
 }
 
 .send-button {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   background: linear-gradient(135deg, var(--accent), var(--accent-2));
   color: white;
   border: none;
-  border-radius: 20px;
+  border-radius: 24px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -307,7 +391,34 @@ body {
   transform: none;
 }
 
-/* Code Blocks */
+/* ==================== معاينة الصورة ==================== */
+.image-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: var(--bg-deep);
+  border-radius: 12px;
+  margin-bottom: 8px;
+  border: 1px solid var(--border);
+}
+
+.image-preview img {
+  height: 50px;
+  width: 50px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.image-preview .remove-image {
+  background: none;
+  border: none;
+  color: var(--error);
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+/* ==================== كتل الأكواد ==================== */
 .sky-code-container {
   margin: 12px 0;
   border-radius: 12px;
@@ -317,7 +428,7 @@ body {
 }
 
 .sky-code-header {
-  background: rgba(255,255,255,0.03);
+  background: rgba(255, 255, 255, 0.03);
   padding: 8px 12px;
   display: flex;
   justify-content: space-between;
@@ -348,7 +459,7 @@ body {
   font-family: monospace;
 }
 
-/* Toast */
+/* ==================== التنبيهات ==================== */
 #toast-container {
   position: fixed;
   bottom: 80px;
@@ -389,7 +500,7 @@ body {
 .toast-success { border-right: 3px solid var(--success); }
 .toast-info { border-right: 3px solid var(--accent); }
 
-/* Buttons */
+/* ==================== الأزرار العامة ==================== */
 .sky-icon-btn {
   width: 44px;
   height: 44px;
@@ -427,7 +538,7 @@ body {
   filter: brightness(1.05);
 }
 
-/* Ripple Effect */
+/* ==================== تأثير التموج ==================== */
 .ripple {
   position: absolute;
   border-radius: 50%;
@@ -444,36 +555,197 @@ body {
   }
 }
 
-/* Meditation Mode Body Class (يضاف بواسطة JavaScript) */
+/* ==================== وضع التأمل ==================== */
 body.meditation-mode {
   filter: brightness(0.95) saturate(0.8);
   transition: all 1s ease;
 }
 
-body.meditation-mode #mind-container {
-  filter: blur(0.5px);
+/* ==================== الشخصيات الحية ==================== */
+#characters-area {
+  position: absolute;
+  top: 60px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 20;
 }
 
-/* Mobile Responsive */
+#living-chars {
+  display: flex;
+  gap: 16px;
+  background: rgba(10, 10, 15, 0.7);
+  backdrop-filter: blur(12px);
+  padding: 8px 24px;
+  border-radius: 60px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  pointer-events: auto;
+}
+
+.char-spot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.char-spot:active {
+  transform: scale(0.95);
+}
+
+.char-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+}
+
+.char-pink {
+  background: radial-gradient(circle at 30% 30%, #ff99cc, #ff66aa);
+  box-shadow: 0 0 10px rgba(255, 102, 170, 0.3);
+}
+.char-green {
+  background: radial-gradient(circle at 30% 30%, #88ff88, #44cc44);
+  box-shadow: 0 0 10px rgba(68, 204, 68, 0.3);
+}
+.char-white {
+  background: radial-gradient(circle at 30% 30%, #ffffff, #ccccdd);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+.char-face {
+  position: relative;
+  width: 36px;
+  height: 36px;
+}
+
+.eyes {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  position: absolute;
+  top: 8px;
+  left: 4px;
+}
+
+.eye {
+  width: 7px;
+  height: 7px;
+  background: #1a1a2e;
+  border-radius: 50%;
+  transition: all 0.15s ease;
+}
+
+.mouth {
+  width: 14px;
+  height: 7px;
+  background: #3d2a1f;
+  border-radius: 0 0 10px 10px;
+  position: absolute;
+  bottom: 5px;
+  left: 11px;
+  transition: all 0.15s ease;
+}
+
+.blush {
+  width: 9px;
+  height: 5px;
+  background: #ffaaaa;
+  border-radius: 50%;
+  position: absolute;
+  bottom: 10px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.char-spot[data-char="pink"] .blush {
+  left: 2px;
+  background: #ff8888;
+}
+.char-spot[data-char="green"] .blush {
+  right: 2px;
+  background: #ffaaaa;
+}
+.char-spot[data-char="white"] .blush {
+  left: 25px;
+  background: #ffcccc;
+}
+
+/* حالات الوجه للشخصيات */
+.char-spot[data-mood="happy"] .mouth {
+  border-radius: 50%;
+  transform: scaleY(-1);
+  height: 9px;
+}
+.char-spot[data-mood="sad"] .mouth {
+  border-radius: 50%;
+  background: #8866aa;
+  transform: scaleY(0.6);
+}
+.char-spot[data-mood="surprised"] .mouth {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #553322;
+}
+.char-spot[data-mood="annoyed"] .eye {
+  transform: scaleX(0.7);
+}
+.char-spot[data-mood="shy"] .blush {
+  opacity: 1;
+}
+.char-spot[data-mood="shy"] .eye {
+  transform: translateX(2px);
+}
+
+.char-name {
+  font-size: 10px;
+  color: #aaa;
+  font-weight: 500;
+}
+
+.char-spot[data-hidden="true"] {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0);
+  transition: all 0.3s;
+}
+
+/* ==================== خلفية المجرة ==================== */
+#galaxy-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -2;
+  pointer-events: none;
+}
+
+/* ==================== استجابة للجوال ==================== */
 @media (max-width: 768px) {
   .sky-sidebar {
     position: fixed;
-    top: 52px;
+    top: 56px;
     bottom: 0;
     left: -100%;
     width: 75%;
     max-width: 280px;
     z-index: 100;
     transition: left 0.3s ease;
-    box-shadow: 4px 0 20px rgba(0,0,0,0.5);
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5);
   }
 
   .sky-sidebar.mobile-open {
     left: 0;
-  }
-
-  #mind-container {
-    height: 320px;
   }
 
   .chat-messages {
@@ -484,32 +756,53 @@ body.meditation-mode #mind-container {
     max-width: 90%;
     font-size: 0.9rem;
   }
-  
+
   .mind-metrics {
-    gap: 8px;
+    gap: 6px;
   }
-  
+
   .mind-metrics div {
     padding: 4px 8px;
   }
-  
+
   .input-area {
-    padding: 12px 12px;
+    padding: 10px 12px;
     gap: 8px;
+  }
+  
+  #living-chars {
+    gap: 12px;
+    padding: 6px 16px;
+  }
+  
+  .char-avatar {
+    width: 44px;
+    height: 44px;
+  }
+  
+  .char-face {
+    width: 30px;
+    height: 30px;
   }
 }
 
-/* Landscape mode */
+/* ==================== الوضع الأفقي ==================== */
 @media (max-width: 900px) and (orientation: landscape) {
-  #mind-container {
-    height: 260px;
-  }
-  
   .mind-status {
     height: 44px;
   }
   
   .main-container {
     height: calc(100dvh - 44px);
+  }
+  
+  #living-chars {
+    top: 48px;
+    padding: 4px 12px;
+  }
+  
+  .char-avatar {
+    width: 38px;
+    height: 38px;
   }
 }
