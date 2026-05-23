@@ -1,5 +1,6 @@
 // ======================================================
 // SkyOS v10 — UI Controller (متطور بالكامل)
+// + HoloLiquid Fluid Motion Effect مدمج
 // ======================================================
 
 const SkyUI = {
@@ -183,12 +184,80 @@ const SkyUI = {
   }
 };
 
-// إضافة الأنماط الديناميكية للتأثيرات (إذا لم تكن موجودة في CSS)
+/* ============================================================
+   HOLOLIQUID FLUID MOTION EFFECT (مدمج)
+   ============================================================ */
+const HoloLiquidFluid = {
+  fluidLayer: null,
+  x: 0,
+  y: 0,
+  tx: 0,
+  ty: 0,
+  animationId: null,
+
+  init() {
+    // إنشاء طبقة السائل الهولوغرافي
+    this.fluidLayer = document.createElement("div");
+    this.fluidLayer.className = "holo-fluid-layer";
+    document.body.appendChild(this.fluidLayer);
+
+    // بدء حلقة الحركة
+    this.animate();
+
+    // تتبع حركة الماوس
+    document.addEventListener("mousemove", (e) => {
+      this.tx = (e.clientX - window.innerWidth / 2) * 0.02;
+      this.ty = (e.clientY - window.innerHeight / 2) * 0.02;
+    });
+
+    // إيقاف الحركة عند الخروج من النافذة (اختياري)
+    document.addEventListener("mouseleave", () => {
+      this.tx = 0;
+      this.ty = 0;
+    });
+
+    console.log('🌊 HoloLiquid Fluid Motion مفعّل');
+  },
+
+  animate() {
+    this.x += (this.tx - this.x) * 0.05;
+    this.y += (this.ty - this.y) * 0.05;
+
+    if (this.fluidLayer) {
+      this.fluidLayer.style.transform = `translate(${this.x}px, ${this.y}px)`;
+    }
+
+    this.animationId = requestAnimationFrame(() => this.animate());
+  },
+
+  // إيقاف الحركة (لتوفير الأداء عند الحاجة)
+  stop() {
+    if (this.animationId) {
+      cancelAnimationFrame(this.animationId);
+      this.animationId = null;
+    }
+  },
+
+  // استئناف الحركة
+  resume() {
+    if (!this.animationId) {
+      this.animate();
+    }
+  }
+};
+
+// ======================================================
+// إضافة الأنماط الديناميكية للتأثيرات
+// ======================================================
 const addDynamicStyles = () => {
   if (document.getElementById('skyui-dynamic-styles')) return;
+  
   const style = document.createElement('style');
   style.id = 'skyui-dynamic-styles';
   style.textContent = `
+    /* ==================== */
+    /* أنماط SkyUI الأساسية */
+    /* ==================== */
     .thinking-dots {
       display: flex;
       gap: 4px;
@@ -202,13 +271,21 @@ const addDynamicStyles = () => {
     }
     .thinking-dots span:nth-child(1) { animation-delay: -0.32s; }
     .thinking-dots span:nth-child(2) { animation-delay: -0.16s; }
+    
     @keyframes dot-bounce {
       0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
       40% { transform: scale(1); opacity: 1; }
     }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    
     .message {
       transition: opacity 0.3s ease, transform 0.3s ease;
     }
+    
     .toast {
       background: #1e1e2f;
       border: 1px solid #334155;
@@ -223,6 +300,7 @@ const addDynamicStyles = () => {
     }
     .toast-error { border-right: 3px solid #ef4444; }
     .toast-success { border-right: 3px solid #22c55e; }
+    
     .ripple {
       position: absolute;
       border-radius: 50%;
@@ -231,17 +309,142 @@ const addDynamicStyles = () => {
       animation: ripple-anim 0.6s linear;
       pointer-events: none;
     }
+    
     @keyframes ripple-anim {
       to { transform: scale(4); opacity: 0; }
     }
+
+    /* ============================ */
+    /* أنماط HoloLiquid Fluid Layer */
+    /* ============================ */
+    .holo-fluid-layer {
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      pointer-events: none;
+      z-index: -1;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(79, 210, 255, 0.08), transparent 50%),
+        radial-gradient(circle at 70% 60%, rgba(179, 107, 255, 0.08), transparent 50%),
+        radial-gradient(circle at 50% 80%, rgba(255, 79, 123, 0.05), transparent 50%);
+      filter: blur(60px);
+      transition: transform 0.1s ease-out;
+      will-change: transform;
+    }
+    
+    /* كود بلوك */
+    .sky-code-container {
+      background: rgba(15, 20, 35, 0.9);
+      border: 1px solid rgba(79, 210, 255, 0.2);
+      border-radius: 12px;
+      margin: 10px 0;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    .sky-code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 14px;
+      background: rgba(10, 15, 30, 0.8);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      font-size: 0.78rem;
+      color: #a4b0d0;
+    }
+    
+    .sky-code-copy-btn {
+      background: rgba(79, 210, 255, 0.1);
+      border: 1px solid rgba(79, 210, 255, 0.3);
+      color: #a4b0d0;
+      padding: 4px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.72rem;
+      transition: all 0.2s ease;
+    }
+    
+    .sky-code-copy-btn:hover {
+      background: rgba(79, 210, 255, 0.2);
+      color: #e8eeff;
+    }
+    
+    .sky-code-block {
+      padding: 14px;
+      margin: 0;
+      overflow-x: auto;
+      font-family: 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 0.82rem;
+      line-height: 1.6;
+      color: #e2e8f0;
+    }
+    
+    .sky-code-block code {
+      font-family: inherit;
+    }
+    
+    /* تنسيق الرسائل */
+    .message-content {
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+    
+    .message-content blockquote {
+      border-right: 3px solid #6366f1;
+      padding-right: 12px;
+      margin: 8px 0;
+      color: #94a3b8;
+      background: rgba(99, 102, 241, 0.05);
+      padding: 8px 12px;
+      border-radius: 0 8px 8px 0;
+    }
+    
+    .message-content ul {
+      margin: 8px 0;
+      padding-right: 20px;
+    }
+    
+    .message-content li {
+      margin-bottom: 4px;
+    }
+    
+    .message-footer {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 6px;
+      font-size: 0.7rem;
+      color: rgba(255, 255, 255, 0.4);
+    }
+    
+    .message.user .message-footer {
+      justify-content: flex-end;
+    }
   `;
+  
   document.head.appendChild(style);
 };
 
+// ======================================================
+// تهيئة كل شيء عند تحميل الصفحة
+// ======================================================
 document.addEventListener('DOMContentLoaded', () => {
+  // تهيئة SkyUI
   SkyUI.init();
+  
+  // إضافة الأنماط الديناميكية
   addDynamicStyles();
+  
+  // تفعيل تأثير HoloLiquid Fluid Motion
+  HoloLiquidFluid.init();
+  
+  console.log('✅ SkyUI + HoloLiquid Fluid Motion جاهزان');
 });
 
+// ======================================================
 // جعل الدوال عامة للاستخدام من HTML
+// ======================================================
 window.SkyUI = SkyUI;
+window.HoloLiquidFluid = HoloLiquidFluid;
