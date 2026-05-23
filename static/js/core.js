@@ -1,5 +1,5 @@
 // ======================================================
-// سماء • المحرك الأساسي (نسخة عملية ومبسطة)
+// سماء • المحرك الأساسي + نظام محادثة HoloLiquid Neo-AI
 // ======================================================
 
 const SkyCore = {
@@ -9,7 +9,10 @@ const SkyCore = {
     isProcessing: false,
     currentTheme: 'dark',
     imagePreview: null,
-    imageFile: null
+    imageFile: null,
+    archive: [],
+    maxVisible: 20,
+    showArchive: false
   },
 
   init() {
@@ -18,7 +21,167 @@ const SkyCore = {
     this.bindEvents();
     this.initTheme();
     this.renderSessions();
-    console.log('✅ سماء جاهزة');
+    this.initArchiveToggle();
+    this.renderMessages();
+    console.log('✅ سماء + HoloLiquid Neo-AI جاهزة');
+  },
+
+  // ==================== زر أرشيف HoloLiquid ====================
+  initArchiveToggle() {
+    const messagesContainer = document.getElementById('messages-list');
+    if (!messagesContainer) return;
+    
+    // إزالة الزر القديم إن وجد
+    const existingBtn = document.getElementById('archive-toggle-btn');
+    if (existingBtn) existingBtn.remove();
+    
+    // إنشاء زر الأرشيف الجديد
+    const arrowBtn = document.createElement("button");
+    arrowBtn.id = 'archive-toggle-btn';
+    arrowBtn.className = "icon-btn neo-glow";
+    arrowBtn.style.cssText = "margin: 10px auto; display: block;";
+    arrowBtn.innerHTML = '<i class="fas fa-chevron-down"></i>';
+    arrowBtn.title = 'عرض كل الرسائل';
+    arrowBtn.onclick = () => this.toggleArchive();
+    
+    // إدراج الزر قبل قائمة الرسائل
+    const parent = messagesList.parentElement;
+    if (parent) {
+      parent.insertBefore(arrowBtn, messagesList);
+    }
+  },
+
+  toggleArchive() {
+    this.state.showArchive = !this.state.showArchive;
+    this.renderMessages();
+    
+    const arrowBtn = document.getElementById('archive-toggle-btn');
+    if (arrowBtn) {
+      arrowBtn.innerHTML = this.state.showArchive
+        ? '<i class="fas fa-chevron-up"></i>'
+        : '<i class="fas fa-chevron-down"></i>';
+      arrowBtn.title = this.state.showArchive ? 'إخفاء الأرشيف' : 'عرض كل الرسائل';
+    }
+  },
+
+  // ==================== عرض الرسائل (HoloLiquid) ====================
+  renderMessages() {
+    const container = document.getElementById('messages-list');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    const session = this.state.sessions.find(s => s.id === this.state.currentSessionId);
+    const archive = session ? session.messages : [];
+    
+    let visible = this.state.showArchive 
+      ? archive 
+      : archive.slice(-this.state.maxVisible);
+
+    if (visible.length === 0) {
+      // رسالة ترحيب
+      const welcomeDiv = document.createElement('div');
+      welcomeDiv.className = 'message assistant';
+      welcomeDiv.innerHTML = `
+        <div class="message-avatar"><i class="fas fa-sparkles"></i></div>
+        <div class="message-bubble">
+          <div class="message-text">مرحباً بك في سماء. كيف يمكنني مساعدتك اليوم؟</div>
+          <div class="message-time">الآن</div>
+          <div class="message-actions">
+            <button class="msg-action copy-msg"><i class="far fa-copy"></i> نسخ</button>
+            <button class="msg-action share-msg"><i class="fas fa-share-alt"></i> مشاركة</button>
+            <button class="msg-action export-all"><i class="fas fa-download"></i> تصدير</button>
+          </div>
+        </div>
+      `;
+      container.appendChild(welcomeDiv);
+      this.bindMessageActions(welcomeDiv, 'مرحباً بك في سماء. كيف يمكنني مساعدتك اليوم؟');
+    } else {
+      visible.forEach((msg, index) => {
+        const div = document.createElement('div');
+        div.className = `message ${msg.role}`;
+        div.dataset.index = index;
+        
+        const time = msg.timestamp 
+          ? new Date(msg.timestamp).toLocaleTimeString('ar', { hour: '2-digit', minute: '2-digit' }) 
+          : 'الآن';
+        
+        const avatarIcon = msg.role === 'user' 
+          ? '<i class="fas fa-user"></i>' 
+          : '<i class="fas fa-sparkles"></i>';
+        
+        div.innerHTML = `
+          <div class="message-avatar">${avatarIcon}</div>
+          <div class="message-bubble">
+            <div class="message-text">${this.escapeHtml(msg.content)}</div>
+            <div class="message-time">${time}</div>
+            <div class="message-actions">
+              <button class="msg-action copy-msg"><i class="far fa-copy"></i> نسخ</button>
+              <button class="msg-action share-msg"><i class="fas fa-share-alt"></i> مشاركة</button>
+              ${msg.role === 'assistant' && index === visible.length - 1 ? '<button class="msg-action regenerate-msg"><i class="fas fa-undo-alt"></i> إعادة</button>' : ''}
+              <button class="msg-action export-all"><i class="fas fa-download"></i> تصدير</button>
+            </div>
+          </div>
+        `;
+        
+        container.appendChild(div);
+        this.bindMessageActions(div, msg.content);
+      });
+    }
+
+    // تحديث زر الأرشيف
+    this.updateArchiveButton(archive.length);
+
+    // تمرير للأسفل
+    setTimeout(() => {
+      container.scrollTop = container.scrollHeight;
+    }, 50);
+  },
+
+  updateArchiveButton(totalMessages) {
+    const arrowBtn = document.getElementById('archive-toggle-btn');
+    if (!arrowBtn) return;
+    
+    if (totalMessages <= this.state.maxVisible) {
+      arrowBtn.style.display = 'none';
+    } else {
+      arrowBtn.style.display = 'block';
+      arrowBtn.innerHTML = this.state.showArchive
+        ? '<i class="fas fa-chevron-up"></i>'
+        : '<i class="fas fa-chevron-down"></i>';
+    }
+  },
+
+  bindMessageActions(messageDiv, content) {
+    const copyBtn = messageDiv.querySelector('.copy-msg');
+    const shareBtn = messageDiv.querySelector('.share-msg');
+    const regenerateBtn = messageDiv.querySelector('.regenerate-msg');
+    const exportBtn = messageDiv.querySelector('.export-all');
+    
+    if (copyBtn) {
+      copyBtn.onclick = (e) => {
+        e.stopPropagation();
+        this.copyText(content);
+      };
+    }
+    if (shareBtn) {
+      shareBtn.onclick = (e) => {
+        e.stopPropagation();
+        this.shareText(content);
+      };
+    }
+    if (regenerateBtn) {
+      regenerateBtn.onclick = (e) => {
+        e.stopPropagation();
+        this.regenerateLastMessage();
+      };
+    }
+    if (exportBtn) {
+      exportBtn.onclick = (e) => {
+        e.stopPropagation();
+        this.exportChat();
+      };
+    }
   },
 
   bindEvents() {
@@ -132,18 +295,21 @@ const SkyCore = {
     };
     this.state.sessions.unshift(newSession);
     this.state.currentSessionId = id;
+    this.state.showArchive = false;
     this.saveSessions();
     this.renderSessions();
-    this.clearMessages();
-    this.addWelcomeMessage();
+    this.renderMessages();
+    this.initArchiveToggle();
     this.showToast('محادثة جديدة', 'success');
   },
 
   switchSession(id) {
     this.state.currentSessionId = id;
+    this.state.showArchive = false;
     this.saveSessions();
     this.renderSessions();
-    this.loadSessionMessages();
+    this.renderMessages();
+    this.initArchiveToggle();
     const sidebar = document.getElementById('sidebar');
     if (sidebar) sidebar.classList.remove('mobile-open');
   },
@@ -157,7 +323,7 @@ const SkyCore = {
     this.saveSessions();
     this.renderSessions();
     if (this.state.currentSessionId) {
-      this.loadSessionMessages();
+      this.renderMessages();
     } else {
       this.newSession();
     }
@@ -183,94 +349,6 @@ const SkyCore = {
       delBtn.addEventListener('click', (e) => this.deleteSession(session.id, e));
       container.appendChild(div);
     });
-  },
-
-  loadSessionMessages() {
-    this.clearMessages();
-    const session = this.state.sessions.find(s => s.id === this.state.currentSessionId);
-    if (session?.messages) {
-      session.messages.forEach(msg => {
-        this.addMessageToUI(msg.role, msg.content, msg.timestamp);
-      });
-    }
-  },
-
-  addWelcomeMessage() {
-    const welcome = "مرحباً بك في سماء. كيف يمكنني مساعدتك اليوم؟";
-    this.addMessageToUI('assistant', welcome, Date.now());
-    const session = this.state.sessions.find(s => s.id === this.state.currentSessionId);
-    if (session) {
-      session.messages.push({ role: 'assistant', content: welcome, timestamp: Date.now() });
-      this.saveSessions();
-    }
-  },
-
-  clearMessages() {
-    const container = document.getElementById('messages-list');
-    if (container) container.innerHTML = '';
-  },
-
-  // ==================== الرسائل والأزرار ====================
-  addMessageToUI(role, content, timestamp) {
-    const container = document.getElementById('messages-list');
-    if (!container) return;
-
-    const time = timestamp ? new Date(timestamp).toLocaleTimeString('ar', { hour: '2-digit', minute: '2-digit' }) : 'الآن';
-    const avatarIcon = role === 'user' ? '<i class="fas fa-user"></i>' : '<i class="fas fa-sparkles"></i>';
-    
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${role}`;
-    messageDiv.innerHTML = `
-      <div class="message-avatar">${avatarIcon}</div>
-      <div class="message-bubble">
-        <div class="message-text">${this.escapeHtml(content)}</div>
-        <div class="message-time">${time}</div>
-        <div class="message-actions">
-          <button class="msg-action copy-msg"><i class="far fa-copy"></i> نسخ</button>
-          <button class="msg-action share-msg"><i class="fas fa-share-alt"></i> مشاركة</button>
-          ${role === 'assistant' ? '<button class="msg-action regenerate-msg"><i class="fas fa-undo-alt"></i> إعادة</button>' : ''}
-          <button class="msg-action export-all"><i class="fas fa-download"></i> تصدير</button>
-        </div>
-      </div>
-    `;
-    
-    container.appendChild(messageDiv);
-    container.scrollTop = container.scrollHeight;
-    
-    // ربط الأزرار
-    const copyBtn = messageDiv.querySelector('.copy-msg');
-    const shareBtn = messageDiv.querySelector('.share-msg');
-    const regenerateBtn = messageDiv.querySelector('.regenerate-msg');
-    const exportBtn = messageDiv.querySelector('.export-all');
-    
-    if (copyBtn) copyBtn.onclick = () => this.copyText(content);
-    if (shareBtn) shareBtn.onclick = () => this.shareText(content);
-    if (regenerateBtn) regenerateBtn.onclick = () => this.regenerateLastMessage();
-    if (exportBtn) exportBtn.onclick = () => this.exportChat();
-  },
-
-  showTyping() {
-    const container = document.getElementById('messages-list');
-    if (!container) return;
-    const typingDiv = document.createElement('div');
-    typingDiv.className = 'message assistant';
-    typingDiv.id = 'typing-indicator';
-    typingDiv.innerHTML = `
-      <div class="message-avatar"><i class="fas fa-sparkles"></i></div>
-      <div class="message-bubble">
-        <div class="thinking-indicator">
-          <div class="thinking-dots"><span></span><span></span><span></span></div>
-          <span>يكتب...</span>
-        </div>
-      </div>
-    `;
-    container.appendChild(typingDiv);
-    container.scrollTop = container.scrollHeight;
-  },
-
-  hideTyping() {
-    const typing = document.getElementById('typing-indicator');
-    if (typing) typing.remove();
   },
 
   // ==================== الإجراءات ====================
@@ -311,14 +389,8 @@ const SkyCore = {
     // حذف آخر رد
     const lastAssistantIndex = session.messages.map(m => m.role).lastIndexOf('assistant');
     if (lastAssistantIndex !== -1) session.messages.splice(lastAssistantIndex, 1);
-    
-    // حذف آخر رسالة من الواجهة
-    const messagesList = document.getElementById('messages-list');
-    if (messagesList && messagesList.lastElementChild) {
-      if (messagesList.lastElementChild.classList.contains('message', 'assistant')) {
-        messagesList.lastElementChild.remove();
-      }
-    }
+    this.saveSessions();
+    this.renderMessages();
     
     await this.getAIResponse(lastUserMsg.content);
   },
@@ -343,7 +415,7 @@ const SkyCore = {
     this.showToast('جاري الاستماع...', 'info');
   },
 
-  // ==================== إرسال الرسالة ====================
+  // ==================== إرسال الرسالة (HoloLiquid) ====================
   async sendMessage() {
     const input = document.getElementById('message-input');
     const text = input?.value.trim();
@@ -352,28 +424,27 @@ const SkyCore = {
     if (this.state.isProcessing) return;
     
     let messageText = text || '';
-    let imageHtml = '';
     
     if (this.state.imagePreview) {
-      imageHtml = `[صورة: ${this.state.imageFile?.name || 'صورة'}]\n`;
-      messageText = imageHtml + messageText;
+      const imageInfo = `[صورة: ${this.state.imageFile?.name || 'صورة'}]`;
+      messageText = messageText ? `${imageInfo}\n${messageText}` : imageInfo;
     }
     
     // إضافة رسالة المستخدم
-    this.addMessageToUI('user', messageText || 'صورة', Date.now());
-    if (input) input.value = '';
-    this.clearImagePreview();
-    
-    // حفظ في الجلسة
     const session = this.state.sessions.find(s => s.id === this.state.currentSessionId);
     if (session) {
       session.messages.push({ role: 'user', content: messageText || 'صورة', timestamp: Date.now() });
-      if (session.messages.length === 1 && messageText) {
-        session.title = messageText.substring(0, 25);
+      if (session.messages.length === 1 && text) {
+        session.title = text.substring(0, 25);
         this.renderSessions();
       }
       this.saveSessions();
     }
+    
+    // تحديث الواجهة
+    this.renderMessages();
+    this.clearImagePreview();
+    if (input) input.value = '';
     
     await this.getAIResponse(messageText);
   },
@@ -383,26 +454,56 @@ const SkyCore = {
     this.showTyping();
     
     try {
-      // ردود ذكية ومتنوعة
-      let reply = this.getSmartReply(userMessage);
-      
-      // محاكاة تأخير الشبكة
+      const reply = this.getSmartReply(userMessage);
       await new Promise(r => setTimeout(r, 800 + Math.random() * 500));
       
       this.hideTyping();
-      this.addMessageToUI('assistant', reply, Date.now());
       
       const session = this.state.sessions.find(s => s.id === this.state.currentSessionId);
       if (session) {
         session.messages.push({ role: 'assistant', content: reply, timestamp: Date.now() });
         this.saveSessions();
       }
+      
+      this.renderMessages();
     } catch (err) {
       this.hideTyping();
-      this.addMessageToUI('assistant', 'عذراً، حدث خطأ. حاول مرة أخرى.', Date.now());
+      
+      const session = this.state.sessions.find(s => s.id === this.state.currentSessionId);
+      if (session) {
+        session.messages.push({ role: 'assistant', content: 'عذراً، حدث خطأ. حاول مرة أخرى.', timestamp: Date.now() });
+        this.saveSessions();
+      }
+      
+      this.renderMessages();
     } finally {
       this.state.isProcessing = false;
     }
+  },
+
+  showTyping() {
+    const container = document.getElementById('messages-list');
+    if (!container) return;
+    
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'message assistant';
+    typingDiv.id = 'typing-indicator';
+    typingDiv.innerHTML = `
+      <div class="message-avatar"><i class="fas fa-sparkles"></i></div>
+      <div class="message-bubble">
+        <div class="thinking-indicator">
+          <div class="thinking-dots"><span></span><span></span><span></span></div>
+          <span>يكتب...</span>
+        </div>
+      </div>
+    `;
+    container.appendChild(typingDiv);
+    container.scrollTop = container.scrollHeight;
+  },
+
+  hideTyping() {
+    const typing = document.getElementById('typing-indicator');
+    if (typing) typing.remove();
   },
 
   getSmartReply(message) {
@@ -435,7 +536,8 @@ const SkyCore = {
       'فهمت وجهة نظرك. ماذا تقترح كخطوة تالية؟',
       'شكراً لمشاركتك. هل هناك تفاصيل إضافية تود إضافتها؟',
       'أرى. دعني أفكر في ذلك قليلاً... ماذا تتوقع أن يحدث بعد ذلك؟',
-      'جميل! هل لديك أي سؤال محدد حول هذا؟'
+      'جميل! هل لديك أي سؤال محدد حول هذا؟',
+      'تم استلام رسالتك. هذا رد تجريبي ويمكن ربطه بـ API خارجي للحصول على ردود ذكية.'
     ];
     return responses[Math.floor(Math.random() * responses.length)];
   },
@@ -476,10 +578,18 @@ const SkyCore = {
 
   initFirstSession() {
     if (this.state.sessions.length === 0) {
-      this.newSession();
+      const id = Date.now().toString();
+      const newSession = {
+        id: id,
+        title: 'محادثة جديدة',
+        messages: [],
+        createdAt: new Date().toISOString()
+      };
+      this.state.sessions.unshift(newSession);
+      this.state.currentSessionId = id;
+      this.saveSessions();
     } else {
       this.state.currentSessionId = this.state.sessions[0].id;
-      this.loadSessionMessages();
     }
   }
 };
