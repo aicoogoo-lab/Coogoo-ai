@@ -1,3 +1,20 @@
+/* ============================================================
+   HOLOLIQUID NEO-AI GLOBAL STYLE (مدمج في الأعلى)
+   ============================================================ */
+
+/* خلفية هولوغرافية ديناميكية (Animation احتياطي عند عدم وجود JS) */
+body {
+  background: radial-gradient(circle at top, #0a0f24, #02030a 60%, #000000);
+  color: #e8eeff;
+  overflow-x: hidden;
+}
+
+/* تأثير نيون عام */
+.neo-glow {
+  box-shadow: 0 0 20px rgba(79,210,255,0.5),
+              0 0 40px rgba(179,107,255,0.4);
+}
+
 /* ======================================================
    سماء + HoloLiquid Neo-AI • التصميم الأساسي الموحد
    مستوحى من: Material 3 + Spotify + Lusion + Holographic UI
@@ -61,6 +78,8 @@ body.light-theme {
   --text-muted: #64748b;
   --accent: #4f46e5;
   --accent-hover: #6366f1;
+  --shadow-glow-primary: 0 0 30px rgba(79, 70, 229, 0.3);
+  --shadow-glow-accent: 0 0 30px rgba(99, 102, 241, 0.3);
 }
 
 /* ============================
@@ -84,7 +103,7 @@ body {
 
 /* ============================================================
    طبقة الحركة السائلية HOLOLIQUID FLUID MOTION LAYER
-   (تحل محل body::before القديم - تتفاعل مع JavaScript)
+   (تتفاعل مع JavaScript - مع Animation احتياطي عند عدم وجود JS)
    ============================================================ */
 .holo-fluid-layer {
   position: fixed;
@@ -99,6 +118,13 @@ body {
   opacity: 0.55;
   transition: transform 0.2s ease-out;
   will-change: transform;
+  animation: holoFloat 18s ease-in-out infinite alternate;
+}
+
+@keyframes holoFloat {
+  0% { transform: scale(1); opacity: .45; }
+  50% { transform: scale(1.1); opacity: .75; }
+  100% { transform: scale(1.05); opacity: .55; }
 }
 
 /* ============================
@@ -191,9 +217,10 @@ body {
    ============================ */
 .sidebar {
   width: 280px;
-  background: rgba(5, 10, 25, 0.75);
-  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(10, 20, 40, 0.55);
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(22px);
+  box-shadow: 0 0 40px rgba(79, 210, 255, 0.15);
   display: flex;
   flex-direction: column;
   transition: transform 0.3s ease, left 0.3s ease;
@@ -379,19 +406,19 @@ body {
   max-width: 70%;
   background: rgba(10, 20, 40, 0.85);
   border: 1px solid rgba(79, 210, 255, 0.4);
-  box-shadow: 0 0 25px rgba(79, 210, 255, 0.2),
+  box-shadow: 0 0 25px rgba(79, 210, 255, 0.25),
               inset 0 0 15px rgba(79, 210, 255, 0.05);
   border-radius: var(--radius-lg);
   padding: 10px 16px;
   position: relative;
-  color: var(--text-primary);
+  color: #e8eeff;
   backdrop-filter: blur(var(--blur-soft));
 }
 
 /* فقاعة المستخدم */
 .message.user .message-bubble {
   max-width: 70%;
-  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+  background: linear-gradient(135deg, #4fd2ff, #b36bff);
   color: #02030a;
   box-shadow: 0 0 25px rgba(79, 210, 255, 0.4),
               0 0 40px rgba(179, 107, 255, 0.3);
@@ -550,7 +577,7 @@ body {
   border-radius: var(--radius-xl);
   padding: 6px 12px;
   backdrop-filter: blur(18px);
-  box-shadow: 0 0 25px rgba(79, 210, 255, 0.08);
+  box-shadow: 0 0 40px rgba(79, 210, 255, 0.15);
 }
 
 .input-action {
@@ -592,7 +619,7 @@ body {
 
 /* زر الإرسال */
 .send-btn {
-  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+  background: linear-gradient(135deg, #4fd2ff, #b36bff);
   border: none;
   color: #02030a;
   width: 36px;
@@ -658,7 +685,7 @@ body {
 }
 
 /* ============================
-   تأثير نيون عام
+   تأثير نيون عام (مكرر للتأكيد)
    ============================ */
 .neo-glow {
   box-shadow: 0 0 20px rgba(79, 210, 255, 0.5),
