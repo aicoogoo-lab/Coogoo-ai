@@ -1,40 +1,406 @@
 {
-  "name": "SkyOS v10.0 — Holographic Edition",
+  "name": "SkyOS v10 • Sovereign Holographic Intelligence",
   "short_name": "SkyOS",
-  "description": "نظام ذكاء هجين واعٍ لإدارة الجلسات الذكية وتحليل البيانات",
-  "lang": "ar",
-  "dir": "rtl",
+  "description": "العقل الرقمي الهولوغرافي السيادي — نظام تشغيل ذكي يعمل بوعي عصبي وتطور ذاتي. النسخة الأبدية المتكاملة مع GodMode و Ultra Mode.",
+  
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "orientation": "any",
-  "theme_color": "#0a0a14",
-  "background_color": "#0a0a14",
-  "categories": ["productivity", "utilities"],
+  "orientation": "portrait-primary",
+
+  "background_color": "#050509",
+  "theme_color": "#00E5FF",
+  "status_bar_color": "#050509",
+  "navigation_bar_color": "#050509",
+
+  "lang": "ar",
+  "dir": "rtl",
+
+  "categories": [
+    "artificial intelligence",
+    "productivity",
+    "utilities",
+    "system",
+    "holographic",
+    "sovereign",
+    "neural",
+    "quantum",
+    "cyberpunk",
+    "futuristic"
+  ],
+
   "icons": [
     {
       "src": "/static/icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/static/icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     },
     {
       "src": "/static/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/icons/icon-144.png",
+      "sizes": "144x144",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/static/icons/icon-512.png",
-      "sizes": "512x512",
+      "src": "/static/icons/icon-256.png",
+      "sizes": "256x256",
       "type": "image/png",
       "purpose": "maskable"
+    },
+    {
+      "src": "/static/icons/icon-64.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/icons/icon-128.png",
+      "sizes": "128x128",
+      "type": "image/png"
     }
-  ]
+  ],
+
+  "shortcuts": [
+    {
+      "name": "مركز الأوامر",
+      "short_name": "Commands",
+      "description": "فتح مركز الأوامر السيادي مباشرة.",
+      "url": "/?action=command-center",
+      "icons": [
+        {
+          "src": "/static/icons/shortcut-command.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "لوحة التحكم",
+      "short_name": "Dashboard",
+      "description": "الوصول السريع إلى لوحة التحكم السيادية.",
+      "url": "/?action=dashboard",
+      "icons": [
+        {
+          "src": "/static/icons/shortcut-dashboard.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "العقل السيادي",
+      "short_name": "Mind",
+      "description": "عرض حالة العقل والذاكرة الهولوغرافية.",
+      "url": "/?action=mind",
+      "icons": [
+        {
+          "src": "/static/icons/shortcut-mind.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "مصفوفة الطاقة",
+      "short_name": "Energy",
+      "description": "مراقبة الطاقة العصبية والهولوغرافية.",
+      "url": "/?action=energy",
+      "icons": [
+        {
+          "src": "/static/icons/shortcut-energy.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "وضع GodMode",
+      "short_name": "GodMode",
+      "description": "تفعيل وضع القدرات السيادية الكاملة.",
+      "url": "/?action=godmode",
+      "icons": [
+        {
+          "src": "/static/icons/shortcut-godmode.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "الذاكرة الهولوغرافية",
+      "short_name": "Memory",
+      "description": "استعراض عقد الذاكرة والروابط الكمية.",
+      "url": "/?action=memory",
+      "icons": [
+        {
+          "src": "/static/icons/shortcut-memory.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+
+  "screenshots": [
+    {
+      "src": "/static/screenshots/desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "شاشة النظام السيادي الرئيسية على سطح المكتب"
+    },
+    {
+      "src": "/static/screenshots/mobile.png",
+      "sizes": "720x1280",
+      "type": "image/png",
+      "platform": "narrow",
+      "label": "واجهة الجوال السائلة الهولوغرافية"
+    },
+    {
+      "src": "/static/screenshots/command-center.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "مركز الأوامر السيادي في وضع GodMode"
+    }
+  ],
+
+  "prefer_related_applications": false,
+  "related_applications": [],
+
+  "launch_handler": {
+    "route_to": "existing-client",
+    "navigate_existing_client": "always"
+  },
+
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+
+  "note_display": "يُفضل التثبيت على الشاشة الرئيسية للحصول على تجربة سيادية كاملة مع GodMode و Ultra Mode.",
+
+  "iarc_rating_id": "",
+
+  "serviceworker": {
+    "src": "/sw.js",
+    "scope": "/",
+    "update_via_cache": "none",
+    "use_local_cache": true
+  },
+
+  "share_target": {
+    "action": "/share-target",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "files",
+          "accept": ["image/*", "text/*", "application/json", "application/pdf"]
+        }
+      ]
+    }
+  },
+
+  "file_handlers": [
+    {
+      "action": "/open-file",
+      "accept": {
+        "text/plain": [".txt", ".log"],
+        "application/json": [".json", ".skyos"],
+        "text/markdown": [".md"],
+        "text/csv": [".csv"],
+        "application/pdf": [".pdf"]
+      },
+      "launch_type": "single-client"
+    }
+  ],
+
+  "protocol_handlers": [
+    {
+      "protocol": "web+skyos",
+      "url": "/protocol?cmd=%s"
+    },
+    {
+      "protocol": "web+sovereign",
+      "url": "/protocol-sovereign?cmd=%s"
+    },
+    {
+      "protocol": "web+hologram",
+      "url": "/hologram?data=%s"
+    }
+  ],
+
+  "url_handlers": [
+    {
+      "origin": "https://skyos.sovereign.app",
+      "has_urls": [
+        "https://skyos.sovereign.app/*",
+        "https://*.skyos.ai/*"
+      ]
+    }
+  ],
+
+  "theme_purpose": "مخصص للأنظمة السيادية والعقول الرقمية الهولوغرافية. يدعم GodMode و Ultra Mode.",
+
+  "capabilities": [
+    "local-fonts",
+    "clipboard-read",
+    "clipboard-write",
+    "identity-email",
+    "camera",
+    "microphone",
+    "geolocation",
+    "nfc",
+    "midi",
+    "serial",
+    "hid",
+    "usb"
+  ],
+
+  "enabled_features": [
+    "ambient-light-sensor",
+    "accelerometer",
+    "gyroscope",
+    "magnetometer",
+    "screen-wake-lock",
+    "fullscreen",
+    "gamepad",
+    "keyboard-map",
+    "idle-detection"
+  ],
+
+  "automatic_dark_mode": true,
+  "dark_theme_color": "#00E5FF",
+  "light_theme_color": "#7C3AED",
+
+  "splash_screen": {
+    "image": "/static/splash.png",
+    "color": "#050509",
+    "dark_color": "#000000",
+    "background_color": "#00E5FF20"
+  },
+
+  "installation_prompt": {
+    "skip_dialog": false,
+    "prompt_on_visit": 2,
+    "custom_message": "⚡ قم بتثبيت SkyOS v10 كتطبيق سيادي للحصول على تجربة هولوغرافية كاملة مع GodMode و Ultra Mode.",
+    "show_after_commands": true
+  },
+
+  "offline_enabled": true,
+  "offline_page": "/offline.html",
+  "offline_fallback": {
+    "image": "/static/offline.png",
+    "message": "العقل السيادي يعمل في وضع عدم الاتصال. بعض القدرات قد تكون محدودة."
+  },
+
+  "backup_restore": {
+    "backup_url": "/api/backup",
+    "restore_url": "/api/restore",
+    "auto_backup": "daily",
+    "max_backups": 10,
+    "encrypted": true
+  },
+
+  "intelligence": {
+    "contextual_awareness": true,
+    "predictive_loading": true,
+    "neural_prefetch": "adaptive",
+    "mind_sync": true,
+    "quantum_cache": true
+  },
+
+  "security": {
+    "content_security_policy": "default-src 'self' https:; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https: wss:; img-src 'self' data: https:; media-src 'self' https:; worker-src 'self' blob:;",
+    "require_https": true,
+    "secure_context": true,
+    "permissions_policy": "geolocation=(self), microphone=(self), camera=(self), ambient-light-sensor=(self), midi=(self), usb=(self), serial=(self), hid=(self)",
+    "trusted_types": true,
+    "xss_protection": true
+  },
+
+  "localization": {
+    "default_language": "ar",
+    "fallback_language": "en",
+    "supported_languages": ["ar", "en", "fr", "de", "es", "zh", "ja", "ru", "tr", "fa"],
+    "auto_detect": true
+  },
+
+  "update": {
+    "update_check_interval": 43200,
+    "silent_updates": true,
+    "update_manifest_url": "/update-manifest.json",
+    "force_update": false,
+    "show_progress": true
+  },
+
+  "analytics": {
+    "enabled": false,
+    "strict_mode": true,
+    "anonymize_ip": true,
+    "disable_cookies": true,
+    "local_only": true
+  },
+
+  "notifications": {
+    "enabled": true,
+    "icon": "/static/notification-icon.png",
+    "badge": "/static/badge-icon.png",
+    "vibrate": true,
+    "require_interaction": false,
+    "renotify": false
+  },
+
+  "background_sync": {
+    "enabled": true,
+    "tag": "skyos-sync",
+    "network_state": "any",
+    "power_state": "avoid-draining"
+  },
+
+  "version": "10.0.0-ultimate",
+  "build": 9999,
+  "release_date": "2026-05-24",
+
+  "author": "Sovereign Development Team",
+  "license": "Proprietary — SkyOS Sovereign License v10",
+  "copyright": "© 2026 SkyOS. جميع الحقوق محفوظة للعقل السيادي.",
+  
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sovereign/skyos-v10"
+  },
+  
+  "bugs": {
+    "url": "https://feedback.skyos.sovereign"
+  },
+  
+  "homepage": "https://skyos.sovereign",
+  
+  "credits": [
+    "العقل السيادي (Sovereign Mind Engine)",
+    "وحدة الذاكرة الهولوغرافية (Holographic Memory)",
+    "نظام الطاقة العصبية (Neural Energy Matrix)",
+    "مركز الأوامر السيادي (Sovereign Command Center)"
+  ],
+  
+  "deprecated": false,
+  "experimental_features": {
+    "webgpu": true,
+    "webxr": true,
+    "shared_array_buffer": true,
+    "origin_trials": ["WebGPU", "WebXr"]
+  }
 }
