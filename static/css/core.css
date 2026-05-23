@@ -1,44 +1,71 @@
 /* ======================================================
-   سماء • التصميم الأساسي (نسخة أنيقة وعملية)
-   مستوحى من: Material 3 + Spotify + Lusion
+   سماء + HoloLiquid Neo-AI • التصميم الأساسي الموحد
+   مستوحى من: Material 3 + Spotify + Lusion + Holographic UI
    ====================================================== */
 
 :root {
-  --bg-primary: #0a0a0f;
-  --bg-secondary: #121218;
-  --bg-elevated: #1a1a24;
-  --surface: #1f1f2a;
-  --border: rgba(255,255,255,0.06);
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
+  /* ألوان أساسية */
+  --bg-primary: #02030a;
+  --bg-secondary: #0a0f24;
+  --bg-elevated: #12182a;
+  --surface: rgba(10, 20, 40, 0.55);
+  --border: rgba(255, 255, 255, 0.08);
+  --text-primary: #e8eeff;
+  --text-secondary: #a4b0d0;
   --text-muted: #64748b;
-  --accent: #6366f1;
-  --accent-hover: #818cf8;
-  --accent-glow: rgba(99,102,241,0.2);
+  
+  /* ألوان مميزة */
+  --accent: #4fd2ff;
+  --accent-hover: #7adcff;
+  --accent-glow: rgba(79, 210, 255, 0.25);
+  --accent-secondary: #b36bff;
+  --accent-secondary-glow: rgba(179, 107, 255, 0.25);
+  --accent-tertiary: #ff4f7b;
+  
+  /* حالة */
   --success: #10b981;
   --error: #ef4444;
   --warning: #f59e0b;
+  
+  /* أنصاف أقطار */
   --radius-sm: 8px;
   --radius-md: 12px;
-  --radius-lg: 16px;
+  --radius-lg: 18px;
   --radius-xl: 24px;
-  --transition: all 0.2s ease;
+  
+  /* حركة */
+  --transition: all 0.25s ease-out;
+  --transition-med: 0.4s ease-out;
+  
+  /* ظلال */
+  --shadow-glow-primary: 0 0 30px rgba(79, 210, 255, 0.4);
+  --shadow-glow-accent: 0 0 30px rgba(179, 107, 255, 0.4);
+  --shadow-soft: 0 20px 50px rgba(0, 0, 0, 0.7);
+  
+  /* تأثيرات */
+  --blur-strong: 24px;
+  --blur-soft: 16px;
 }
 
-/* الثيم الفاتح */
+/* ============================
+   الثيم الفاتح
+   ============================ */
 body.light-theme {
-  --bg-primary: #f8fafc;
+  --bg-primary: #f0f4ff;
   --bg-secondary: #ffffff;
-  --bg-elevated: #f1f5f9;
-  --surface: #e2e8f0;
-  --border: rgba(0,0,0,0.08);
-  --text-primary: #0f172a;
+  --bg-elevated: #e8ecf8;
+  --surface: rgba(255, 255, 255, 0.7);
+  --border: rgba(0, 0, 0, 0.08);
+  --text-primary: #0a0f24;
   --text-secondary: #475569;
   --text-muted: #64748b;
   --accent: #4f46e5;
   --accent-hover: #6366f1;
 }
 
+/* ============================
+   أساسيات عامة
+   ============================ */
 * {
   margin: 0;
   padding: 0;
@@ -46,15 +73,51 @@ body.light-theme {
 }
 
 body {
-  background: var(--bg-primary);
+  background: radial-gradient(circle at top, #0a0f24, #02030a 60%, #000000);
   color: var(--text-primary);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   height: 100dvh;
   overflow: hidden;
   transition: var(--transition);
+  overflow-x: hidden;
 }
 
-/* سكرول بار */
+/* ============================
+   تأثير ضوء هولوغرافي خلفي
+   ============================ */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -20%;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(79, 210, 255, 0.25), transparent 60%),
+    radial-gradient(circle at 80% 0%, rgba(179, 107, 255, 0.25), transparent 60%),
+    radial-gradient(circle at 50% 100%, rgba(255, 79, 123, 0.18), transparent 60%);
+  filter: blur(60px);
+  opacity: 0.55;
+  z-index: -1;
+  animation: holoFloat 18s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes holoFloat {
+  0% {
+    transform: scale(1);
+    opacity: 0.45;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.75;
+  }
+  100% {
+    transform: scale(1.05);
+    opacity: 0.55;
+  }
+}
+
+/* ============================
+   سكرول بار أنيق
+   ============================ */
 ::-webkit-scrollbar {
   width: 4px;
 }
@@ -62,15 +125,18 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--text-muted);
+  background: rgba(79, 210, 255, 0.5);
   border-radius: 10px;
 }
 
-/* Header */
+/* ============================
+   Header
+   ============================ */
 .app-header {
   height: 60px;
-  background: var(--bg-secondary);
-  border-bottom: 1px solid var(--border);
+  background: rgba(5, 10, 25, 0.75);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(var(--blur-strong));
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -86,8 +152,8 @@ body {
 }
 
 .icon-btn {
-  background: transparent;
-  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   color: var(--text-secondary);
   width: 36px;
   height: 36px;
@@ -97,11 +163,14 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  backdrop-filter: blur(12px);
 }
 
 .icon-btn:hover {
-  background: var(--surface);
+  background: rgba(79, 210, 255, 0.15);
   color: var(--text-primary);
+  box-shadow: 0 0 15px rgba(79, 210, 255, 0.25);
+  border-color: rgba(79, 210, 255, 0.4);
 }
 
 .logo {
@@ -122,33 +191,38 @@ body {
   gap: 8px;
 }
 
-/* Main Layout */
+/* ============================
+   Main Layout
+   ============================ */
 .app-main {
   display: flex;
   height: calc(100dvh - 60px);
   overflow: hidden;
 }
 
-/* Sidebar */
+/* ============================
+   Sidebar - زجاجية هولوغرافية
+   ============================ */
 .sidebar {
   width: 280px;
-  background: var(--bg-secondary);
-  border-left: 1px solid var(--border);
+  background: rgba(5, 10, 25, 0.75);
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(22px);
   display: flex;
   flex-direction: column;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, left 0.3s ease;
   z-index: 20;
 }
 
 .sidebar-header {
   padding: 16px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .new-session-btn {
   width: 100%;
-  background: var(--accent);
-  color: white;
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+  color: #02030a;
   border: none;
   padding: 10px;
   border-radius: var(--radius-md);
@@ -159,10 +233,13 @@ body {
   align-items: center;
   justify-content: center;
   gap: 8px;
+  box-shadow: var(--shadow-glow-primary);
 }
 
 .new-session-btn:hover {
-  background: var(--accent-hover);
+  background: linear-gradient(135deg, var(--accent-hover), var(--accent-secondary));
+  transform: translateY(-1px);
+  box-shadow: 0 0 30px rgba(79, 210, 255, 0.5);
 }
 
 .sessions-list {
@@ -197,12 +274,15 @@ body {
 }
 
 .session-item:hover {
-  background: var(--surface);
+  background: rgba(79, 210, 255, 0.08);
+  border: 1px solid rgba(79, 210, 255, 0.2);
 }
 
 .session-item.active {
-  background: var(--accent-glow);
+  background: rgba(79, 210, 255, 0.12);
   color: var(--accent);
+  border: 1px solid rgba(79, 210, 255, 0.3);
+  box-shadow: 0 0 15px rgba(79, 210, 255, 0.15);
 }
 
 .delete-session {
@@ -221,12 +301,12 @@ body {
 }
 
 .delete-session:hover {
-  color: var(--error);
+  color: var(--accent-tertiary);
 }
 
 .sidebar-footer {
   padding: 16px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
   font-size: 0.75rem;
   color: var(--text-muted);
 }
@@ -237,7 +317,9 @@ body {
   gap: 6px;
 }
 
-/* Chat Area */
+/* ============================
+   Chat Area
+   ============================ */
 .chat-area {
   flex: 1;
   display: flex;
@@ -246,7 +328,9 @@ body {
   position: relative;
 }
 
-/* Messages Container */
+/* ============================
+   Messages Container
+   ============================ */
 .messages-container {
   flex: 1;
   overflow-y: auto;
@@ -262,17 +346,19 @@ body {
   width: 100%;
 }
 
-/* Message Bubbles */
+/* ============================
+   Message Bubbles
+   ============================ */
 .message {
   display: flex;
   gap: 12px;
-  animation: fadeInUp 0.2s ease;
+  animation: fadeInUp 0.3s ease;
 }
 
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(15px);
   }
   to {
     opacity: 1;
@@ -287,7 +373,8 @@ body {
 .message-avatar {
   width: 32px;
   height: 32px;
-  background: var(--surface);
+  background: rgba(10, 20, 40, 0.75);
+  border: 1px solid rgba(79, 210, 255, 0.3);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -296,21 +383,35 @@ body {
 }
 
 .message.user .message-avatar {
-  background: var(--accent);
-  color: white;
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+  border: none;
+  color: #02030a;
 }
 
-.message-bubble {
+/* فقاعة المساعد */
+.message.assistant .message-bubble {
   max-width: 70%;
-  background: var(--bg-elevated);
+  background: rgba(10, 20, 40, 0.85);
+  border: 1px solid rgba(79, 210, 255, 0.4);
+  box-shadow: 0 0 25px rgba(79, 210, 255, 0.2),
+              inset 0 0 15px rgba(79, 210, 255, 0.05);
   border-radius: var(--radius-lg);
   padding: 10px 16px;
   position: relative;
+  color: var(--text-primary);
+  backdrop-filter: blur(var(--blur-soft));
 }
 
+/* فقاعة المستخدم */
 .message.user .message-bubble {
-  background: var(--accent);
-  color: white;
+  max-width: 70%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+  color: #02030a;
+  box-shadow: 0 0 25px rgba(79, 210, 255, 0.4),
+              0 0 40px rgba(179, 107, 255, 0.3);
+  border-radius: var(--radius-lg);
+  padding: 10px 16px;
+  position: relative;
 }
 
 .message-text {
@@ -325,16 +426,18 @@ body {
 
 .message-time {
   font-size: 0.65rem;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.5);
   margin-top: 4px;
   text-align: left;
 }
 
 .message.user .message-time {
-  color: rgba(255,255,255,0.6);
+  color: rgba(0, 0, 0, 0.4);
 }
 
-/* Message Actions (أزرار النسخ والمشاركة) */
+/* ============================
+   Message Actions (نسخ/مشاركة)
+   ============================ */
 .message-actions {
   display: flex;
   gap: 8px;
@@ -348,8 +451,8 @@ body {
 }
 
 .msg-action {
-  background: var(--surface);
-  border: none;
+  background: rgba(10, 20, 40, 0.85);
+  border: 1px solid rgba(79, 210, 255, 0.3);
   color: var(--text-secondary);
   padding: 4px 8px;
   border-radius: 20px;
@@ -359,22 +462,29 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  backdrop-filter: blur(12px);
 }
 
 .msg-action:hover {
-  background: var(--accent);
-  color: white;
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+  color: #02030a;
+  border-color: transparent;
+  box-shadow: var(--shadow-glow-primary);
 }
 
-/* Thinking Indicator */
+/* ============================
+   Thinking Indicator
+   ============================ */
 .thinking-indicator {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
-  background: var(--bg-elevated);
+  background: rgba(10, 20, 40, 0.85);
+  border: 1px solid rgba(79, 210, 255, 0.3);
   border-radius: var(--radius-lg);
   width: fit-content;
+  box-shadow: 0 0 20px rgba(79, 210, 255, 0.15);
 }
 
 .thinking-dots {
@@ -388,6 +498,7 @@ body {
   background: var(--accent);
   border-radius: 50%;
   animation: dotPulse 1.4s infinite;
+  box-shadow: 0 0 10px rgba(79, 210, 255, 0.6);
 }
 
 .thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
@@ -398,10 +509,13 @@ body {
   30% { transform: scale(1.2); opacity: 1; }
 }
 
-/* Input Area */
+/* ============================
+   Input Area
+   ============================ */
 .input-area {
-  background: var(--bg-secondary);
-  border-top: 1px solid var(--border);
+  background: rgba(5, 10, 25, 0.75);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(var(--blur-strong));
   padding: 12px 20px;
 }
 
@@ -413,9 +527,11 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: var(--surface);
+  background: rgba(10, 20, 40, 0.75);
+  border: 1px solid rgba(79, 210, 255, 0.3);
   padding: 6px 12px 6px 6px;
   border-radius: var(--radius-md);
+  backdrop-filter: blur(12px);
 }
 
 .image-preview img {
@@ -431,16 +547,24 @@ body {
   color: var(--text-muted);
   cursor: pointer;
   padding: 4px;
+  transition: var(--transition);
 }
 
+.remove-preview:hover {
+  color: var(--accent-tertiary);
+}
+
+/* حاوية الإدخال الزجاجية */
 .input-wrapper {
   display: flex;
   align-items: flex-end;
   gap: 10px;
-  background: var(--bg-primary);
-  border: 1px solid var(--border);
+  background: rgba(10, 20, 40, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-xl);
   padding: 6px 12px;
+  backdrop-filter: blur(18px);
+  box-shadow: 0 0 25px rgba(79, 210, 255, 0.08);
 }
 
 .input-action {
@@ -458,8 +582,9 @@ body {
 }
 
 .input-action:hover {
-  background: var(--surface);
+  background: rgba(79, 210, 255, 0.15);
   color: var(--accent);
+  box-shadow: 0 0 15px rgba(79, 210, 255, 0.25);
 }
 
 #message-input {
@@ -475,10 +600,15 @@ body {
   max-height: 120px;
 }
 
+#message-input::placeholder {
+  color: rgba(164, 176, 208, 0.5);
+}
+
+/* زر الإرسال */
 .send-btn {
-  background: var(--accent);
+  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
   border: none;
-  color: white;
+  color: #02030a;
   width: 36px;
   height: 36px;
   border-radius: 50%;
@@ -487,19 +617,25 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 0 20px rgba(79, 210, 255, 0.4);
 }
 
 .send-btn:hover {
-  background: var(--accent-hover);
-  transform: scale(1.02);
+  background: linear-gradient(135deg, var(--accent-hover), var(--accent-secondary));
+  transform: scale(1.05);
+  box-shadow: 0 0 30px rgba(79, 210, 255, 0.6),
+              0 0 50px rgba(179, 107, 255, 0.3);
 }
 
 .send-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
-/* Toast */
+/* ============================
+   Toast
+   ============================ */
 #toast-container {
   position: fixed;
   bottom: 20px;
@@ -513,19 +649,21 @@ body {
 }
 
 .toast {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
+  background: rgba(10, 20, 40, 0.9);
+  border: 1px solid rgba(79, 210, 255, 0.4);
   padding: 10px 20px;
   border-radius: 40px;
   font-size: 0.8rem;
-  backdrop-filter: blur(10px);
-  animation: toastIn 0.2s ease;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 0 25px rgba(79, 210, 255, 0.2);
+  animation: toastIn 0.25s ease;
+  color: var(--text-primary);
 }
 
 @keyframes toastIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(15px);
   }
   to {
     opacity: 1;
@@ -533,7 +671,17 @@ body {
   }
 }
 
-/* Mobile */
+/* ============================
+   تأثير نيون عام
+   ============================ */
+.neo-glow {
+  box-shadow: 0 0 20px rgba(79, 210, 255, 0.5),
+              0 0 40px rgba(179, 107, 255, 0.4);
+}
+
+/* ============================
+   تجاوب - موبايل
+   ============================ */
 @media (max-width: 768px) {
   .sidebar {
     position: fixed;
@@ -542,7 +690,8 @@ body {
     left: -100%;
     width: 280px;
     transition: left 0.3s ease;
-    box-shadow: 2px 0 20px rgba(0,0,0,0.3);
+    box-shadow: 2px 0 30px rgba(0, 0, 0, 0.5);
+    border-right: 1px solid rgba(79, 210, 255, 0.15);
   }
   
   .sidebar.mobile-open {
@@ -550,7 +699,7 @@ body {
   }
   
   .message-bubble {
-    max-width: 85%;
+    max-width: 85% !important;
   }
   
   .input-wrapper {
@@ -563,7 +712,9 @@ body {
   }
 }
 
-/* Landscape */
+/* ============================
+   تجاوب - وضع أفقي
+   ============================ */
 @media (max-width: 900px) and (orientation: landscape) {
   .app-header {
     height: 50px;
