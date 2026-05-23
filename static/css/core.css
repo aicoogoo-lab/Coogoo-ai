@@ -1,346 +1,988 @@
 /* ============================================================
-   SkyOS v10 - Sovereign Glass Theme
-   تصميم فاخر هولوغرافي سيادي (محسن)
+   SkyOS v10 - Sovereign Liquid Holographic Theme (الكامل النهائي)
+   الإصدار: Sovereign Edition | GodMode Ultra
+   تم التطوير وفق رؤية العقل السيادي
    ============================================================ */
 
 :root {
-  /* ألوان أساسية */
-  --bg-primary: #0A0A0F;
-  --bg-secondary: #12141C;
-  --bg-elevated: #1A1C26;
-  --surface: rgba(18, 20, 28, 0.65);
-  --border: rgba(255, 255, 255, 0.07);
-  
-  /* نصوص */
-  --text-primary: #E8ECF5;
-  --text-secondary: #A8B0C8;
-  --text-muted: #6B7280;
-  
-  /* ألوان مميزة (هولوغرافي سيادي) */
-  --accent: #00E5FF;
-  --accent-hover: #33EBFF;
-  --accent-glow: rgba(0, 229, 255, 0.25);
-  --accent-secondary: #7C3AED;
-  
-  /* حالات */
-  --success: #22C55E;
-  --warning: #FBBF24;
-  --error: #EF4444;
-  
-  /* نصف قطر */
-  --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
-  --radius-xl: 28px;
-  
-  /* تأثيرات */
-  --blur: 20px;
-  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    /* الألوان الأساسية - سيادية فاخرة */
+    --bg-primary: #050509;
+    --bg-secondary: #0A0A0F;
+    --bg-elevated: #12141C;
+    --surface: rgba(12, 14, 24, 0.78);
+    --surface-soft: rgba(18, 20, 32, 0.65);
+    --border: rgba(255, 255, 255, 0.08);
+
+    /* النصوص */
+    --text-primary: #E8ECF5;
+    --text-secondary: #A8B0C8;
+    --text-muted: #6B7280;
+
+    /* الألوان النشطة - هولوغرافية */
+    --accent: #00E5FF;
+    --accent-hover: #33EBFF;
+    --accent-secondary: #7C3AED;
+    --accent-glow: rgba(0, 229, 255, 0.6);
+
+    /* حالات النظام */
+    --success: #22C55E;
+    --warning: #FBBF24;
+    --danger: #F97373;
+
+    /* الحواف */
+    --radius-sm: 10px;
+    --radius-md: 14px;
+    --radius-lg: 20px;
+    --radius-xl: 28px;
+    --radius-full: 9999px;
+
+    /* التأثيرات */
+    --blur: 22px;
+    --transition: all 0.25s cubic-bezier(0.4, 0.0, 0.2, 1);
+    --glow-sm: 0 0 10px rgba(0, 229, 255, 0.3);
+    --glow-md: 0 0 20px rgba(0, 229, 255, 0.5);
+    --glow-lg: 0 0 40px rgba(0, 229, 255, 0.7);
 }
 
-/* ============================
-   أساسيات
-   ============================ */
+/* ==================== الأساسيات ==================== */
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-body {
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
-  overflow-x: hidden;
+body.skyos-body {
+    background: radial-gradient(circle at 20% 30%, #0a0a1a 0%, #020208 100%);
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    line-height: 1.5;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
 }
 
-/* سكرول بار أنيق */
-::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(0, 229, 255, 0.3);
-  border-radius: 20px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 229, 255, 0.5);
+/* ==================== الخلفية السائلة الهولوغرافية ==================== */
+.liquid-bg {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    z-index: -2;
+    background: radial-gradient(circle at 10% 0%, #0f172a 0, #020617 45%, #000 100%);
 }
 
-/* ============================
-   Header
-   ============================ */
+.liquid-layer {
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    top: -50%;
+    left: -50%;
+    background: radial-gradient(circle at 20% 20%, rgba(0, 229, 255, 0.15), transparent 55%),
+                radial-gradient(circle at 80% 80%, rgba(124, 58, 237, 0.15), transparent 55%);
+    filter: blur(50px);
+    opacity: 0.7;
+    mix-blend-mode: screen;
+    animation: liquidMove 28s infinite alternate ease-in-out;
+}
+
+.liquid-layer.layer-2 {
+    animation-duration: 36s;
+    opacity: 0.5;
+    transform: scale(1.1);
+    background: radial-gradient(circle at 60% 30%, rgba(0, 229, 255, 0.1), transparent 60%),
+                radial-gradient(circle at 20% 80%, rgba(124, 58, 237, 0.1), transparent 60%);
+}
+
+.liquid-layer.layer-3 {
+    animation-duration: 44s;
+    opacity: 0.35;
+    filter: blur(70px);
+    background: radial-gradient(circle at 90% 10%, rgba(0, 229, 255, 0.08), transparent 70%);
+}
+
+@keyframes liquidMove {
+    0% {
+        transform: translate3d(-5%, -5%, 0) scale(1.05);
+    }
+    50% {
+        transform: translate3d(8%, 4%, 0) scale(1.1);
+    }
+    100% {
+        transform: translate3d(-4%, 10%, 0) scale(1.08);
+    }
+}
+
+/* ==================== الهيدر (الزجاجي السائل) ==================== */
 .app-header {
-  height: 64px;
-  background: rgba(10, 10, 15, 0.85);
-  border-bottom: 1px solid var(--border);
-  backdrop-filter: blur(var(--blur));
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 32px;
-  position: sticky;
-  top: 0;
-  z-index: 100;
+    height: 72px;
+    background: linear-gradient(135deg, rgba(5, 5, 12, 0.96), rgba(5, 5, 12, 0.85));
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(var(--blur));
+    display: flex;
+    align-items: center;
+    padding: 0 32px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
+.glass-header {
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+}
+
+.header-content {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* الشعار - بتأثير هولوغرافي */
 .logo {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
 }
 
-.logo i {
-  font-size: 26px;
-  color: var(--accent);
+.logo-core {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-full);
+    background: radial-gradient(circle at 30% 20%, #ffffff, #00e5ff 40%, #020617 80%);
+    box-shadow: 0 0 18px rgba(0, 229, 255, 0.7), 0 0 40px rgba(124, 58, 237, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
 }
 
-.logo h1 {
-  font-size: 22px;
-  font-weight: 600;
-  letter-spacing: -0.5px;
+.logo-orbit {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    border-radius: var(--radius-full);
+    border: 1px solid rgba(0, 229, 255, 0.5);
+    opacity: 0.8;
+    animation: logoOrbit 8s linear infinite;
 }
 
-.logo .version {
-  color: var(--accent);
-  font-weight: 400;
-  font-size: 15px;
+.logo-icon {
+    font-size: 22px;
+    color: #020617;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.9);
 }
 
-/* ============================
-   Main Layout
-   ============================ */
-.app-main {
-  display: flex;
-  height: calc(100dvh - 64px);
-  overflow: hidden;
+@keyframes logoOrbit {
+    0% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(180deg) scale(1.05); }
+    100% { transform: rotate(360deg) scale(1); }
 }
 
-/* ============================
-   Sidebar (زجاجي فاخر)
-   ============================ */
-.sidebar {
-  width: 280px;
-  background: var(--surface);
-  border-right: 1px solid var(--border);
-  backdrop-filter: blur(var(--blur));
-  display: flex;
-  flex-direction: column;
-  z-index: 50;
+.logo-text h1 {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    background: linear-gradient(135deg, #fff, #00e5ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
 }
 
-.sidebar-header {
-  padding: 20px;
-  border-bottom: 1px solid var(--border);
+.version {
+    color: var(--accent);
+    font-weight: 500;
+    margin-inline-start: 4px;
 }
 
-.new-session-btn {
-  width: 100%;
-  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
-  color: #0A0A0F;
-  border: none;
-  padding: 12px 20px;
-  border-radius: var(--radius-md);
-  font-weight: 600;
-  font-size: 14px;
-  cursor: pointer;
-  transition: var(--transition);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+.tagline {
+    font-size: 12px;
+    color: var(--text-muted);
 }
 
-.new-session-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(0, 229, 255, 0.3);
+/* الجانب الأيمن من الهيدر */
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
 }
 
-.sessions-list {
-  flex: 1;
-  overflow-y: auto;
-  padding: 12px;
+.status-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: radial-gradient(circle at 0 0, rgba(34, 197, 94, 0.3), rgba(15, 23, 42, 0.9));
+    padding: 6px 16px;
+    border-radius: var(--radius-full);
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    backdrop-filter: blur(4px);
 }
 
-.session-item {
-  padding: 12px 14px;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 4px;
-  color: var(--text-secondary);
-  transition: var(--transition);
-}
-
-.session-item:hover {
-  background: rgba(255,255,255,0.04);
-}
-
-.session-item.active {
-  background: rgba(0, 229, 255, 0.08);
-  color: var(--accent);
-  border: 1px solid rgba(0, 229, 255, 0.2);
-}
-
-/* ============================
-   منطقة الدردشة / الواجهة الرئيسية
-   ============================ */
-.chat-area {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  background: var(--bg-primary);
-  position: relative;
-}
-
-/* Messages */
-.messages-container {
-  flex: 1;
-  overflow-y: auto;
-  padding: 30px 40px;
-}
-
-.messages-list {
-  max-width: 820px;
-  margin: 0 auto;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-/* Message Bubbles */
-.message {
-  display: flex;
-  gap: 14px;
-}
-
-.message.user {
-  flex-direction: row-reverse;
-}
-
-.message-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  font-size: 14px;
-}
-
-.message.assistant .message-avatar {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  color: var(--accent);
-}
-
-.message.user .message-avatar {
-  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
-  color: #0A0A0F;
-}
-
-.message-bubble {
-  max-width: 75%;
-  padding: 16px 20px;
-  border-radius: var(--radius-lg);
-  line-height: 1.6;
-  font-size: 15px;
-}
-
-.message.assistant .message-bubble {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  backdrop-filter: blur(var(--blur));
-}
-
-.message.user .message-bubble {
-  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
-  color: #0A0A0F;
-  font-weight: 500;
-}
-
-/* ============================
-   Input Area (مهم جداً)
-   ============================ */
-.input-area {
-  padding: 20px 40px;
-  background: rgba(10, 10, 15, 0.9);
-  border-top: 1px solid var(--border);
-  backdrop-filter: blur(var(--blur));
-}
-
-.input-wrapper {
-  max-width: 820px;
-  margin: 0 auto;
-  display: flex;
-  align-items: flex-end;
-  gap: 12px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  padding: 10px 18px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
-}
-
-#message-input {
-  flex: 1;
-  background: transparent;
-  border: none;
-  color: var(--text-primary);
-  font-size: 15.5px;
-  padding: 12px 0;
-  resize: none;
-  outline: none;
-  max-height: 140px;
-  line-height: 1.5;
-}
-
-.send-btn {
-  width: 44px;
-  height: 44px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
-  color: #0A0A0F;
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: var(--transition);
-  box-shadow: 0 0 20px rgba(0, 229, 255, 0.4);
-}
-
-.send-btn:hover {
-  transform: scale(1.08);
-  box-shadow: 0 0 35px rgba(0, 229, 255, 0.6);
-}
-
-/* ============================
-   تحسينات إضافية
-   ============================ */
-.glass {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  backdrop-filter: blur(var(--blur));
-  border-radius: var(--radius-lg);
-}
-
-/* Status indicators */
 .status-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    animation: pulse 1.8s infinite;
 }
 
-.status-dot.online { background: var(--success); box-shadow: 0 0 8px var(--success); }
-.status-dot.warning { background: var(--warning); box-shadow: 0 0 8px var(--warning); }
+.status-dot.online {
+    background: var(--success);
+    box-shadow: 0 0 12px var(--success);
+}
 
-/* تأثير هولوغرافي خفيف على العناصر */
-.holo-glow {
-  box-shadow: 0 0 15px var(--accent-glow);
+@keyframes pulse {
+    0% { opacity: 0.4; transform: scale(0.8); }
+    100% { opacity: 1; transform: scale(1.2); }
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    padding: 6px 14px;
+    border-radius: var(--radius-full);
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    color: var(--text-secondary);
+}
+
+.user-info i {
+    color: var(--accent);
+}
+
+/* مؤشر الطاقة المصغر */
+.energy-mini {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+.energy-label {
+    letter-spacing: 0.08em;
+}
+
+.energy-bar {
+    width: 80px;
+    height: 6px;
+    border-radius: var(--radius-full);
+    background: rgba(15, 23, 42, 0.9);
+    overflow: hidden;
+    border: 1px solid rgba(148, 163, 184, 0.4);
+}
+
+.energy-fill {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #22c55e, #a3e635, #22c55e);
+    animation: energyFlow 2.4s linear infinite;
+}
+
+.energy-fill.high {
+    background: linear-gradient(90deg, #22c55e, #4ade80, #22c55e);
+}
+
+@keyframes energyFlow {
+    0% { transform: translateX(-60%); }
+    100% { transform: translateX(60%); }
+}
+
+/* ==================== الحاوية الرئيسية ==================== */
+.main-container {
+    max-width: 1400px;
+    margin: 32px auto 40px;
+    padding: 0 24px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+/* ==================== البطاقة الزجاجية السيادية ==================== */
+.glass-card {
+    background: radial-gradient(circle at top left, rgba(148, 163, 184, 0.12), transparent 55%),
+                radial-gradient(circle at bottom right, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.96));
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    backdrop-filter: blur(var(--blur));
+    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.9), 0 0 0 1px rgba(15, 23, 42, 0.9);
+    position: relative;
+    overflow: hidden;
+    transition: var(--transition);
+}
+
+.glass-card:hover {
+    border-color: rgba(0, 229, 255, 0.4);
+    box-shadow: 0 20px 50px rgba(0, 229, 255, 0.15), 0 0 0 1px rgba(0, 229, 255, 0.2);
+}
+
+.glass-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 0 0, rgba(0, 229, 255, 0.12), transparent 55%);
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* ==================== رأس القسم ==================== */
+.section-header {
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 2;
+}
+
+.section-header h2 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+}
+
+.section-header h2 i {
+    color: var(--accent);
+    font-size: 1.2rem;
+    text-shadow: var(--glow-sm);
+}
+
+.subtitle {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+/* ==================== الشبكات الرئيسية ==================== */
+.top-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr);
+    gap: 24px;
+}
+
+.mid-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+
+/* ==================== العقل السيادي (AI Core) ==================== */
+.ai-core {
+    border: 1px solid rgba(0, 229, 255, 0.25);
+}
+
+.ai-core-visual {
+    position: relative;
+    height: 220px;
+    margin: 8px 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ai-orbit {
+    position: absolute;
+    border-radius: var(--radius-full);
+    border: 1px solid rgba(148, 163, 184, 0.4);
+    box-shadow: var(--glow-sm);
+    opacity: 0.9;
+}
+
+.orbit-outer {
+    width: 220px;
+    height: 220px;
+    border-color: rgba(0, 229, 255, 0.4);
+    animation: orbitSpin 18s linear infinite;
+}
+
+.orbit-middle {
+    width: 170px;
+    height: 170px;
+    border-color: rgba(124, 58, 237, 0.5);
+    animation: orbitSpinReverse 14s linear infinite;
+}
+
+.orbit-inner {
+    width: 120px;
+    height: 120px;
+    border-color: rgba(148, 163, 184, 0.6);
+    animation: orbitSpin 10s linear infinite;
+}
+
+.ai-core-node {
+    position: relative;
+    width: 85px;
+    height: 85px;
+    border-radius: var(--radius-full);
+    background: radial-gradient(circle at 30% 20%, #ffffff, #00e5ff 40%, #020617 80%);
+    box-shadow: var(--glow-lg), 0 0 60px rgba(124, 58, 237, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.ai-core-glow {
+    position: absolute;
+    inset: -40%;
+    background: conic-gradient(from 0deg, rgba(0, 229, 255, 0.5), transparent, rgba(124, 58, 237, 0.5), transparent, rgba(0, 229, 255, 0.5));
+    mix-blend-mode: screen;
+    animation: coreGlow 8s linear infinite;
+}
+
+.ai-pulse {
+    position: absolute;
+    width: 130%;
+    height: 130%;
+    border-radius: inherit;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    opacity: 0;
+    animation: corePulse 2.8s ease-out infinite;
+}
+
+@keyframes orbitSpin {
+    0% { transform: rotate(0deg) scale(1); }
+    100% { transform: rotate(360deg) scale(1); }
+}
+
+@keyframes orbitSpinReverse {
+    0% { transform: rotate(360deg) scale(1); }
+    100% { transform: rotate(0deg) scale(1); }
+}
+
+@keyframes coreGlow {
+    0% { transform: rotate(0deg); opacity: 0.9; }
+    100% { transform: rotate(360deg); opacity: 0.9; }
+}
+
+@keyframes corePulse {
+    0% { transform: scale(0.7); opacity: 0.7; }
+    70% { transform: scale(1.2); opacity: 0; }
+    100% { transform: scale(1.3); opacity: 0; }
+}
+
+/* حالة العقل (المؤشرات) */
+.ai-state-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px 20px;
+    font-size: 0.8rem;
+}
+
+.ai-state-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.ai-state-label {
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.ai-state-value {
+    color: var(--accent-hover);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* ==================== مركز الأوامر ==================== */
+.command-center {
+    border: 1px solid rgba(0, 229, 255, 0.25);
+}
+
+.command-input-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.command-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+.command-mode,
+.command-context {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: var(--radius-full);
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(148, 163, 184, 0.4);
+}
+
+.command-mode i,
+.command-context i {
+    color: var(--accent);
+    font-size: 0.7rem;
+}
+
+.command-input {
+    width: 100%;
+    background: radial-gradient(circle at top, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.98));
+    border: 1px solid rgba(148, 163, 184, 0.5);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    resize: vertical;
+    min-height: 110px;
+    outline: none;
+    transition: var(--transition);
+}
+
+.command-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(0, 229, 255, 0.2), var(--glow-sm);
+}
+
+/* الأزرار */
+.btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+    color: #020617;
+    border: none;
+    padding: 10px 24px;
+    border-radius: var(--radius-md);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: var(--transition);
+    box-shadow: 0 12px 30px rgba(0, 229, 255, 0.35);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 40px rgba(0, 229, 255, 0.5);
+}
+
+.btn-ghost {
+    background: rgba(15, 23, 42, 0.9);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(148, 163, 184, 0.5);
+    color: var(--text-secondary);
+    padding: 9px 18px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: var(--transition);
+}
+
+.btn-ghost i {
+    color: var(--accent);
+}
+
+.btn-ghost:hover {
+    background: rgba(15, 23, 42, 1);
+    border-color: var(--accent);
+    color: var(--accent-hover);
+}
+
+/* الأوامر السريعة */
+.quick-commands {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.quick-chip {
+    border-radius: var(--radius-full);
+    border: 1px solid rgba(148, 163, 184, 0.5);
+    background: rgba(15, 23, 42, 0.9);
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    padding: 6px 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.quick-chip i {
+    font-size: 0.7rem;
+    color: var(--accent);
+}
+
+.quick-chip:hover {
+    border-color: var(--accent);
+    color: var(--accent-hover);
+    box-shadow: var(--glow-sm);
+}
+
+/* ==================== نظرة عامة على النظام ==================== */
+.system-overview-card {
+    border: 1px solid rgba(148, 163, 184, 0.4);
+}
+
+.overview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.overview-item {
+    background: rgba(15, 23, 42, 0.9);
+    padding: 14px;
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(31, 41, 55, 0.9);
+}
+
+.overview-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.overview-value {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.overview-value.online { color: var(--success); }
+.overview-value.warning { color: var(--warning); }
+
+.overview-sub {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-top: 6px;
+}
+
+/* ==================== مصفوفة الطاقة ==================== */
+.energy-matrix-card {
+    border: 1px solid rgba(0, 229, 255, 0.25);
+}
+
+.energy-matrix-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.energy-metric {
+    display: grid;
+    grid-template-columns: 1fr 2fr auto;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.8rem;
+}
+
+.metric-label {
+    color: var(--text-secondary);
+}
+
+.metric-bar {
+    height: 8px;
+    border-radius: var(--radius-full);
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid rgba(30, 64, 175, 0.8);
+    overflow: hidden;
+}
+
+.metric-fill {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #22c55e, #4ade80);
+    animation: metricFlow 3s linear infinite;
+}
+
+.metric-fill.mid {
+    background: linear-gradient(90deg, #eab308, #facc15);
+}
+
+.metric-fill.high {
+    background: linear-gradient(90deg, #f97316, #fb923c);
+}
+
+.metric-fill.low {
+    background: linear-gradient(90deg, #22c55e, #16a34a);
+}
+
+.metric-value {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+@keyframes metricFlow {
+    0% { transform: translateX(-40%); }
+    100% { transform: translateX(40%); }
+}
+
+/* ==================== الذاكرة الهولوغرافية ==================== */
+.memory-card {
+    border: 1px solid rgba(124, 58, 237, 0.35);
+}
+
+.memory-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 14px;
+    margin-bottom: 16px;
+}
+
+.stat-card {
+    text-align: center;
+    padding: 12px;
+    background: rgba(15, 23, 42, 0.95);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(31, 41, 55, 0.9);
+}
+
+.stat-value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--accent);
+}
+
+.stat-label {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    margin-top: 6px;
+}
+
+.stat-sub {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+/* التصور البصري للذاكرة */
+.memory-visual {
+    position: relative;
+    height: 100px;
+    margin-top: 8px;
+    border-radius: var(--radius-md);
+    background: radial-gradient(circle at 10% 0, rgba(0, 229, 255, 0.15), transparent 55%),
+                radial-gradient(circle at 90% 100%, rgba(124, 58, 237, 0.15), transparent 55%);
+    overflow: hidden;
+}
+
+.memory-node {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-radius: var(--radius-full);
+    background: var(--accent);
+    box-shadow: var(--glow-md);
+    animation: floatNode 4s infinite alternate;
+}
+
+.memory-node::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border-radius: inherit;
+    border: 1px solid rgba(148, 163, 184, 0.7);
+    opacity: 0.6;
+}
+
+.memory-node.node-1 { top: 20px; left: 15%; animation-delay: 0s; }
+.memory-node.node-2 { top: 45px; left: 40%; animation-delay: 0.5s; }
+.memory-node.node-3 { top: 25px; left: 65%; animation-delay: 1s; }
+.memory-node.node-4 { top: 65px; left: 30%; animation-delay: 0.3s; }
+.memory-node.node-5 { top: 70px; left: 80%; animation-delay: 0.8s; }
+
+@keyframes floatNode {
+    from { transform: translateY(0px); opacity: 0.7; }
+    to { transform: translateY(-12px); opacity: 1; }
+}
+
+/* ==================== لوحة التحكم السيادية (الشبكة) ==================== */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.dashboard-card {
+    padding: 20px;
+}
+
+.dashboard-card h3 {
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1rem;
+}
+
+.dashboard-card h3 i {
+    color: var(--accent);
+}
+
+.dashboard-card p {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    margin-bottom: 14px;
+}
+
+.card-capabilities {
+    list-style: none;
+    margin: 0 0 16px;
+    padding: 0;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.card-capabilities li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.card-capabilities i {
+    font-size: 0.7rem;
+    color: var(--accent);
+}
+
+/* الأزرار الثانوية */
+.btn-secondary {
+    background: rgba(15, 23, 42, 0.96);
+    border: 1px solid rgba(148, 163, 184, 0.6);
+    color: var(--text-primary);
+    padding: 8px 18px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: var(--transition);
+    font-size: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-secondary:hover {
+    background: rgba(15, 23, 42, 1);
+    border-color: var(--accent);
+    box-shadow: var(--glow-sm);
+}
+
+/* ==================== شريط الإجراءات السريعة ==================== */
+.quick-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 16px 20px;
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(148, 163, 184, 0.4);
+    background: radial-gradient(circle at 0 0, rgba(0, 229, 255, 0.1), transparent 55%),
+                rgba(15, 23, 42, 0.96);
+}
+
+.quick-action-btn {
+    flex: 1 1 140px;
+    min-width: 120px;
+    border-radius: var(--radius-full);
+    border: 1px solid rgba(148, 163, 184, 0.6);
+    background: rgba(15, 23, 42, 0.98);
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    padding: 8px 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.quick-action-btn i {
+    font-size: 0.8rem;
+    color: var(--accent);
+}
+
+.quick-action-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent-hover);
+    box-shadow: var(--glow-sm);
+}
+
+/* ==================== الاستجابة للأجهزة المختلفة ==================== */
+@media (max-width: 1100px) {
+    .mid-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 900px) {
+    .top-grid, .mid-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .app-header {
+        padding: 0 16px;
+        height: 64px;
+    }
+
+    .tagline {
+        display: none;
+    }
+
+    .main-container {
+        padding: 0 16px 28px;
+        margin-top: 20px;
+    }
+
+    .glass-card {
+        padding: 18px;
+    }
+
+    .ai-core-visual {
+        height: 180px;
+    }
+
+    .orbit-outer { width: 180px; height: 180px; }
+    .orbit-middle { width: 140px; height: 140px; }
+    .orbit-inner { width: 100px; height: 100px; }
+
+    .overview-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .memory-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .quick-actions {
+        padding: 12px;
+    }
+}
+
+/* ==================== دعم الهولوغرام ثلاثي الأبعاد (للتكامل مع Three.js) ==================== */
+#hologram-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.content-layer {
+    position: relative;
+    z-index: 10;
 }
