@@ -2,58 +2,39 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <meta name="color-scheme" content="dark">
-  <title>SkyOS • v10 — العقل الهولوغرافي</title>
+  <meta name="theme-color" content="#050507">
+  <title>سماء • الشخصيات الحية</title>
   
-  <!-- Three.js -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- Three.js (تم تعليقه لأننا نستخدم الشخصيات بدلاً من الكرة) -->
+  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script> -->
   
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/core.css">
   
   <style>
-    /* أنماط إضافية للواجهة الثورية */
-    #mind-container {
-      width: 100%;
-      height: 420px;
-      background: #000;
-      border-radius: 16px;
-      overflow: hidden;
+    /* تعديلات بسيطة لاستيعاب الشخصيات */
+    .mind-status {
       position: relative;
-      margin-bottom: 20px;
-      border: 1px solid var(--border);
-    }
-    
-    .ar-button {
-      position: absolute;
-      top: 16px;
-      right: 16px;
       z-index: 10;
-      background: rgba(99, 102, 241, 0.9);
-      color: white;
-      border: none;
-      padding: 10px 18px;
-      border-radius: 9999px;
-      font-size: 0.9rem;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
+      background: rgba(10,10,15,0.8);
+      backdrop-filter: blur(12px);
     }
-    
-    .mind-label {
+    #characters-area {
       position: absolute;
-      bottom: 16px;
-      left: 16px;
-      background: rgba(0,0,0,0.6);
-      padding: 6px 14px;
-      border-radius: 9999px;
-      font-size: 0.8rem;
+      top: 60px;
+      left: 0;
+      right: 0;
       display: flex;
-      align-items: center;
-      gap: 8px;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 20;
+    }
+    /* إخفاء حاوية العقل القديمة إن وجدت */
+    #mind-container {
+      display: none;
     }
   </style>
 </head>
@@ -66,20 +47,26 @@
         <i class="fas fa-bars"></i>
       </button>
       <div>
-        <strong>SkyOS v10</strong>
+        <strong>سماء</strong>
         <span style="color:#64748b; margin: 0 8px;">•</span>
-        <span style="color:#64748b;">العقل الهولوغرافي</span>
+        <span style="color:#a78bfa;">الشخصيات الحية</span>
       </div>
     </div>
 
     <div class="mind-metrics">
-      <div><i class="fas fa-brain"></i> <span id="mind-confidence">94</span>%</div>
+      <div><i class="fas fa-brain"></i> <span id="mind-confidence">85</span>%</div>
       <div><i class="fas fa-database"></i> <span id="memory-count">128</span></div>
+      <div id="mind-mood-indicator">
+        <i class="fas fa-smile-wink"></i>
+        <span>محايد</span>
+      </div>
     </div>
   </div>
 
-  <div class="main-container">
+  <!-- منطقة عرض الشخصيات (سيتم تعبئتها بواسطة JavaScript) -->
+  <div id="characters-area"></div>
 
+  <div class="main-container">
     <!-- Sidebar -->
     <aside class="sky-sidebar" id="sidebar">
       <div class="sidebar-section">
@@ -87,7 +74,6 @@
           <i class="fas fa-plus"></i> جلسة جديدة
         </button>
       </div>
-
       <div class="sidebar-section" style="flex:1; overflow-y:auto;">
         <div style="font-size:0.75rem; color:#64748b; margin-bottom:8px;">
           <i class="fas fa-archive"></i> الجلسات المحفوظة
@@ -98,38 +84,19 @@
 
     <!-- Main Content -->
     <div class="chat-container">
-
-      <!-- 3D Holographic Mind -->
-      <div style="padding: 16px 16px 0 16px;">
-        <div id="mind-container">
-          <button class="ar-button" id="ar-button">
-            <i class="fas fa-vr-cardboard"></i>
-            <span>تفعيل الواقع المعزز</span>
-          </button>
-          <div class="mind-label">
-            <i class="fas fa-atom"></i>
-            <span>العقل الرقمي الهولوغرافي</span>
-          </div>
-        </div>
-      </div>
-
       <!-- Chat Messages -->
       <div class="chat-messages" id="chat-messages"></div>
 
-      <!-- Input -->
+      <!-- Input Area -->
       <div class="input-area">
         <button class="sky-icon-btn" id="voice-btn"><i class="fas fa-microphone"></i></button>
         <button class="sky-icon-btn" id="upload-btn"><i class="fas fa-paperclip"></i></button>
-        
-        <textarea id="user-input" placeholder="تحدث مع العقل الهولوغرافي..." rows="1"></textarea>
-        
+        <textarea id="user-input" placeholder="تحدث مع الشخصيات..." rows="1"></textarea>
         <button class="send-button" id="send-btn">
           <i class="fas fa-paper-plane"></i>
         </button>
       </div>
-
     </div>
-
   </div>
 
   <div id="toast-container"></div>
@@ -139,15 +106,31 @@
       endpoints: {
         chat: "/api/chat",
         upload: "/upload"
-      }
+      },
+      version: "v11",
+      useMockAPI: true
     };
   </script>
 
-  <!-- Scripts -->
-  <script src="/static/js/core.js"></script>
+  <!-- السكريبتات الأساسية -->
   <script src="/static/js/ui.js"></script>
   <script src="/static/js/mind.js"></script>
-  <script src="/static/js/three-mind.js"></script> <!-- سيتم إضافته لاحقاً -->
-
+  <!-- تم تعطيل three-mind.js لأنه تم الاستغناء عن الكرة -->
+  <!-- <script src="/static/js/three-mind.js"></script> -->
+  <!-- الشخصيات الحية (المحور الأول) -->
+  <script src="/static/js/living-characters.js"></script>
+  <!-- المحرك الأساسي -->
+  <script src="/static/js/core.js"></script>
+  <!-- AR controller (اختياري، يمكن تفعيله لاحقاً) -->
+  <!-- <script src="/static/js/ar-controller.js"></script> -->
+  
+  <script>
+    // تحديث مؤشر المزاج من أحداث الشخصيات
+    window.addEventListener('mind-mood-change', (e) => {
+      const moodSpan = document.querySelector('#mind-mood-indicator span');
+      if (moodSpan) moodSpan.textContent = e.detail.mood === 'happy' ? 'سعيد' : e.detail.mood === 'sad' ? 'حزين' : 'محايد';
+    });
+    console.log('✅ سماء جاهزة مع الشخصيات الحية');
+  </script>
 </body>
 </html>
