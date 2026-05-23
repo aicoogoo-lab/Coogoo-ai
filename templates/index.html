@@ -1,143 +1,129 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>سماء | محادثة ذكية</title>
-  
-  <!-- Three.js لتأثيرات بصرية خفيفة (اختياري، يمكن إلغاؤه) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  
-  <!-- Fonts & Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
-  
-  <!-- Styles -->
-  <link rel="stylesheet" href="/static/css/core.css">
-  
-  <style>
-    /* تأثيرات إضافية سريعة */
-    body {
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    }
-    
-    /* زر الثيم المؤقت (سيظهر تلقائياً) */
-    .theme-temp-btn {
-      background: rgba(255,255,255,0.08);
-      border-radius: 30px;
-      padding: 6px 12px;
-      font-size: 0.75rem;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-    .theme-temp-btn:hover {
-      background: rgba(255,255,255,0.15);
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkyOS v10 • Sovereign Mind</title>
+    <link rel="stylesheet" href="/static/css/core.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
-
-  <!-- Header -->
-  <div class="app-header">
-    <div class="header-left">
-      <button class="icon-btn" id="menu-toggle" aria-label="القائمة">
-        <i class="fas fa-bars"></i>
-      </button>
-      <div class="logo">
-        <span class="logo-icon">🌙</span>
-        <span class="logo-text">سماء</span>
-      </div>
-    </div>
-    <div class="header-right">
-      <div class="theme-temp-btn" id="theme-toggle" title="تبديل الثيم">
-        <i class="fas fa-palette"></i> <span id="theme-name">داكن</span>
-      </div>
-      <button class="icon-btn" id="new-session-header" title="جلسة جديدة">
-        <i class="fas fa-plus"></i>
-      </button>
-    </div>
-  </div>
-
-  <!-- Main Layout -->
-  <div class="app-main">
-    
-    <!-- Sidebar (جلسات) -->
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar-header">
-        <button class="new-session-btn" id="new-session-btn">
-          <i class="fas fa-plus"></i> محادثة جديدة
-        </button>
-      </div>
-      <div class="sessions-list" id="session-list">
-        <!-- ستظهر الجلسات هنا -->
-      </div>
-      <div class="sidebar-footer">
-        <div class="memory-badge">
-          <i class="fas fa-brain"></i> <span id="memory-count">128</span> ذاكرة
-        </div>
-      </div>
-    </aside>
-
-    <!-- Chat Area -->
-    <div class="chat-area">
-      
-      <!-- منطقة الرسائل -->
-      <div class="messages-container" id="messages-container">
-        <div class="messages-list" id="messages-list">
-          <!-- رسالة ترحيب -->
-          <div class="message assistant">
-            <div class="message-avatar"><i class="fas fa-sparkles"></i></div>
-            <div class="message-bubble">
-              <div class="message-text">مرحباً بك في سماء. كيف يمكنني مساعدتك اليوم؟</div>
-              <div class="message-time">الآن</div>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-infinity"></i>
+                <div>
+                    <h1>SkyOS <span class="version">v10</span></h1>
+                    <p class="tagline">العقل الرقمي الهولوغرافي السيادي</p>
+                </div>
             </div>
-          </div>
-        </div>
-      </div>
 
-      <!-- منطقة الإدخال -->
-      <div class="input-area">
-        <div class="image-preview-area" id="image-preview-area" style="display: none;">
-          <div class="image-preview">
-            <img id="preview-img" src="" alt="معاينة">
-            <button class="remove-preview" id="remove-preview"><i class="fas fa-times"></i></button>
-          </div>
+            <div class="header-status">
+                <div class="status-pill">
+                    <div class="status-dot online"></div>
+                    <span>Sovereign Mode Active</span>
+                </div>
+                <div class="user-info">
+                    <i class="fas fa-user-shield"></i>
+                    <span>Sovereign Master</span>
+                </div>
+            </div>
         </div>
-        <div class="input-wrapper">
-          <button class="input-action" id="upload-btn" title="رفع صورة">
-            <i class="fas fa-image"></i>
-          </button>
-          <textarea id="message-input" placeholder="اكتب رسالتك..." rows="1"></textarea>
-          <button class="input-action" id="voice-btn" title="إدخال صوتي">
-            <i class="fas fa-microphone"></i>
-          </button>
-          <button class="send-btn" id="send-btn">
-            <i class="fas fa-paper-plane"></i>
-          </button>
+    </header>
+
+    <main class="main-container">
+
+        <!-- Command Center -->
+        <section class="command-center glass-card">
+            <div class="section-header">
+                <h2><i class="fas fa-terminal"></i> Command Center</h2>
+                <span class="subtitle">أعطِ أوامرك للعقل السيادي</span>
+            </div>
+
+            <div class="command-input-area">
+                <textarea id="commandInput" placeholder="اكتب أمرك هنا... مثال: حلل الذاكرة الهولوغرافية للأسبوع الماضي"></textarea>
+                <button onclick="sendCommand()" class="btn-primary">
+                    <i class="fas fa-paper-plane"></i>
+                    <span>إرسال</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Memory & Status Grid -->
+        <div class="grid-2">
+
+            <!-- Holographic Memory -->
+            <section class="glass-card">
+                <div class="section-header">
+                    <h2><i class="fas fa-atom"></i> Holographic Memory</h2>
+                </div>
+                <div class="memory-stats">
+                    <div class="stat">
+                        <div class="stat-value">847,291</div>
+                        <div class="stat-label">Nodes</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">94.7%</div>
+                        <div class="stat-label">Coherence</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">12.4k</div>
+                        <div class="stat-label">Quantum Links</div>
+                    </div>
+                </div>
+                <div class="memory-visual">
+                    <div class="holo-ring"></div>
+                    <div class="holo-ring delay-1"></div>
+                    <div class="holo-ring delay-2"></div>
+                </div>
+            </section>
+
+            <!-- System Status -->
+            <section class="glass-card">
+                <div class="section-header">
+                    <h2><i class="fas fa-microchip"></i> System Status</h2>
+                </div>
+                <div class="status-grid">
+                    <div class="status-item">
+                        <div class="status-label">Core Engine</div>
+                        <div class="status-value online">Operational</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">Quantum Memory</div>
+                        <div class="status-value online">Stable</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">Predictive Engine</div>
+                        <div class="status-value online">Active</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-label">Self-Evolution</div>
+                        <div class="status-value warning">Learning</div>
+                    </div>
+                </div>
+            </section>
+
         </div>
-      </div>
-      
-    </div>
-  </div>
 
-  <!-- Toast Container -->
-  <div id="toast-container"></div>
+        <!-- Live Mind View -->
+        <section class="glass-card mind-view">
+            <div class="section-header">
+                <h2><i class="fas fa-eye"></i> Live Mind View</h2>
+                <span class="subtitle">التمثيل البصري للعقل السيادي</span>
+            </div>
+            <div class="mind-canvas-container">
+                <canvas id="mindCanvas" width="800" height="400"></canvas>
+                <div class="canvas-overlay">
+                    <p>Three.js Holographic View</p>
+                    <small>سيتم تفعيل العرض ثلاثي الأبعاد قريباً</small>
+                </div>
+            </div>
+        </section>
 
-  <script>
-    window.SKY_CONFIG = {
-      useMockAPI: true,
-      version: "2.0"
-    };
-  </script>
-  
-  <script src="/static/js/ui.js"></script>
-  <script src="/static/js/core.js"></script>
-  
-  <script>
-    // تهيئة بسيطة
-    document.addEventListener('DOMContentLoaded', () => {
-      if (window.SkyCore) SkyCore.init();
-    });
-  </script>
+    </main>
+
+    <script src="/static/js/core.js"></script>
+    <script src="/static/js/ui.js"></script>
 </body>
 </html>
