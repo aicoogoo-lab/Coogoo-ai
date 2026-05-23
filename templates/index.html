@@ -4,11 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>SkyOS v10 • العقل الرقمي الهولوغرافي السيادي | GodMode Ultra</title>
-    <!-- Font Awesome 6 (CDN) -->
+
+    <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&family=Orbitron:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Three.js لإنشاء الهولوغرام السائل التفاعلي -->
+    <!-- Three.js للهولوغرام -->
     <script type="importmap">
         {
             "imports": {
@@ -16,486 +17,796 @@
             }
         }
     </script>
+
     <style>
-        /* ---------- RESET & BASE ---------- */
+        /* ============================================================
+           SkyOS v10 - Sovereign Liquid Holographic Theme (الكامل النهائي)
+           تم تضمينه بالكامل هنا ليكون الملف مستقلاً
+           ============================================================ */
+        :root {
+            --bg-primary: #050509;
+            --bg-secondary: #0A0A0F;
+            --bg-elevated: #12141C;
+            --surface: rgba(12, 14, 24, 0.78);
+            --surface-soft: rgba(18, 20, 32, 0.65);
+            --border: rgba(255, 255, 255, 0.08);
+            --text-primary: #E8ECF5;
+            --text-secondary: #A8B0C8;
+            --text-muted: #6B7280;
+            --accent: #00E5FF;
+            --accent-hover: #33EBFF;
+            --accent-secondary: #7C3AED;
+            --accent-glow: rgba(0, 229, 255, 0.6);
+            --success: #22C55E;
+            --warning: #FBBF24;
+            --danger: #F97373;
+            --radius-sm: 10px;
+            --radius-md: 14px;
+            --radius-lg: 20px;
+            --radius-xl: 28px;
+            --radius-full: 9999px;
+            --blur: 22px;
+            --transition: all 0.25s cubic-bezier(0.4, 0.0, 0.2, 1);
+            --glow-sm: 0 0 10px rgba(0, 229, 255, 0.3);
+            --glow-md: 0 0 20px rgba(0, 229, 255, 0.5);
+            --glow-lg: 0 0 40px rgba(0, 229, 255, 0.7);
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
-        body {
+        body.skyos-body {
             background: radial-gradient(circle at 20% 30%, #0a0a1a 0%, #020208 100%);
-            font-family: 'Inter', sans-serif;
-            color: #eef5ff;
-            overflow-x: hidden;
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            line-height: 1.5;
             min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
         }
 
-        /* ---------- الزجاج السائل السيادي ---------- */
-        .glass-card, .glass-header {
-            background: rgba(8, 12, 25, 0.4);
-            backdrop-filter: blur(16px) saturate(180%);
-            border: 1px solid rgba(0, 229, 255, 0.35);
-            border-radius: 2rem;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
-            transition: all 0.4s ease;
-        }
-
-        .glass-card:hover, .glass-header:hover {
-            border-color: #00e5ff;
-            box-shadow: 0 0 25px rgba(0,229,255,0.2);
-        }
-
-        /* ---------- الخلفية السائلة (Liquid Background) ---------- */
+        /* الخلفية السائلة الهولوغرافية */
         .liquid-bg {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -2;
+            inset: 0;
             overflow: hidden;
+            z-index: -2;
+            background: radial-gradient(circle at 10% 0%, #0f172a 0, #020617 45%, #000 100%);
         }
 
         .liquid-layer {
             position: absolute;
             width: 200%;
             height: 200%;
-            background: radial-gradient(circle at center, rgba(0,229,255,0.08) 0%, rgba(122,0,255,0.05) 100%);
-            border-radius: 40%;
-            animation: liquidMove 25s infinite linear;
+            top: -50%;
+            left: -50%;
+            background: radial-gradient(circle at 20% 20%, rgba(0, 229, 255, 0.15), transparent 55%),
+                        radial-gradient(circle at 80% 80%, rgba(124, 58, 237, 0.15), transparent 55%);
+            filter: blur(50px);
+            opacity: 0.7;
+            mix-blend-mode: screen;
+            animation: liquidMove 28s infinite alternate ease-in-out;
         }
 
-        .layer-1 { top: -50%; left: -50%; animation-duration: 30s; opacity: 0.6; }
-        .layer-2 { top: -30%; left: -20%; animation-duration: 40s; opacity: 0.4; animation-direction: reverse; }
-        .layer-3 { top: -70%; left: -70%; animation-duration: 50s; opacity: 0.3; }
+        .liquid-layer.layer-2 {
+            animation-duration: 36s;
+            opacity: 0.5;
+            transform: scale(1.1);
+            background: radial-gradient(circle at 60% 30%, rgba(0, 229, 255, 0.1), transparent 60%),
+                        radial-gradient(circle at 20% 80%, rgba(124, 58, 237, 0.1), transparent 60%);
+        }
+
+        .liquid-layer.layer-3 {
+            animation-duration: 44s;
+            opacity: 0.35;
+            filter: blur(70px);
+            background: radial-gradient(circle at 90% 10%, rgba(0, 229, 255, 0.08), transparent 70%);
+        }
 
         @keyframes liquidMove {
-            0% { transform: rotate(0deg) translate(0%, 0%); }
-            100% { transform: rotate(360deg) translate(10%, 10%); }
-        }
-
-        /* ---------- التخطيط الرئيسي ---------- */
-        .main-container {
-            max-width: 1600px;
-            margin: 0 auto;
-            padding: 1.5rem;
-            position: relative;
-            z-index: 5;
+            0% { transform: translate3d(-5%, -5%, 0) scale(1.05); }
+            50% { transform: translate3d(8%, 4%, 0) scale(1.1); }
+            100% { transform: translate3d(-4%, 10%, 0) scale(1.08); }
         }
 
         /* الهيدر */
         .app-header {
-            margin-bottom: 2rem;
-            padding: 0.8rem 2rem;
-            border-radius: 2rem;
+            height: 72px;
+            background: linear-gradient(135deg, rgba(5, 5, 12, 0.96), rgba(5, 5, 12, 0.85));
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(var(--blur));
+            display: flex;
+            align-items: center;
+            padding: 0 32px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .glass-header {
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
         }
 
         .header-content {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
         }
 
         .logo {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 14px;
         }
 
         .logo-core {
             position: relative;
-            width: 50px;
-            height: 50px;
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-full);
+            background: radial-gradient(circle at 30% 20%, #ffffff, #00e5ff 40%, #020617 80%);
+            box-shadow: 0 0 18px rgba(0, 229, 255, 0.7), 0 0 40px rgba(124, 58, 237, 0.4);
             display: flex;
             align-items: center;
             justify-content: center;
+            overflow: hidden;
         }
 
         .logo-orbit {
             position: absolute;
-            width: 100%;
-            height: 100%;
-            border: 1px solid #00e5ff;
-            border-radius: 50%;
-            animation: spin 6s linear infinite;
-        }
-
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+            width: 80px;
+            height: 80px;
+            border-radius: var(--radius-full);
+            border: 1px solid rgba(0, 229, 255, 0.5);
+            opacity: 0.8;
+            animation: logoOrbit 8s linear infinite;
         }
 
         .logo-icon {
-            font-size: 2rem;
-            color: #00e5ff;
-            filter: drop-shadow(0 0 8px #00e5ff);
+            font-size: 22px;
+            color: #020617;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.9);
+        }
+
+        @keyframes logoOrbit {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.05); }
+            100% { transform: rotate(360deg) scale(1); }
         }
 
         .logo-text h1 {
-            font-family: 'Orbitron', monospace;
-            font-size: 1.6rem;
-            letter-spacing: 2px;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            background: linear-gradient(135deg, #fff, #00e5ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
         }
 
         .version {
-            color: #00e5ff;
-            font-weight: 700;
+            color: var(--accent);
+            font-weight: 500;
         }
 
         .tagline {
-            font-size: 0.7rem;
-            opacity: 0.8;
+            font-size: 12px;
+            color: var(--text-muted);
         }
 
         .header-right {
             display: flex;
-            gap: 1.5rem;
             align-items: center;
-            flex-wrap: wrap;
+            gap: 20px;
         }
 
-        .status-pill, .energy-mini, .user-info {
+        .status-pill {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            background: rgba(0,0,0,0.5);
-            padding: 0.3rem 1rem;
-            border-radius: 2rem;
-            font-size: 0.85rem;
+            gap: 8px;
+            background: radial-gradient(circle at 0 0, rgba(34, 197, 94, 0.3), rgba(15, 23, 42, 0.9));
+            padding: 6px 16px;
+            border-radius: var(--radius-full);
+            font-size: 13px;
+            font-weight: 500;
+            border: 1px solid rgba(34, 197, 94, 0.4);
+            backdrop-filter: blur(4px);
         }
 
         .status-dot {
             width: 10px;
             height: 10px;
             border-radius: 50%;
-            background: #00ffaa;
-            box-shadow: 0 0 8px #00ffaa;
-            animation: pulse 1.5s infinite;
+            animation: pulse 1.8s infinite;
+        }
+
+        .status-dot.online {
+            background: var(--success);
+            box-shadow: 0 0 12px var(--success);
         }
 
         @keyframes pulse {
-            0% { opacity: 0.4; transform: scale(0.8);}
-            100% { opacity: 1; transform: scale(1.2);}
+            0% { opacity: 0.4; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1.2); }
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: var(--radius-full);
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            color: var(--text-secondary);
+        }
+
+        .user-info i {
+            color: var(--accent);
+        }
+
+        .energy-mini {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
         }
 
         .energy-bar {
-            width: 60px;
-            height: 4px;
-            background: #333;
-            border-radius: 4px;
+            width: 80px;
+            height: 6px;
+            border-radius: var(--radius-full);
+            background: rgba(15, 23, 42, 0.9);
             overflow: hidden;
+            border: 1px solid rgba(148, 163, 184, 0.4);
         }
 
         .energy-fill {
             display: block;
             height: 100%;
-            width: 80%;
-            background: linear-gradient(90deg, #00e5ff, #7a00ff);
+            border-radius: inherit;
+            background: linear-gradient(90deg, #22c55e, #a3e635, #22c55e);
+            animation: energyFlow 2.4s linear infinite;
         }
 
-        /* الشبكات */
-        .top-grid, .mid-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
+        .energy-fill.high {
+            background: linear-gradient(90deg, #22c55e, #4ade80, #22c55e);
         }
 
-        /* العقل السيادي */
-        .ai-core {
-            padding: 1.5rem;
+        @keyframes energyFlow {
+            0% { transform: translateX(-60%); }
+            100% { transform: translateX(60%); }
+        }
+
+        /* الحاوية الرئيسية */
+        .main-container {
+            max-width: 1400px;
+            margin: 32px auto 40px;
+            padding: 0 24px 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
+
+        /* البطاقة الزجاجية */
+        .glass-card {
+            background: radial-gradient(circle at top left, rgba(148, 163, 184, 0.12), transparent 55%),
+                        radial-gradient(circle at bottom right, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.96));
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            backdrop-filter: blur(var(--blur));
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.9), 0 0 0 1px rgba(15, 23, 42, 0.9);
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .glass-card:hover {
+            border-color: rgba(0, 229, 255, 0.4);
+            box-shadow: 0 20px 50px rgba(0, 229, 255, 0.15), 0 0 0 1px rgba(0, 229, 255, 0.2);
+        }
+
+        .glass-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 0 0, rgba(0, 229, 255, 0.12), transparent 55%);
+            opacity: 0.6;
+            pointer-events: none;
         }
 
         .section-header {
-            margin-bottom: 1.2rem;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 2;
         }
+
         .section-header h2 {
-            font-family: 'Orbitron', monospace;
             font-size: 1.3rem;
+            font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 10px;
+            margin-bottom: 6px;
         }
+
+        .section-header h2 i {
+            color: var(--accent);
+            text-shadow: var(--glow-sm);
+        }
+
         .subtitle {
+            color: var(--text-muted);
             font-size: 0.8rem;
-            opacity: 0.7;
+        }
+
+        /* الشبكات */
+        .top-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr);
+            gap: 24px;
+        }
+
+        /* AI Core */
+        .ai-core {
+            border: 1px solid rgba(0, 229, 255, 0.25);
         }
 
         .ai-core-visual {
             position: relative;
-            height: 200px;
+            height: 220px;
+            margin: 8px 0 20px;
             display: flex;
-            justify-content: center;
             align-items: center;
-            margin-bottom: 1.5rem;
+            justify-content: center;
         }
 
         .ai-orbit {
             position: absolute;
-            border: 1px solid rgba(0,229,255,0.5);
-            border-radius: 50%;
-            animation: orbitRotate 10s linear infinite;
+            border-radius: var(--radius-full);
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            box-shadow: var(--glow-sm);
+            opacity: 0.9;
         }
-        .orbit-outer { width: 160px; height: 160px; border-width: 1px; }
-        .orbit-middle { width: 110px; height: 110px; animation-duration: 7s; }
-        .orbit-inner { width: 60px; height: 60px; animation-duration: 4s; }
 
-        @keyframes orbitRotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+        .orbit-outer {
+            width: 220px;
+            height: 220px;
+            border-color: rgba(0, 229, 255, 0.4);
+            animation: orbitSpin 18s linear infinite;
+        }
+
+        .orbit-middle {
+            width: 170px;
+            height: 170px;
+            border-color: rgba(124, 58, 237, 0.5);
+            animation: orbitSpinReverse 14s linear infinite;
+        }
+
+        .orbit-inner {
+            width: 120px;
+            height: 120px;
+            border-color: rgba(148, 163, 184, 0.6);
+            animation: orbitSpin 10s linear infinite;
+        }
+
+        @keyframes orbitSpin {
+            0% { transform: rotate(0deg) scale(1); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+
+        @keyframes orbitSpinReverse {
+            0% { transform: rotate(360deg) scale(1); }
+            100% { transform: rotate(0deg) scale(1); }
         }
 
         .ai-core-node {
             position: relative;
-            width: 30px;
-            height: 30px;
-            background: #00e5ff;
-            border-radius: 50%;
-            box-shadow: 0 0 30px #00e5ff;
-            animation: corePulse 1.8s infinite;
+            width: 85px;
+            height: 85px;
+            border-radius: var(--radius-full);
+            background: radial-gradient(circle at 30% 20%, #ffffff, #00e5ff 40%, #020617 80%);
+            box-shadow: var(--glow-lg), 0 0 60px rgba(124, 58, 237, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .ai-core-glow {
+            position: absolute;
+            inset: -40%;
+            background: conic-gradient(from 0deg, rgba(0, 229, 255, 0.5), transparent, rgba(124, 58, 237, 0.5), transparent, rgba(0, 229, 255, 0.5));
+            mix-blend-mode: screen;
+            animation: coreGlow 8s linear infinite;
+        }
+
+        .ai-pulse {
+            position: absolute;
+            width: 130%;
+            height: 130%;
+            border-radius: inherit;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            opacity: 0;
+            animation: corePulse 2.8s ease-out infinite;
+        }
+
+        @keyframes coreGlow {
+            0% { transform: rotate(0deg); opacity: 0.9; }
+            100% { transform: rotate(360deg); opacity: 0.9; }
         }
 
         @keyframes corePulse {
-            0% { transform: scale(1); opacity: 0.8; }
-            100% { transform: scale(1.5); opacity: 0; }
+            0% { transform: scale(0.7); opacity: 0.7; }
+            70% { transform: scale(1.2); opacity: 0; }
+            100% { transform: scale(1.3); opacity: 0; }
         }
 
         .ai-state-grid {
             display: grid;
-            grid-template-columns: repeat(2,1fr);
-            gap: 1rem;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px 20px;
+            font-size: 0.8rem;
         }
 
         .ai-state-item {
-            background: rgba(0,0,0,0.4);
-            border-radius: 1rem;
-            padding: 0.5rem;
-            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
         }
-        .ai-state-label { font-size: 0.7rem; opacity: 0.7; display: block; }
-        .ai-state-value { font-weight: bold; font-family: monospace; }
+
+        .ai-state-label {
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .ai-state-value {
+            color: var(--accent-hover);
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
 
         /* مركز الأوامر */
         .command-center {
-            padding: 1.5rem;
+            border: 1px solid rgba(0, 229, 255, 0.25);
         }
+
         .command-input-wrapper {
-            background: rgba(0,0,0,0.3);
-            border-radius: 1.5rem;
-            padding: 1rem;
-            margin-bottom: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
         }
+
         .command-meta {
             display: flex;
-            justify-content: space-between;
-            margin-bottom: 1rem;
-        }
-        .command-mode, .command-context {
-            background: #00e5ff20;
-            padding: 0.2rem 0.8rem;
-            border-radius: 2rem;
-            font-size: 0.8rem;
-        }
-        .command-input {
-            width: 100%;
-            background: rgba(0,0,0,0.6);
-            border: 1px solid #00e5ff;
-            border-radius: 1rem;
-            padding: 0.8rem;
-            color: #fff;
-            font-family: monospace;
-            resize: vertical;
-        }
-        .command-actions {
-            display: flex;
-            gap: 0.8rem;
-            margin-top: 1rem;
             flex-wrap: wrap;
+            gap: 10px;
+            font-size: 0.7rem;
+            color: var(--text-muted);
         }
-        .btn-primary, .btn-ghost, .btn-secondary {
-            background: linear-gradient(135deg, #00e5ff, #7a00ff);
-            border: none;
-            padding: 0.5rem 1.2rem;
-            border-radius: 2rem;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.2s;
+
+        .command-mode, .command-context {
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: var(--radius-full);
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(148, 163, 184, 0.4);
         }
+
+        .command-mode i, .command-context i {
+            color: var(--accent);
+        }
+
+        .command-input {
+            width: 100%;
+            background: radial-gradient(circle at top, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.98));
+            border: 1px solid rgba(148, 163, 184, 0.5);
+            border-radius: var(--radius-md);
+            padding: 14px;
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            resize: vertical;
+            min-height: 110px;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .command-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(0, 229, 255, 0.2), var(--glow-sm);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            color: #020617;
+            border: none;
+            padding: 10px 24px;
+            border-radius: var(--radius-md);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+            box-shadow: 0 12px 30px rgba(0, 229, 255, 0.35);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 18px 40px rgba(0, 229, 255, 0.5);
+        }
+
         .btn-ghost {
-            background: transparent;
-            border: 1px solid #00e5ff;
+            background: rgba(15, 23, 42, 0.9);
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(148, 163, 184, 0.5);
+            color: var(--text-secondary);
+            padding: 9px 18px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
         }
-        .btn-secondary {
-            background: #2a2a4a;
-            margin-top: 1rem;
+
+        .btn-ghost i {
+            color: var(--accent);
         }
+
+        .btn-ghost:hover {
+            background: rgba(15, 23, 42, 1);
+            border-color: var(--accent);
+            color: var(--accent-hover);
+        }
+
         .quick-commands {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.7rem;
-        }
-        .quick-chip {
-            background: rgba(0,229,255,0.2);
-            border: 1px solid #00e5ff;
-            border-radius: 2rem;
-            padding: 0.3rem 1rem;
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .quick-chip:hover {
-            background: #00e5ff40;
+            gap: 10px;
+            margin-top: 8px;
         }
 
-        /* مصفوفة الطاقة */
-        .energy-matrix-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-        .energy-metric {
-            display: flex;
+        .quick-chip {
+            border-radius: var(--radius-full);
+            border: 1px solid rgba(148, 163, 184, 0.5);
+            background: rgba(15, 23, 42, 0.9);
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            padding: 6px 14px;
+            display: inline-flex;
             align-items: center;
-            gap: 1rem;
+            gap: 6px;
+            cursor: pointer;
+            transition: var(--transition);
         }
-        .metric-bar {
-            flex: 1;
-            height: 6px;
-            background: #333;
-            border-radius: 4px;
+
+        .quick-chip i {
+            font-size: 0.7rem;
+            color: var(--accent);
         }
-        .metric-fill {
-            display: block;
-            height: 100%;
-            border-radius: 4px;
+
+        .quick-chip:hover {
+            border-color: var(--accent);
+            color: var(--accent-hover);
+            box-shadow: var(--glow-sm);
         }
-        .metric-fill.mid { width: 62%; background: #ffaa00; }
-        .metric-fill.high { width: 85%; background: #00e5ff; }
-        .metric-fill.low { width: 30%; background: #00ffaa; }
+
+        /* نظرة عامة */
+        .system-overview-card {
+            border: 1px solid rgba(148, 163, 184, 0.4);
+        }
+
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .overview-item {
+            background: rgba(15, 23, 42, 0.9);
+            padding: 14px;
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(31, 41, 55, 0.9);
+        }
+
+        .overview-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        .overview-value {
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .overview-value.online { color: var(--success); }
+        .overview-value.warning { color: var(--warning); }
 
         /* الذاكرة الهولوغرافية */
-        .memory-stats {
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        .stat-card {
-            text-align: center;
-            background: rgba(0,0,0,0.3);
-            padding: 0.8rem;
-            border-radius: 1rem;
-            flex: 1;
-        }
-        .stat-value {
-            font-size: 1.5rem;
-            font-weight: bold;
-            font-family: monospace;
-        }
-        .memory-visual {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-        }
-        .memory-node {
-            width: 40px;
-            height: 40px;
-            background: radial-gradient(circle, #00e5ff, #7a00ff);
-            border-radius: 50%;
-            animation: floatNode 3s infinite alternate;
-        }
-        @keyframes floatNode {
-            from { transform: translateY(0px); opacity: 0.6; }
-            to { transform: translateY(-10px); opacity: 1; }
+        .memory-card {
+            border: 1px solid rgba(124, 58, 237, 0.35);
         }
 
-        /* لوحة التحكم السيادية (الشبكة) */
+        .memory-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 12px;
+            background: rgba(15, 23, 42, 0.95);
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(31, 41, 55, 0.9);
+        }
+
+        .stat-value {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-top: 6px;
+        }
+
+        .memory-visual {
+            position: relative;
+            height: 100px;
+            margin-top: 8px;
+            border-radius: var(--radius-md);
+            background: radial-gradient(circle at 10% 0, rgba(0, 229, 255, 0.15), transparent 55%),
+                        radial-gradient(circle at 90% 100%, rgba(124, 58, 237, 0.15), transparent 55%);
+        }
+
+        .memory-node {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: var(--radius-full);
+            background: var(--accent);
+            box-shadow: var(--glow-md);
+            animation: floatNode 4s infinite alternate;
+        }
+
+        .memory-node::after {
+            content: "";
+            position: absolute;
+            inset: -4px;
+            border-radius: inherit;
+            border: 1px solid rgba(148, 163, 184, 0.7);
+        }
+
+        .memory-node.node-1 { top: 20px; left: 15%; animation-delay: 0s; }
+        .memory-node.node-2 { top: 45px; left: 40%; animation-delay: 0.5s; }
+        .memory-node.node-3 { top: 25px; left: 65%; animation-delay: 1s; }
+        .memory-node.node-4 { top: 65px; left: 30%; animation-delay: 0.3s; }
+        .memory-node.node-5 { top: 70px; left: 80%; animation-delay: 0.8s; }
+
+        @keyframes floatNode {
+            from { transform: translateY(0px); opacity: 0.7; }
+            to { transform: translateY(-12px); opacity: 1; }
+        }
+
+        /* لوحة التحكم */
         .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
+            gap: 20px;
         }
+
         .dashboard-card {
-            padding: 1.2rem;
+            padding: 20px;
         }
+
         .dashboard-card h3 {
-            margin-bottom: 0.5rem;
+            margin-bottom: 10px;
             display: flex;
-            gap: 0.5rem;
             align-items: center;
-        }
-        .card-capabilities {
-            list-style: none;
-            margin: 1rem 0;
-        }
-        .card-capabilities li {
-            margin-bottom: 0.4rem;
-            font-size: 0.85rem;
+            gap: 10px;
+            font-size: 1rem;
         }
 
-        /* شريط الإجراءات السريعة */
-        .quick-actions {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-around;
-            padding: 0.8rem;
-            margin-top: 1rem;
+        .dashboard-card h3 i {
+            color: var(--accent);
         }
-        .quick-action-btn {
-            background: none;
-            border: none;
-            color: white;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.3rem;
-            cursor: pointer;
+
+        .dashboard-card p {
+            color: var(--text-muted);
             font-size: 0.8rem;
+            margin-bottom: 16px;
         }
 
-        /* استجابة الجوال */
-        @media (max-width: 768px) {
-            .main-container {
-                padding: 1rem;
-            }
-            .top-grid, .mid-grid {
-                grid-template-columns: 1fr;
-            }
-            .header-content {
-                flex-direction: column;
-                align-items: start;
-            }
+        .btn-secondary {
+            background: rgba(15, 23, 42, 0.96);
+            border: 1px solid rgba(148, 163, 184, 0.6);
+            color: var(--text-primary);
+            padding: 8px 18px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.75rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        /* اللوحة ثلاثية الأبعاد للهولوغرام الحي */
+        .btn-secondary:hover {
+            background: rgba(15, 23, 42, 1);
+            border-color: var(--accent);
+            box-shadow: var(--glow-sm);
+        }
+
+        /* Canvas الهولوغرام */
         #hologram-canvas {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 1;
+            z-index: 0;
             pointer-events: none;
         }
+
         .content-layer {
             position: relative;
             z-index: 10;
         }
+
+        /* استجابة */
+        @media (max-width: 1100px) {
+            .top-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .app-header { padding: 0 16px; height: 64px; }
+            .tagline { display: none; }
+            .main-container { padding: 0 16px 28px; margin-top: 20px; }
+            .glass-card { padding: 18px; }
+            .ai-core-visual { height: 180px; }
+            .orbit-outer { width: 180px; height: 180px; }
+            .orbit-middle { width: 140px; height: 140px; }
+            .orbit-inner { width: 100px; height: 100px; }
+            .overview-grid { grid-template-columns: 1fr; }
+            .memory-stats { grid-template-columns: 1fr; }
+        }
+
+        /* أنيميشن إضافية */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .user-message, .ai-message {
+            animation: fadeInUp 0.3s ease;
+        }
     </style>
 </head>
+
 <body class="skyos-body">
 
-    <!-- خلفية سائلة -->
+    <!-- الخلفية السائلة -->
     <div class="liquid-bg">
         <div class="liquid-layer layer-1"></div>
         <div class="liquid-layer layer-2"></div>
@@ -506,6 +817,7 @@
     <canvas id="hologram-canvas"></canvas>
 
     <div class="content-layer">
+        <!-- Header -->
         <header class="app-header glass-header">
             <div class="header-content">
                 <div class="logo">
@@ -521,7 +833,7 @@
                 <div class="header-right">
                     <div class="status-pill">
                         <div class="status-dot online"></div>
-                        <span>Sovereign Mode</span>
+                        <span>Sovereign Mode Active</span>
                     </div>
                     <div class="energy-mini">
                         <span class="energy-label">Energy</span>
@@ -537,8 +849,10 @@
             </div>
         </header>
 
+        <!-- Main -->
         <main class="main-container">
-            <!-- الصف العلوي -->
+
+            <!-- AI Core + Command Center -->
             <section class="top-grid">
                 <section class="ai-core glass-card">
                     <div class="section-header">
@@ -569,7 +883,7 @@
                         </div>
                         <div class="ai-state-item">
                             <span class="ai-state-label">Security Layer</span>
-                            <span class="ai-state-value">Zero-Trust Active</span>
+                            <span class="ai-state-value" id="securityStatus">Zero-Trust Active</span>
                         </div>
                     </div>
                 </section>
@@ -577,195 +891,96 @@
                 <section class="command-center glass-card">
                     <div class="section-header">
                         <h2><i class="fas fa-terminal"></i> Command Center</h2>
-                        <p class="subtitle">أرسل أوامرك مباشرة إلى العقل السيادي • GodMode + Ultra</p>
+                        <p class="subtitle">أرسل أوامرك مباشرة إلى العقل السيادي</p>
                     </div>
                     <div class="command-input-wrapper">
                         <div class="command-meta">
                             <span class="command-mode"><i class="fas fa-bolt"></i> GodMode</span>
                             <span class="command-context"><i class="fas fa-globe"></i> Global Context Aware</span>
                         </div>
-                        <textarea id="commandInput" class="command-input"
-                                  placeholder="اكتب أمرك السيادي هنا... مثال: فعّل تحليل سيادي كامل لكل العمليات خلال آخر 24 ساعة مع تصنيف المخاطر حسب الأولوية."
-                                  rows="4"></textarea>
+                        <textarea id="commandInput" class="command-input" placeholder="اكتب أمرك السيادي هنا..." rows="5"></textarea>
                         <div class="command-actions">
-                            <button onclick="sendCommand()" class="btn-primary">
-                                <i class="fas fa-paper-plane"></i>
-                                <span>إرسال الأمر</span>
-                            </button>
-                            <button class="btn-ghost" onclick="toggleVoiceCommand()">
-                                <i class="fas fa-microphone"></i>
-                                <span>أمر صوتي</span>
-                            </button>
-                            <button class="btn-ghost" onclick="openCommandTemplates()">
-                                <i class="fas fa-wand-magic-sparkles"></i>
-                                <span>قوالب أوامر</span>
-                            </button>
+                            <button onclick="sendCommand()" class="btn-primary"><i class="fas fa-paper-plane"></i> إرسال الأمر</button>
+                            <button class="btn-ghost" onclick="toggleVoiceCommand()"><i class="fas fa-microphone"></i> أمر صوتي</button>
+                            <button class="btn-ghost" onclick="openCommandTemplates()"><i class="fas fa-wand-magic-sparkles"></i> قوالب أوامر</button>
                         </div>
-                    </div>
-                    <div class="quick-commands">
-                        <button class="quick-chip" onclick="quickCommand('تحليل شامل للذاكرة الهولوغرافية')">
-                            <i class="fas fa-atom"></i> تحليل الذاكرة
-                        </button>
-                        <button class="quick-chip" onclick="quickCommand('تفعيل وضع الحماية القصوى')">
-                            <i class="fas fa-shield-halved"></i> حماية قصوى
-                        </button>
-                        <button class="quick-chip" onclick="quickCommand('إنشاء تقرير سيادي تنفيذي')">
-                            <i class="fas fa-file-shield"></i> تقرير سيادي
-                        </button>
-                        <button class="quick-chip" onclick="quickCommand('تشغيل أتمتة عصبية للمهام الحرجة')">
-                            <i class="fas fa-network-wired"></i> أتمتة عصبية
-                        </button>
+                        <div class="quick-commands">
+                            <button class="quick-chip" onclick="quickCommand('تحليل شامل للذاكرة الهولوغرافية')"><i class="fas fa-atom"></i> تحليل الذاكرة</button>
+                            <button class="quick-chip" onclick="quickCommand('تفعيل وضع الحماية القصوى')"><i class="fas fa-shield-halved"></i> حماية قصوى</button>
+                            <button class="quick-chip" onclick="quickCommand('إنشاء تقرير سيادي تنفيذي')"><i class="fas fa-file-shield"></i> تقرير سيادي</button>
+                            <button class="quick-chip" onclick="quickCommand('تشغيل أتمتة عصبية للمهام الحرجة')"><i class="fas fa-network-wired"></i> أتمتة عصبية</button>
+                        </div>
                     </div>
                 </section>
             </section>
 
-            <section class="mid-grid">
-                <section class="glass-card system-overview-card">
-                    <div class="section-header">
-                        <h2><i class="fas fa-tachometer-alt"></i> System Overview</h2>
-                        <p class="subtitle">نظرة سيادية على حالة العقل الرقمي</p>
-                    </div>
-                    <div class="overview-grid" style="display:grid; gap:1rem;">
-                        <div class="overview-item">
-                            <div class="overview-label">Core Engine</div>
-                            <div class="overview-value online">Operational</div>
-                            <div class="overview-sub">Neural Core v10.4 • Stable</div>
-                        </div>
-                        <div class="overview-item">
-                            <div class="overview-label">Quantum Memory</div>
-                            <div class="overview-value online">Stable</div>
-                            <div class="overview-sub">Multi-Layer Holographic Storage</div>
-                        </div>
-                        <div class="overview-item">
-                            <div class="overview-label">Self-Evolution</div>
-                            <div class="overview-value warning">Active</div>
-                            <div class="overview-sub">Adaptive Learning Enabled</div>
-                        </div>
-                        <div class="overview-item">
-                            <div class="overview-label">Security Status</div>
-                            <div class="overview-value online">Secure</div>
-                            <div class="overview-sub">Zero-Trust • Multi-Factor Shield</div>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="glass-card energy-matrix-card">
-                    <div class="section-header">
-                        <h2><i class="fas fa-bolt"></i> Energy Matrix</h2>
-                        <p class="subtitle">مصفوفة الطاقة العصبية والهولوغرافية</p>
-                    </div>
-                    <div class="energy-matrix-grid">
-                        <div class="energy-metric">
-                            <span class="metric-label">Neural Load</span>
-                            <div class="metric-bar"><span class="metric-fill mid" style="width:62%"></span></div>
-                            <span class="metric-value">62%</span>
-                        </div>
-                        <div class="energy-metric">
-                            <span class="metric-label">Cognitive Overclock</span>
-                            <div class="metric-bar"><span class="metric-fill high" style="width:85%"></span></div>
-                            <span class="metric-value">Hyper</span>
-                        </div>
-                        <div class="energy-metric">
-                            <span class="metric-label">Security Shield</span>
-                            <div class="metric-bar"><span class="metric-fill high" style="width:100%"></span></div>
-                            <span class="metric-value">Max</span>
-                        </div>
-                        <div class="energy-metric">
-                            <span class="metric-label">System Temperature</span>
-                            <div class="metric-bar"><span class="metric-fill low" style="width:30%"></span></div>
-                            <span class="metric-value">Cool</span>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="glass-card memory-card">
-                    <div class="section-header">
-                        <h2><i class="fas fa-atom"></i> Holographic Memory</h2>
-                        <p class="subtitle">بنية الذاكرة الكمية الهولوغرافية</p>
-                    </div>
-                    <div class="memory-stats">
-                        <div class="stat-card">
-                            <div class="stat-value">847,291</div>
-                            <div class="stat-label">Memory Nodes</div>
-                            <div class="stat-sub">Active Holographic Nodes</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">94.7%</div>
-                            <div class="stat-label">Coherence Level</div>
-                            <div class="stat-sub">Quantum Coherence Stability</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">12,438</div>
-                            <div class="stat-label">Quantum Links</div>
-                            <div class="stat-sub">Cross-Domain Neural Links</div>
-                        </div>
-                    </div>
-                    <div class="memory-visual">
-                        <div class="memory-node node-1"></div>
-                        <div class="memory-node node-2"></div>
-                        <div class="memory-node node-3"></div>
-                        <div class="memory-node node-4"></div>
-                        <div class="memory-node node-5"></div>
-                    </div>
-                </section>
+            <!-- System Overview -->
+            <section class="glass-card system-overview-card">
+                <div class="section-header">
+                    <h2><i class="fas fa-tachometer-alt"></i> System Overview</h2>
+                </div>
+                <div class="overview-grid">
+                    <div class="overview-item"><div class="overview-label">Core Engine</div><div class="overview-value online">Operational</div></div>
+                    <div class="overview-item"><div class="overview-label">Quantum Memory</div><div class="overview-value online">Stable</div></div>
+                    <div class="overview-item"><div class="overview-label">Self-Evolution</div><div class="overview-value warning">Active</div></div>
+                    <div class="overview-item"><div class="overview-label">Security Status</div><div class="overview-value online">Secure</div></div>
+                </div>
             </section>
 
-            <section class="dashboard-grid">
-                <!-- الأقسام التسعة الأساسية -->
-                <section class="glass-card dashboard-card"><h3><i class="fas fa-chart-line"></i> Analysis Engine</h3><p>تحليل نصوص متقدم • استخراج النقاط • نماذج تنبؤية سيادية</p><ul class="card-capabilities"><li><i class="fas fa-check"></i> تحليل سياقي متعدد الطبقات</li><li><i class="fas fa-check"></i> تصنيف المخاطر والأولويات</li><li><i class="fas fa-check"></i> تقارير تنفيذية فورية</li></ul><button class="btn-secondary" onclick="alert('🔍 محرك التحليل السيادي: جاهز لتحليل شامل')">فتح محرك التحليل</button></section>
-                <section class="glass-card dashboard-card"><h3><i class="fas fa-comments"></i> Language Interaction</h3><p>محادثة سيادية • دعم اللهجات • توليد محتوى رسمي وتنفيذي</p><ul class="card-capabilities"><li><i class="fas fa-check"></i> إعادة صياغة سيادية</li><li><i class="fas fa-check"></i> توليد خطابات وتقارير</li><li><i class="fas fa-check"></i> دعم لغات متعددة</li></ul><button class="btn-secondary" onclick="alert('🗣️ وحدة التفاعل اللغوي: جاهزة للحوار السيادي')">فتح وحدة التفاعل اللغوي</button></section>
-                <section class="glass-card dashboard-card"><h3><i class="fas fa-shield-alt"></i> Security Center</h3><p>مراقبة التهديدات • إدارة الصلاحيات • سجلات الأمان السيادي</p><ul class="card-capabilities"><li><i class="fas fa-check"></i> كشف الأنشطة غير الطبيعية</li><li><i class="fas fa-check"></i> إدارة أدوار وصلاحيات دقيقة</li><li><i class="fas fa-check"></i> تقارير أمان لحظية</li></ul><button class="btn-secondary" onclick="alert('🛡️ مركز الأمان: جميع الطبقات نشطة')">فتح مركز الأمان</button></section>
-                <section class="glass-card dashboard-card"><h3><i class="fas fa-robot"></i> Model Management</h3><p>تحديث النماذج • التدريب المحلي • إدارة الإصدارات السيادية</p><ul class="card-capabilities"><li><i class="fas fa-check"></i> إدارة نسخ النماذج</li><li><i class="fas fa-check"></i> Fine-tuning محلي</li><li><i class="fas fa-check"></i> سياسات نشر آمنة</li></ul><button class="btn-secondary" onclick="alert('🤖 إدارة النماذج: الإصدار الرئيسي نشط')">إدارة النماذج</button></section>
-                <section class="glass-card dashboard-card"><h3><i class="fas fa-database"></i> Data Management</h3><p>إدارة مصادر البيانات • التشفير • سياسات الحذف السيادي</p><ul class="card-capabilities"><li><i class="fas fa-check"></i> تصنيف البيانات حسب الحساسية</li><li><i class="fas fa-check"></i> تشفير متعدد الطبقات</li><li><i class="fas fa-check"></i> سياسات حذف آمنة</li></ul><button class="btn-secondary" onclick="alert('💾 إدارة البيانات: متاحة بالكامل')">إدارة البيانات</button></section>
-                <section class="glass-card dashboard-card"><h3><i class="fas fa-plug"></i> Integrations</h3><p>التكامل مع الأنظمة • قواعد البيانات • واجهات API</p><ul class="card-capabilities"><li><i class="fas fa-check"></i> ربط مع أنظمة خارجية</li><li><i class="fas fa-check"></i> إدارة مفاتيح الوصول</li><li><i class="fas fa-check"></i> مراقبة الاتصالات</li></ul><button class="btn-secondary" onclick="alert('🔌 إدارة التكاملات: جاهزة للتوصيل')">إدارة التكاملات</button></section>
-                <section class="glass-card dashboard-card"><h3><i class="fas fa-users-cog"></i> Users & Permissions</h3><p>إدارة المستخدمين • الأدوار • صلاحيات الوصول السيادي</p><ul class="card-capabilities"><li><i class="fas fa-check"></i> إنشاء مستخدمين سياديين</li><li><i class="fas fa-check"></i> أدوار متعددة المستويات</li><li><i class="fas fa-check"></i> مراقبة جلسات الدخول</li></ul><button class="btn-secondary" onclick="alert('👥 إدارة المستخدمين: صلاحيات سيادية محفوظة')">إدارة المستخدمين</button></section>
-                <section class="glass-card dashboard-card"><h3><i class="fas fa-list-check"></i> Activity Log</h3><p>سجل العمليات • التغييرات • التنبيهات السيادية</p><ul class="card-capabilities"><li><i class="fas fa-check"></i> تتبع كل الأوامر</li><li><i class="fas fa-check"></i> عرض الأحداث الحرجة</li><li><i class="fas fa-check"></i> تصدير تقارير</li></ul><button class="btn-secondary" onclick="alert('📋 سجل العمليات: آخر 100 حدث معروض')">عرض السجل</button></section>
-                <section class="glass-card dashboard-card"><h3><i class="fas fa-network-wired"></i> Neural Automations</h3><p>أتمتة عصبية سيادية • مهام ذكية • تشغيل تلقائي مشروط</p><ul class="card-capabilities"><li><i class="fas fa-check"></i> إنشاء سيناريوهات أتمتة</li><li><i class="fas fa-check"></i> تشغيل مهام عند شروط محددة</li><li><i class="fas fa-check"></i> مراقبة الأتمتة لحظيًا</li></ul><button class="btn-secondary" onclick="alert('🧠 الأتمتة العصبية: نشطة ومراقبة')">إدارة الأتمتة العصبية</button></section>
+            <!-- Holographic Memory -->
+            <section class="glass-card memory-card">
+                <div class="section-header">
+                    <h2><i class="fas fa-atom"></i> Holographic Memory</h2>
+                </div>
+                <div class="memory-stats">
+                    <div class="stat-card"><div class="stat-value">847,291</div><div class="stat-label">Memory Nodes</div></div>
+                    <div class="stat-card"><div class="stat-value">94.7%</div><div class="stat-label">Coherence Level</div></div>
+                    <div class="stat-card"><div class="stat-value">12,438</div><div class="stat-label">Quantum Links</div></div>
+                </div>
+                <div class="memory-visual">
+                    <div class="memory-node node-1"></div><div class="memory-node node-2"></div>
+                    <div class="memory-node node-3"></div><div class="memory-node node-4"></div>
+                    <div class="memory-node node-5"></div>
+                </div>
             </section>
 
-            <section class="quick-actions glass-card">
-                <button class="quick-action-btn" onclick="alert('🔍 بحث سيادي: جاهز')"><i class="fas fa-magnifying-glass"></i><span>بحث سيادي</span></button>
-                <button class="quick-action-btn" onclick="alert('📄 تقرير تنفيذي: سيتم إنشاؤه')"><i class="fas fa-file-lines"></i><span>تقرير تنفيذي</span></button>
-                <button class="quick-action-btn" onclick="activateOverclock()"><i class="fas fa-microchip"></i><span>وضع Overclock</span></button>
-                <button class="quick-action-btn" onclick="activateStealth()"><i class="fas fa-mask"></i><span>وضع Stealth</span></button>
-            </section>
+            <!-- Dashboard -->
+            <div class="section-header" style="margin-top: 20px;">
+                <h2><i class="fas fa-th-large"></i> Dashboard</h2>
+            </div>
+            <div class="dashboard-grid">
+                <section class="glass-card dashboard-card"><h3><i class="fas fa-chart-line"></i> Analysis Engine</h3><p>تحليل نصوص متقدم، استخراج النقاط الرئيسية، نماذج تنبؤية.</p><button class="btn-secondary" onclick="alert('🔍 محرك التحليل السيادي: جاهز')">فتح محرك التحليل</button></section>
+                <section class="glass-card dashboard-card"><h3><i class="fas fa-comments"></i> Language Interaction</h3><p>إعادة صياغة، دعم اللهجات، توليد محتوى رسمي.</p><button class="btn-secondary" onclick="alert('🗣️ وحدة التفاعل اللغوي: نشطة')">فتح وحدة التفاعل اللغوي</button></section>
+                <section class="glass-card dashboard-card"><h3><i class="fas fa-shield-alt"></i> Security Center</h3><p>مراقبة التهديدات، إدارة الصلاحيات، كشف الأنشطة.</p><button class="btn-secondary" onclick="alert('🛡️ مركز الأمان: آمن')">فتح مركز الأمان</button></section>
+                <section class="glass-card dashboard-card"><h3><i class="fas fa-robot"></i> Model Management</h3><p>تحديث النماذج، التدريب المحلي، إدارة الإصدارات.</p><button class="btn-secondary" onclick="alert('🤖 إدارة النماذج: متاحة')">إدارة النماذج</button></section>
+                <section class="glass-card dashboard-card"><h3><i class="fas fa-database"></i> Data Management</h3><p>إدارة مصادر البيانات، التشفير، التصنيف.</p><button class="btn-secondary" onclick="alert('💾 إدارة البيانات: آمنة')">فتح إدارة البيانات</button></section>
+                <section class="glass-card dashboard-card"><h3><i class="fas fa-plug"></i> System Integration</h3><p>ربط الأنظمة، API، قواعد البيانات.</p><button class="btn-secondary" onclick="alert('🔌 التكامل: جاهز')">إدارة التكامل</button></section>
+            </div>
         </main>
     </div>
 
     <script type="module">
         // Three.js Hologram Core
         import * as THREE from 'three';
-
         const canvas = document.getElementById('hologram-canvas');
         const scene = new THREE.Scene();
-        scene.background = null; // شفاف
+        scene.background = null;
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
         camera.position.set(0, 0, 5);
         const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
 
-        // كرة هولوغرافية سائلة
         const geometry = new THREE.SphereGeometry(1.2, 64, 64);
-        const material = new THREE.MeshStandardMaterial({
-            color: 0x00e5ff,
-            emissive: 0x1a00cc,
-            roughness: 0.2,
-            metalness: 0.9,
-            transparent: true,
-            opacity: 0.7,
-            wireframe: false
-        });
+        const material = new THREE.MeshStandardMaterial({ color: 0x00e5ff, emissive: 0x1a00cc, roughness: 0.2, metalness: 0.9, transparent: true, opacity: 0.7 });
         const coreSphere = new THREE.Mesh(geometry, material);
         scene.add(coreSphere);
 
-        // حلقة نيون دوارة حول الكرة
         const ringGeo = new THREE.TorusGeometry(1.5, 0.03, 64, 200);
         const ringMat = new THREE.MeshStandardMaterial({ color: 0x7a00ff, emissive: 0x3a00aa });
         const ring = new THREE.Mesh(ringGeo, ringMat);
         scene.add(ring);
 
-        // جسيمات عائمة (سائل هولوغرافي)
         const particleCount = 800;
         const particlesGeometry = new THREE.BufferGeometry();
         const positions = new Float32Array(particleCount * 3);
@@ -779,7 +994,6 @@
         const particles = new THREE.Points(particlesGeometry, particleMat);
         scene.add(particles);
 
-        // إضاءة ديناميكية
         const light = new THREE.PointLight(0x00e5ff, 1);
         light.position.set(2, 2, 3);
         scene.add(light);
@@ -795,7 +1009,6 @@
             ring.rotation.x = time * 0.6;
             ring.rotation.z = time * 0.4;
             particles.rotation.y = time * 0.1;
-            // حركة عائمة للجسيمات
             const positionsAttr = particlesGeometry.attributes.position.array;
             for (let i = 0; i < particleCount; i++) {
                 positionsAttr[i*3+1] += (Math.random() - 0.5) * 0.003;
@@ -803,11 +1016,9 @@
                 if (positionsAttr[i*3+1] < -2.5) positionsAttr[i*3+1] = 2.5;
             }
             particlesGeometry.attributes.position.needsUpdate = true;
-
             renderer.render(scene, camera);
         }
         animate();
-
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
@@ -816,36 +1027,120 @@
     </script>
 
     <script>
-        // الوظائف التفاعلية العامة
+        // ============================================================
+        // SkyOS v10 - Sovereign UI Controller (الكامل النهائي)
+        // ============================================================
+        let godModeActive = true;
+        let currentNeuralLoad = 62;
+
+        function updateCognitiveState(state) {
+            const el = document.getElementById('cognitiveState');
+            if (el) el.innerText = state;
+        }
+        function updateNeuralLoad(load) {
+            currentNeuralLoad = Math.min(100, Math.max(0, load));
+            const loadEl = document.getElementById('neuralLoad');
+            if (loadEl) loadEl.innerText = `${currentNeuralLoad}%`;
+            const energyFill = document.querySelector('.energy-fill');
+            if (energyFill) energyFill.style.width = `${currentNeuralLoad}%`;
+        }
+        function animateAICoreThinking() {
+            const core = document.querySelector('.ai-core-node');
+            if (core) {
+                core.style.boxShadow = '0 0 45px rgba(0,229,255,1), 0 0 90px rgba(124,58,237,1)';
+                core.style.transform = 'scale(1.15)';
+            }
+        }
+        function animateAICoreIdle() {
+            const core = document.querySelector('.ai-core-node');
+            if (core) {
+                core.style.boxShadow = '0 0 24px rgba(0,229,255,0.7), 0 0 50px rgba(124,58,237,0.6)';
+                core.style.transform = 'scale(1)';
+            }
+        }
+        function generateAIResponse(command) {
+            const lower = command.toLowerCase();
+            if (lower.includes('ذاكرة') || lower.includes('memory')) {
+                return `<span class="response-icon">🧠</span> <strong>تحليل الذاكرة الهولوغرافية:</strong><br>• مستوى التماسك: <span style="color:#00E5FF">94.7%</span><br>• الروابط الكمية النشطة: <span style="color:#00E5FF">12,438</span><br>• العقد الهولوغرافية: <span style="color:#00E5FF">847,291</span>`;
+            } else if (lower.includes('حالة') || lower.includes('status')) {
+                return `<span class="response-icon">📊</span> <strong>حالة النظام السيادي:</strong><br>• Core Engine: <span style="color:#22c55e">Operational</span><br>• Quantum Memory: <span style="color:#22c55e">Stable</span><br>• Neural Load: <span style="color:#00E5FF">${currentNeuralLoad}%</span>`;
+            } else if (lower.includes('أمان') || lower.includes('security')) {
+                return `<span class="response-icon">🛡️</span> <strong>مركز الأمان:</strong><br>• لا توجد تهديدات<br>• جدار الحماية الصفري: نشط`;
+            } else if (lower.includes('تقرير')) {
+                return `<span class="response-icon">📈</span> <strong>تقرير سيادي:</strong><br>• تحليل سياقي مكتمل<br>• تصنيف المخاطر: منخفض`;
+            } else {
+                return `<span class="response-icon">✨</span> <strong>تم استلام الأمر:</strong> "${command.substring(0,100)}"<br>جاري المعالجة. استخدم "تحليل الذاكرة" أو "حالة النظام".`;
+            }
+        }
+        function displayUserMessage(command) {
+            const container = document.querySelector('.main-container');
+            if (!container) return;
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'glass-card user-message';
+            msgDiv.style.borderRight = '4px solid #00E5FF';
+            msgDiv.style.marginTop = '20px';
+            msgDiv.innerHTML = `<div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;"><i class="fas fa-user-shield" style="color:#00E5FF;"></i><strong style="color:#00E5FF;">Sovereign Master</strong></div><p style="font-size:0.9rem;">${escapeHtml(command)}</p>`;
+            container.appendChild(msgDiv);
+            msgDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        function displayAIResponse(htmlResponse) {
+            const container = document.querySelector('.main-container');
+            if (!container) return;
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'glass-card ai-message';
+            msgDiv.style.borderRight = '4px solid #7C3AED';
+            msgDiv.style.marginTop = '14px';
+            msgDiv.innerHTML = `<div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;"><i class="fas fa-robot" style="color:#7C3AED;"></i><strong style="color:#7C3AED;">SkyOS Core</strong></div><div style="font-size:0.9rem; line-height:1.6;">${htmlResponse}</div>`;
+            container.appendChild(msgDiv);
+            msgDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        function escapeHtml(str) {
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
         window.sendCommand = function() {
             const input = document.getElementById('commandInput');
+            if (!input) return;
             const command = input.value.trim();
-            if(command) {
-                alert(`✅ الأمر السيادي تم استلامه:\n"${command}"\n\nسيتم تنفيذه فوراً بواسطة العقل السيادي.`);
-                // يمكن إضافة محاكاة لتغيير حالة النظام
-                document.getElementById('cognitiveState').innerText = 'Executing Command';
-                setTimeout(() => document.getElementById('cognitiveState').innerText = 'Hyper Analysis', 2000);
-            } else {
-                alert('✍️ يرجى كتابة أمر سيادي أولاً.');
-            }
+            if (!command) return;
+            displayUserMessage(command);
+            input.value = '';
+            animateAICoreThinking();
+            updateCognitiveState('Executing...');
+            setTimeout(() => {
+                const response = generateAIResponse(command);
+                displayAIResponse(response);
+                animateAICoreIdle();
+                updateCognitiveState('Hyper Analysis');
+            }, 800);
         };
         window.toggleVoiceCommand = function() {
-            alert('🎤 تم تفعيل الإدخال الصوتي (محاكاة). سيتم الاستماع لأمرك السيادي.');
+            alert('🎤 ميزة الأوامر الصوتية قيد التطوير في الإصدار القادم.');
         };
         window.openCommandTemplates = function() {
-            alert('📋 قوالب الأوامر السيادية:\n- تحليل شامل\n- تقرير حالة النظام\n- تفعيل الحماية القصوى\n- تشغيل الأتمتة العصبية');
+            const templates = ["تحليل شامل للذاكرة الهولوغرافية", "تقرير حالة النظام الكامل", "تفعيل الحماية القصوى", "تشغيل الأتمتة العصبية"];
+            let msg = "📋 قوالب الأوامر:\n";
+            templates.forEach((t,i)=>msg+=`${i+1}. ${t}\n`);
+            const choice = prompt(msg+"\nأدخل رقم القالب:");
+            if (choice && !isNaN(choice) && choice>=1 && choice<=templates.length) {
+                document.getElementById('commandInput').value = templates[parseInt(choice)-1];
+                sendCommand();
+            }
         };
-        window.quickCommand = function(cmdText) {
-            document.getElementById('commandInput').value = cmdText;
+        window.quickCommand = function(cmd) {
+            document.getElementById('commandInput').value = cmd;
             sendCommand();
         };
-        window.activateOverclock = function() {
-            alert('⚡ تفعيل وضع Overclock: زيادة سرعة المعالجة العصبية بنسبة 200%.');
-            document.getElementById('neuralLoad').innerText = '98%';
-        };
-        window.activateStealth = function() {
-            alert('🕶️ تفعيل وضع Stealth: إخفاء البصمة الرقمية وتقليل الإشعاع الهولوغرافي.');
-        };
+        // تحديث الطاقة الديناميكي
+        setInterval(() => {
+            let newLoad = currentNeuralLoad + (Math.random() * 4 - 2);
+            newLoad = Math.min(95, Math.max(45, newLoad));
+            updateNeuralLoad(Math.round(newLoad));
+        }, 8000);
     </script>
 </body>
 </html>
