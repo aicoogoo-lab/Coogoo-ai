@@ -1,129 +1,851 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SkyOS v10 • Sovereign Mind</title>
-    <link rel="stylesheet" href="/static/css/core.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>SkyOS v10 • العقل الرقمي الهولوغرافي السيادي | GodMode Ultra</title>
+    <!-- Font Awesome 6 (CDN) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&family=Orbitron:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Three.js لإنشاء الهولوغرام السائل التفاعلي -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js"
+            }
+        }
+    </script>
+    <style>
+        /* ---------- RESET & BASE ---------- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: radial-gradient(circle at 20% 30%, #0a0a1a 0%, #020208 100%);
+            font-family: 'Inter', sans-serif;
+            color: #eef5ff;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* ---------- الزجاج السائل السيادي ---------- */
+        .glass-card, .glass-header {
+            background: rgba(8, 12, 25, 0.4);
+            backdrop-filter: blur(16px) saturate(180%);
+            border: 1px solid rgba(0, 229, 255, 0.35);
+            border-radius: 2rem;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
+            transition: all 0.4s ease;
+        }
+
+        .glass-card:hover, .glass-header:hover {
+            border-color: #00e5ff;
+            box-shadow: 0 0 25px rgba(0,229,255,0.2);
+        }
+
+        /* ---------- الخلفية السائلة (Liquid Background) ---------- */
+        .liquid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            overflow: hidden;
+        }
+
+        .liquid-layer {
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at center, rgba(0,229,255,0.08) 0%, rgba(122,0,255,0.05) 100%);
+            border-radius: 40%;
+            animation: liquidMove 25s infinite linear;
+        }
+
+        .layer-1 { top: -50%; left: -50%; animation-duration: 30s; opacity: 0.6; }
+        .layer-2 { top: -30%; left: -20%; animation-duration: 40s; opacity: 0.4; animation-direction: reverse; }
+        .layer-3 { top: -70%; left: -70%; animation-duration: 50s; opacity: 0.3; }
+
+        @keyframes liquidMove {
+            0% { transform: rotate(0deg) translate(0%, 0%); }
+            100% { transform: rotate(360deg) translate(10%, 10%); }
+        }
+
+        /* ---------- التخطيط الرئيسي ---------- */
+        .main-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 1.5rem;
+            position: relative;
+            z-index: 5;
+        }
+
+        /* الهيدر */
+        .app-header {
+            margin-bottom: 2rem;
+            padding: 0.8rem 2rem;
+            border-radius: 2rem;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-core {
+            position: relative;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-orbit {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 1px solid #00e5ff;
+            border-radius: 50%;
+            animation: spin 6s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+            color: #00e5ff;
+            filter: drop-shadow(0 0 8px #00e5ff);
+        }
+
+        .logo-text h1 {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.6rem;
+            letter-spacing: 2px;
+        }
+
+        .version {
+            color: #00e5ff;
+            font-weight: 700;
+        }
+
+        .tagline {
+            font-size: 0.7rem;
+            opacity: 0.8;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .status-pill, .energy-mini, .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(0,0,0,0.5);
+            padding: 0.3rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.85rem;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #00ffaa;
+            box-shadow: 0 0 8px #00ffaa;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.4; transform: scale(0.8);}
+            100% { opacity: 1; transform: scale(1.2);}
+        }
+
+        .energy-bar {
+            width: 60px;
+            height: 4px;
+            background: #333;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .energy-fill {
+            display: block;
+            height: 100%;
+            width: 80%;
+            background: linear-gradient(90deg, #00e5ff, #7a00ff);
+        }
+
+        /* الشبكات */
+        .top-grid, .mid-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        /* العقل السيادي */
+        .ai-core {
+            padding: 1.5rem;
+        }
+
+        .section-header {
+            margin-bottom: 1.2rem;
+        }
+        .section-header h2 {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .subtitle {
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+
+        .ai-core-visual {
+            position: relative;
+            height: 200px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .ai-orbit {
+            position: absolute;
+            border: 1px solid rgba(0,229,255,0.5);
+            border-radius: 50%;
+            animation: orbitRotate 10s linear infinite;
+        }
+        .orbit-outer { width: 160px; height: 160px; border-width: 1px; }
+        .orbit-middle { width: 110px; height: 110px; animation-duration: 7s; }
+        .orbit-inner { width: 60px; height: 60px; animation-duration: 4s; }
+
+        @keyframes orbitRotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .ai-core-node {
+            position: relative;
+            width: 30px;
+            height: 30px;
+            background: #00e5ff;
+            border-radius: 50%;
+            box-shadow: 0 0 30px #00e5ff;
+            animation: corePulse 1.8s infinite;
+        }
+
+        @keyframes corePulse {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+
+        .ai-state-grid {
+            display: grid;
+            grid-template-columns: repeat(2,1fr);
+            gap: 1rem;
+        }
+
+        .ai-state-item {
+            background: rgba(0,0,0,0.4);
+            border-radius: 1rem;
+            padding: 0.5rem;
+            text-align: center;
+        }
+        .ai-state-label { font-size: 0.7rem; opacity: 0.7; display: block; }
+        .ai-state-value { font-weight: bold; font-family: monospace; }
+
+        /* مركز الأوامر */
+        .command-center {
+            padding: 1.5rem;
+        }
+        .command-input-wrapper {
+            background: rgba(0,0,0,0.3);
+            border-radius: 1.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        .command-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+        .command-mode, .command-context {
+            background: #00e5ff20;
+            padding: 0.2rem 0.8rem;
+            border-radius: 2rem;
+            font-size: 0.8rem;
+        }
+        .command-input {
+            width: 100%;
+            background: rgba(0,0,0,0.6);
+            border: 1px solid #00e5ff;
+            border-radius: 1rem;
+            padding: 0.8rem;
+            color: #fff;
+            font-family: monospace;
+            resize: vertical;
+        }
+        .command-actions {
+            display: flex;
+            gap: 0.8rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+        .btn-primary, .btn-ghost, .btn-secondary {
+            background: linear-gradient(135deg, #00e5ff, #7a00ff);
+            border: none;
+            padding: 0.5rem 1.2rem;
+            border-radius: 2rem;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-ghost {
+            background: transparent;
+            border: 1px solid #00e5ff;
+        }
+        .btn-secondary {
+            background: #2a2a4a;
+            margin-top: 1rem;
+        }
+        .quick-commands {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.7rem;
+        }
+        .quick-chip {
+            background: rgba(0,229,255,0.2);
+            border: 1px solid #00e5ff;
+            border-radius: 2rem;
+            padding: 0.3rem 1rem;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .quick-chip:hover {
+            background: #00e5ff40;
+        }
+
+        /* مصفوفة الطاقة */
+        .energy-matrix-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .energy-metric {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .metric-bar {
+            flex: 1;
+            height: 6px;
+            background: #333;
+            border-radius: 4px;
+        }
+        .metric-fill {
+            display: block;
+            height: 100%;
+            border-radius: 4px;
+        }
+        .metric-fill.mid { width: 62%; background: #ffaa00; }
+        .metric-fill.high { width: 85%; background: #00e5ff; }
+        .metric-fill.low { width: 30%; background: #00ffaa; }
+
+        /* الذاكرة الهولوغرافية */
+        .memory-stats {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .stat-card {
+            text-align: center;
+            background: rgba(0,0,0,0.3);
+            padding: 0.8rem;
+            border-radius: 1rem;
+            flex: 1;
+        }
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            font-family: monospace;
+        }
+        .memory-visual {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+        .memory-node {
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle, #00e5ff, #7a00ff);
+            border-radius: 50%;
+            animation: floatNode 3s infinite alternate;
+        }
+        @keyframes floatNode {
+            from { transform: translateY(0px); opacity: 0.6; }
+            to { transform: translateY(-10px); opacity: 1; }
+        }
+
+        /* لوحة التحكم السيادية (الشبكة) */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .dashboard-card {
+            padding: 1.2rem;
+        }
+        .dashboard-card h3 {
+            margin-bottom: 0.5rem;
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        .card-capabilities {
+            list-style: none;
+            margin: 1rem 0;
+        }
+        .card-capabilities li {
+            margin-bottom: 0.4rem;
+            font-size: 0.85rem;
+        }
+
+        /* شريط الإجراءات السريعة */
+        .quick-actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            padding: 0.8rem;
+            margin-top: 1rem;
+        }
+        .quick-action-btn {
+            background: none;
+            border: none;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.3rem;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        /* استجابة الجوال */
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 1rem;
+            }
+            .top-grid, .mid-grid {
+                grid-template-columns: 1fr;
+            }
+            .header-content {
+                flex-direction: column;
+                align-items: start;
+            }
+        }
+
+        /* اللوحة ثلاثية الأبعاد للهولوغرام الحي */
+        #hologram-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+        .content-layer {
+            position: relative;
+            z-index: 10;
+        }
+    </style>
 </head>
-<body>
-    <!-- Header -->
-    <header class="header">
-        <div class="header-content">
-            <div class="logo">
-                <i class="fas fa-infinity"></i>
-                <div>
-                    <h1>SkyOS <span class="version">v10</span></h1>
-                    <p class="tagline">العقل الرقمي الهولوغرافي السيادي</p>
-                </div>
-            </div>
+<body class="skyos-body">
 
-            <div class="header-status">
-                <div class="status-pill">
-                    <div class="status-dot online"></div>
-                    <span>Sovereign Mode Active</span>
-                </div>
-                <div class="user-info">
-                    <i class="fas fa-user-shield"></i>
-                    <span>Sovereign Master</span>
-                </div>
-            </div>
-        </div>
-    </header>
+    <!-- خلفية سائلة -->
+    <div class="liquid-bg">
+        <div class="liquid-layer layer-1"></div>
+        <div class="liquid-layer layer-2"></div>
+        <div class="liquid-layer layer-3"></div>
+    </div>
 
-    <main class="main-container">
+    <!-- قماش الهولوغرام ثلاثي الأبعاد -->
+    <canvas id="hologram-canvas"></canvas>
 
-        <!-- Command Center -->
-        <section class="command-center glass-card">
-            <div class="section-header">
-                <h2><i class="fas fa-terminal"></i> Command Center</h2>
-                <span class="subtitle">أعطِ أوامرك للعقل السيادي</span>
-            </div>
-
-            <div class="command-input-area">
-                <textarea id="commandInput" placeholder="اكتب أمرك هنا... مثال: حلل الذاكرة الهولوغرافية للأسبوع الماضي"></textarea>
-                <button onclick="sendCommand()" class="btn-primary">
-                    <i class="fas fa-paper-plane"></i>
-                    <span>إرسال</span>
-                </button>
-            </div>
-        </section>
-
-        <!-- Memory & Status Grid -->
-        <div class="grid-2">
-
-            <!-- Holographic Memory -->
-            <section class="glass-card">
-                <div class="section-header">
-                    <h2><i class="fas fa-atom"></i> Holographic Memory</h2>
-                </div>
-                <div class="memory-stats">
-                    <div class="stat">
-                        <div class="stat-value">847,291</div>
-                        <div class="stat-label">Nodes</div>
+    <div class="content-layer">
+        <header class="app-header glass-header">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-core">
+                        <span class="logo-orbit"></span>
+                        <i class="fas fa-infinity logo-icon"></i>
                     </div>
-                    <div class="stat">
-                        <div class="stat-value">94.7%</div>
-                        <div class="stat-label">Coherence</div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-value">12.4k</div>
-                        <div class="stat-label">Quantum Links</div>
+                    <div class="logo-text">
+                        <h1>SkyOS <span class="version">v10</span></h1>
+                        <p class="tagline">العقل الرقمي الهولوغرافي السيادي</p>
                     </div>
                 </div>
-                <div class="memory-visual">
-                    <div class="holo-ring"></div>
-                    <div class="holo-ring delay-1"></div>
-                    <div class="holo-ring delay-2"></div>
+                <div class="header-right">
+                    <div class="status-pill">
+                        <div class="status-dot online"></div>
+                        <span>Sovereign Mode</span>
+                    </div>
+                    <div class="energy-mini">
+                        <span class="energy-label">Energy</span>
+                        <div class="energy-bar">
+                            <span class="energy-fill high"></span>
+                        </div>
+                    </div>
+                    <div class="user-info">
+                        <i class="fas fa-user-shield"></i>
+                        <span>Sovereign Master</span>
+                    </div>
                 </div>
+            </div>
+        </header>
+
+        <main class="main-container">
+            <!-- الصف العلوي -->
+            <section class="top-grid">
+                <section class="ai-core glass-card">
+                    <div class="section-header">
+                        <h2><i class="fas fa-brain"></i> Sovereign AI Core</h2>
+                        <p class="subtitle">العقل السائل الهولوغرافي • حالة الوعي اللحظية</p>
+                    </div>
+                    <div class="ai-core-visual">
+                        <div class="ai-orbit orbit-outer"></div>
+                        <div class="ai-orbit orbit-middle"></div>
+                        <div class="ai-orbit orbit-inner"></div>
+                        <div class="ai-core-node">
+                            <span class="ai-pulse"></span>
+                            <span class="ai-core-glow"></span>
+                        </div>
+                    </div>
+                    <div class="ai-state-grid">
+                        <div class="ai-state-item">
+                            <span class="ai-state-label">Cognitive State</span>
+                            <span class="ai-state-value" id="cognitiveState">Hyper Analysis</span>
+                        </div>
+                        <div class="ai-state-item">
+                            <span class="ai-state-label">Awareness Level</span>
+                            <span class="ai-state-value">Sovereign</span>
+                        </div>
+                        <div class="ai-state-item">
+                            <span class="ai-state-label">Neural Load</span>
+                            <span class="ai-state-value" id="neuralLoad">62%</span>
+                        </div>
+                        <div class="ai-state-item">
+                            <span class="ai-state-label">Security Layer</span>
+                            <span class="ai-state-value">Zero-Trust Active</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="command-center glass-card">
+                    <div class="section-header">
+                        <h2><i class="fas fa-terminal"></i> Command Center</h2>
+                        <p class="subtitle">أرسل أوامرك مباشرة إلى العقل السيادي • GodMode + Ultra</p>
+                    </div>
+                    <div class="command-input-wrapper">
+                        <div class="command-meta">
+                            <span class="command-mode"><i class="fas fa-bolt"></i> GodMode</span>
+                            <span class="command-context"><i class="fas fa-globe"></i> Global Context Aware</span>
+                        </div>
+                        <textarea id="commandInput" class="command-input"
+                                  placeholder="اكتب أمرك السيادي هنا... مثال: فعّل تحليل سيادي كامل لكل العمليات خلال آخر 24 ساعة مع تصنيف المخاطر حسب الأولوية."
+                                  rows="4"></textarea>
+                        <div class="command-actions">
+                            <button onclick="sendCommand()" class="btn-primary">
+                                <i class="fas fa-paper-plane"></i>
+                                <span>إرسال الأمر</span>
+                            </button>
+                            <button class="btn-ghost" onclick="toggleVoiceCommand()">
+                                <i class="fas fa-microphone"></i>
+                                <span>أمر صوتي</span>
+                            </button>
+                            <button class="btn-ghost" onclick="openCommandTemplates()">
+                                <i class="fas fa-wand-magic-sparkles"></i>
+                                <span>قوالب أوامر</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="quick-commands">
+                        <button class="quick-chip" onclick="quickCommand('تحليل شامل للذاكرة الهولوغرافية')">
+                            <i class="fas fa-atom"></i> تحليل الذاكرة
+                        </button>
+                        <button class="quick-chip" onclick="quickCommand('تفعيل وضع الحماية القصوى')">
+                            <i class="fas fa-shield-halved"></i> حماية قصوى
+                        </button>
+                        <button class="quick-chip" onclick="quickCommand('إنشاء تقرير سيادي تنفيذي')">
+                            <i class="fas fa-file-shield"></i> تقرير سيادي
+                        </button>
+                        <button class="quick-chip" onclick="quickCommand('تشغيل أتمتة عصبية للمهام الحرجة')">
+                            <i class="fas fa-network-wired"></i> أتمتة عصبية
+                        </button>
+                    </div>
+                </section>
             </section>
 
-            <!-- System Status -->
-            <section class="glass-card">
-                <div class="section-header">
-                    <h2><i class="fas fa-microchip"></i> System Status</h2>
-                </div>
-                <div class="status-grid">
-                    <div class="status-item">
-                        <div class="status-label">Core Engine</div>
-                        <div class="status-value online">Operational</div>
+            <section class="mid-grid">
+                <section class="glass-card system-overview-card">
+                    <div class="section-header">
+                        <h2><i class="fas fa-tachometer-alt"></i> System Overview</h2>
+                        <p class="subtitle">نظرة سيادية على حالة العقل الرقمي</p>
                     </div>
-                    <div class="status-item">
-                        <div class="status-label">Quantum Memory</div>
-                        <div class="status-value online">Stable</div>
+                    <div class="overview-grid" style="display:grid; gap:1rem;">
+                        <div class="overview-item">
+                            <div class="overview-label">Core Engine</div>
+                            <div class="overview-value online">Operational</div>
+                            <div class="overview-sub">Neural Core v10.4 • Stable</div>
+                        </div>
+                        <div class="overview-item">
+                            <div class="overview-label">Quantum Memory</div>
+                            <div class="overview-value online">Stable</div>
+                            <div class="overview-sub">Multi-Layer Holographic Storage</div>
+                        </div>
+                        <div class="overview-item">
+                            <div class="overview-label">Self-Evolution</div>
+                            <div class="overview-value warning">Active</div>
+                            <div class="overview-sub">Adaptive Learning Enabled</div>
+                        </div>
+                        <div class="overview-item">
+                            <div class="overview-label">Security Status</div>
+                            <div class="overview-value online">Secure</div>
+                            <div class="overview-sub">Zero-Trust • Multi-Factor Shield</div>
+                        </div>
                     </div>
-                    <div class="status-item">
-                        <div class="status-label">Predictive Engine</div>
-                        <div class="status-value online">Active</div>
+                </section>
+
+                <section class="glass-card energy-matrix-card">
+                    <div class="section-header">
+                        <h2><i class="fas fa-bolt"></i> Energy Matrix</h2>
+                        <p class="subtitle">مصفوفة الطاقة العصبية والهولوغرافية</p>
                     </div>
-                    <div class="status-item">
-                        <div class="status-label">Self-Evolution</div>
-                        <div class="status-value warning">Learning</div>
+                    <div class="energy-matrix-grid">
+                        <div class="energy-metric">
+                            <span class="metric-label">Neural Load</span>
+                            <div class="metric-bar"><span class="metric-fill mid" style="width:62%"></span></div>
+                            <span class="metric-value">62%</span>
+                        </div>
+                        <div class="energy-metric">
+                            <span class="metric-label">Cognitive Overclock</span>
+                            <div class="metric-bar"><span class="metric-fill high" style="width:85%"></span></div>
+                            <span class="metric-value">Hyper</span>
+                        </div>
+                        <div class="energy-metric">
+                            <span class="metric-label">Security Shield</span>
+                            <div class="metric-bar"><span class="metric-fill high" style="width:100%"></span></div>
+                            <span class="metric-value">Max</span>
+                        </div>
+                        <div class="energy-metric">
+                            <span class="metric-label">System Temperature</span>
+                            <div class="metric-bar"><span class="metric-fill low" style="width:30%"></span></div>
+                            <span class="metric-value">Cool</span>
+                        </div>
                     </div>
-                </div>
+                </section>
+
+                <section class="glass-card memory-card">
+                    <div class="section-header">
+                        <h2><i class="fas fa-atom"></i> Holographic Memory</h2>
+                        <p class="subtitle">بنية الذاكرة الكمية الهولوغرافية</p>
+                    </div>
+                    <div class="memory-stats">
+                        <div class="stat-card">
+                            <div class="stat-value">847,291</div>
+                            <div class="stat-label">Memory Nodes</div>
+                            <div class="stat-sub">Active Holographic Nodes</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">94.7%</div>
+                            <div class="stat-label">Coherence Level</div>
+                            <div class="stat-sub">Quantum Coherence Stability</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">12,438</div>
+                            <div class="stat-label">Quantum Links</div>
+                            <div class="stat-sub">Cross-Domain Neural Links</div>
+                        </div>
+                    </div>
+                    <div class="memory-visual">
+                        <div class="memory-node node-1"></div>
+                        <div class="memory-node node-2"></div>
+                        <div class="memory-node node-3"></div>
+                        <div class="memory-node node-4"></div>
+                        <div class="memory-node node-5"></div>
+                    </div>
+                </section>
             </section>
 
-        </div>
+            <section class="dashboard-grid">
+                <!-- الأقسام التسعة الأساسية -->
+                <section class="glass-card dashboard-card"><h3><i class="fas fa-chart-line"></i> Analysis Engine</h3><p>تحليل نصوص متقدم • استخراج النقاط • نماذج تنبؤية سيادية</p><ul class="card-capabilities"><li><i class="fas fa-check"></i> تحليل سياقي متعدد الطبقات</li><li><i class="fas fa-check"></i> تصنيف المخاطر والأولويات</li><li><i class="fas fa-check"></i> تقارير تنفيذية فورية</li></ul><button class="btn-secondary" onclick="alert('🔍 محرك التحليل السيادي: جاهز لتحليل شامل')">فتح محرك التحليل</button></section>
+                <section class="glass-card dashboard-card"><h3><i class="fas fa-comments"></i> Language Interaction</h3><p>محادثة سيادية • دعم اللهجات • توليد محتوى رسمي وتنفيذي</p><ul class="card-capabilities"><li><i class="fas fa-check"></i> إعادة صياغة سيادية</li><li><i class="fas fa-check"></i> توليد خطابات وتقارير</li><li><i class="fas fa-check"></i> دعم لغات متعددة</li></ul><button class="btn-secondary" onclick="alert('🗣️ وحدة التفاعل اللغوي: جاهزة للحوار السيادي')">فتح وحدة التفاعل اللغوي</button></section>
+                <section class="glass-card dashboard-card"><h3><i class="fas fa-shield-alt"></i> Security Center</h3><p>مراقبة التهديدات • إدارة الصلاحيات • سجلات الأمان السيادي</p><ul class="card-capabilities"><li><i class="fas fa-check"></i> كشف الأنشطة غير الطبيعية</li><li><i class="fas fa-check"></i> إدارة أدوار وصلاحيات دقيقة</li><li><i class="fas fa-check"></i> تقارير أمان لحظية</li></ul><button class="btn-secondary" onclick="alert('🛡️ مركز الأمان: جميع الطبقات نشطة')">فتح مركز الأمان</button></section>
+                <section class="glass-card dashboard-card"><h3><i class="fas fa-robot"></i> Model Management</h3><p>تحديث النماذج • التدريب المحلي • إدارة الإصدارات السيادية</p><ul class="card-capabilities"><li><i class="fas fa-check"></i> إدارة نسخ النماذج</li><li><i class="fas fa-check"></i> Fine-tuning محلي</li><li><i class="fas fa-check"></i> سياسات نشر آمنة</li></ul><button class="btn-secondary" onclick="alert('🤖 إدارة النماذج: الإصدار الرئيسي نشط')">إدارة النماذج</button></section>
+                <section class="glass-card dashboard-card"><h3><i class="fas fa-database"></i> Data Management</h3><p>إدارة مصادر البيانات • التشفير • سياسات الحذف السيادي</p><ul class="card-capabilities"><li><i class="fas fa-check"></i> تصنيف البيانات حسب الحساسية</li><li><i class="fas fa-check"></i> تشفير متعدد الطبقات</li><li><i class="fas fa-check"></i> سياسات حذف آمنة</li></ul><button class="btn-secondary" onclick="alert('💾 إدارة البيانات: متاحة بالكامل')">إدارة البيانات</button></section>
+                <section class="glass-card dashboard-card"><h3><i class="fas fa-plug"></i> Integrations</h3><p>التكامل مع الأنظمة • قواعد البيانات • واجهات API</p><ul class="card-capabilities"><li><i class="fas fa-check"></i> ربط مع أنظمة خارجية</li><li><i class="fas fa-check"></i> إدارة مفاتيح الوصول</li><li><i class="fas fa-check"></i> مراقبة الاتصالات</li></ul><button class="btn-secondary" onclick="alert('🔌 إدارة التكاملات: جاهزة للتوصيل')">إدارة التكاملات</button></section>
+                <section class="glass-card dashboard-card"><h3><i class="fas fa-users-cog"></i> Users & Permissions</h3><p>إدارة المستخدمين • الأدوار • صلاحيات الوصول السيادي</p><ul class="card-capabilities"><li><i class="fas fa-check"></i> إنشاء مستخدمين سياديين</li><li><i class="fas fa-check"></i> أدوار متعددة المستويات</li><li><i class="fas fa-check"></i> مراقبة جلسات الدخول</li></ul><button class="btn-secondary" onclick="alert('👥 إدارة المستخدمين: صلاحيات سيادية محفوظة')">إدارة المستخدمين</button></section>
+                <section class="glass-card dashboard-card"><h3><i class="fas fa-list-check"></i> Activity Log</h3><p>سجل العمليات • التغييرات • التنبيهات السيادية</p><ul class="card-capabilities"><li><i class="fas fa-check"></i> تتبع كل الأوامر</li><li><i class="fas fa-check"></i> عرض الأحداث الحرجة</li><li><i class="fas fa-check"></i> تصدير تقارير</li></ul><button class="btn-secondary" onclick="alert('📋 سجل العمليات: آخر 100 حدث معروض')">عرض السجل</button></section>
+                <section class="glass-card dashboard-card"><h3><i class="fas fa-network-wired"></i> Neural Automations</h3><p>أتمتة عصبية سيادية • مهام ذكية • تشغيل تلقائي مشروط</p><ul class="card-capabilities"><li><i class="fas fa-check"></i> إنشاء سيناريوهات أتمتة</li><li><i class="fas fa-check"></i> تشغيل مهام عند شروط محددة</li><li><i class="fas fa-check"></i> مراقبة الأتمتة لحظيًا</li></ul><button class="btn-secondary" onclick="alert('🧠 الأتمتة العصبية: نشطة ومراقبة')">إدارة الأتمتة العصبية</button></section>
+            </section>
 
-        <!-- Live Mind View -->
-        <section class="glass-card mind-view">
-            <div class="section-header">
-                <h2><i class="fas fa-eye"></i> Live Mind View</h2>
-                <span class="subtitle">التمثيل البصري للعقل السيادي</span>
-            </div>
-            <div class="mind-canvas-container">
-                <canvas id="mindCanvas" width="800" height="400"></canvas>
-                <div class="canvas-overlay">
-                    <p>Three.js Holographic View</p>
-                    <small>سيتم تفعيل العرض ثلاثي الأبعاد قريباً</small>
-                </div>
-            </div>
-        </section>
+            <section class="quick-actions glass-card">
+                <button class="quick-action-btn" onclick="alert('🔍 بحث سيادي: جاهز')"><i class="fas fa-magnifying-glass"></i><span>بحث سيادي</span></button>
+                <button class="quick-action-btn" onclick="alert('📄 تقرير تنفيذي: سيتم إنشاؤه')"><i class="fas fa-file-lines"></i><span>تقرير تنفيذي</span></button>
+                <button class="quick-action-btn" onclick="activateOverclock()"><i class="fas fa-microchip"></i><span>وضع Overclock</span></button>
+                <button class="quick-action-btn" onclick="activateStealth()"><i class="fas fa-mask"></i><span>وضع Stealth</span></button>
+            </section>
+        </main>
+    </div>
 
-    </main>
+    <script type="module">
+        // Three.js Hologram Core
+        import * as THREE from 'three';
 
-    <script src="/static/js/core.js"></script>
-    <script src="/static/js/ui.js"></script>
+        const canvas = document.getElementById('hologram-canvas');
+        const scene = new THREE.Scene();
+        scene.background = null; // شفاف
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 0, 5);
+        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+
+        // كرة هولوغرافية سائلة
+        const geometry = new THREE.SphereGeometry(1.2, 64, 64);
+        const material = new THREE.MeshStandardMaterial({
+            color: 0x00e5ff,
+            emissive: 0x1a00cc,
+            roughness: 0.2,
+            metalness: 0.9,
+            transparent: true,
+            opacity: 0.7,
+            wireframe: false
+        });
+        const coreSphere = new THREE.Mesh(geometry, material);
+        scene.add(coreSphere);
+
+        // حلقة نيون دوارة حول الكرة
+        const ringGeo = new THREE.TorusGeometry(1.5, 0.03, 64, 200);
+        const ringMat = new THREE.MeshStandardMaterial({ color: 0x7a00ff, emissive: 0x3a00aa });
+        const ring = new THREE.Mesh(ringGeo, ringMat);
+        scene.add(ring);
+
+        // جسيمات عائمة (سائل هولوغرافي)
+        const particleCount = 800;
+        const particlesGeometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(particleCount * 3);
+        for (let i = 0; i < particleCount; i++) {
+            positions[i*3] = (Math.random() - 0.5) * 8;
+            positions[i*3+1] = (Math.random() - 0.5) * 6;
+            positions[i*3+2] = (Math.random() - 0.5) * 4 - 2;
+        }
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        const particleMat = new THREE.PointsMaterial({ color: 0x00e5ff, size: 0.05, transparent: true, opacity: 0.5 });
+        const particles = new THREE.Points(particlesGeometry, particleMat);
+        scene.add(particles);
+
+        // إضاءة ديناميكية
+        const light = new THREE.PointLight(0x00e5ff, 1);
+        light.position.set(2, 2, 3);
+        scene.add(light);
+        const ambientLight = new THREE.AmbientLight(0x111122);
+        scene.add(ambientLight);
+
+        let time = 0;
+        function animate() {
+            requestAnimationFrame(animate);
+            time += 0.008;
+            coreSphere.rotation.y = time * 0.5;
+            coreSphere.rotation.x = Math.sin(time * 0.3) * 0.2;
+            ring.rotation.x = time * 0.6;
+            ring.rotation.z = time * 0.4;
+            particles.rotation.y = time * 0.1;
+            // حركة عائمة للجسيمات
+            const positionsAttr = particlesGeometry.attributes.position.array;
+            for (let i = 0; i < particleCount; i++) {
+                positionsAttr[i*3+1] += (Math.random() - 0.5) * 0.003;
+                if (positionsAttr[i*3+1] > 2.5) positionsAttr[i*3+1] = -2.5;
+                if (positionsAttr[i*3+1] < -2.5) positionsAttr[i*3+1] = 2.5;
+            }
+            particlesGeometry.attributes.position.needsUpdate = true;
+
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+
+    <script>
+        // الوظائف التفاعلية العامة
+        window.sendCommand = function() {
+            const input = document.getElementById('commandInput');
+            const command = input.value.trim();
+            if(command) {
+                alert(`✅ الأمر السيادي تم استلامه:\n"${command}"\n\nسيتم تنفيذه فوراً بواسطة العقل السيادي.`);
+                // يمكن إضافة محاكاة لتغيير حالة النظام
+                document.getElementById('cognitiveState').innerText = 'Executing Command';
+                setTimeout(() => document.getElementById('cognitiveState').innerText = 'Hyper Analysis', 2000);
+            } else {
+                alert('✍️ يرجى كتابة أمر سيادي أولاً.');
+            }
+        };
+        window.toggleVoiceCommand = function() {
+            alert('🎤 تم تفعيل الإدخال الصوتي (محاكاة). سيتم الاستماع لأمرك السيادي.');
+        };
+        window.openCommandTemplates = function() {
+            alert('📋 قوالب الأوامر السيادية:\n- تحليل شامل\n- تقرير حالة النظام\n- تفعيل الحماية القصوى\n- تشغيل الأتمتة العصبية');
+        };
+        window.quickCommand = function(cmdText) {
+            document.getElementById('commandInput').value = cmdText;
+            sendCommand();
+        };
+        window.activateOverclock = function() {
+            alert('⚡ تفعيل وضع Overclock: زيادة سرعة المعالجة العصبية بنسبة 200%.');
+            document.getElementById('neuralLoad').innerText = '98%';
+        };
+        window.activateStealth = function() {
+            alert('🕶️ تفعيل وضع Stealth: إخفاء البصمة الرقمية وتقليل الإشعاع الهولوغرافي.');
+        };
+    </script>
 </body>
 </html>
