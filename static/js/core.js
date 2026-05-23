@@ -1,5 +1,6 @@
 // ======================================================
-// سماء • المحرك الأساسي (النسخة المتكاملة الكاملة)
+// سماء • المحرك الأساسي (النسخة النهائية المتكاملة)
+// الإصدار 2.0 - يشمل جميع الميزات المطلوبة
 // ======================================================
 
 const SkyCore = {
@@ -8,21 +9,47 @@ const SkyCore = {
     sessions: [],
     isProcessing: false,
     useMockApi: true,
-    currentTheme: 'galaxy', // galaxy, dark, focus
+    currentTheme: 'galaxy',
     archivedSessionsOffset: 0,
     sessionsPerPage: 10,
     imagePreview: null,
+    imageFile: null,
     lastTap: null,
-    tapTime: 0
+    tapTime: 0,
+    isTyping: false,
+    typingTimeout: null
   },
 
+  // ==================== التهيئة ====================
   init() {
     this.bindEvents();
     this.loadSessionsFromStorage();
     this.initFirstSession();
     this.initTheme();
     this.initGalaxyBackground();
+    this.initKeyboardFix();
     if (window.SkyCharacters) console.log('✅ الشخصيات الحية متصلة');
+    console.log('✅ سماء جاهزة | الإصدار 2.0');
+  },
+
+  // إصلاح مشكلة لوحة المفاتيح على الجوال
+  initKeyboardFix() {
+    const textarea = document.getElementById('user-input');
+    if (!textarea) return;
+    
+    textarea.addEventListener('focus', () => {
+      setTimeout(() => {
+        textarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300);
+    });
+    
+    // إعادة تعيين ارتفاع الشاشة عند فتح/إغلاق لوحة المفاتيح
+    window.visualViewport?.addEventListener('resize', () => {
+      const chatMessages = document.getElementById('chat-messages');
+      if (chatMessages) {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+    });
   },
 
   bindEvents() {
@@ -47,6 +74,7 @@ const SkyCore = {
         }
       });
       userInput.addEventListener('paste', (e) => this.handleImagePaste(e));
+      userInput.addEventListener('input', () => this.handleTyping());
     }
 
     if (menuToggle && sidebar) {
@@ -61,10 +89,34 @@ const SkyCore = {
     window.addEventListener('mind-mood-change', (e) => {
       const moodSpan = document.querySelector('#mind-mood-indicator span');
       if (moodSpan) {
-        const moodText = { happy: 'سعيد', sad: 'حزين', shy: 'خجول', annoyed: 'منزعج', surprised: 'مندهش', idle: 'محايد' };
-        moodSpan.textContent = moodText[e.detail.mood] || 'محايد';
+        const moodText = { 
+          happy: '😊 سعيد', 
+          sad: '😢 حزين', 
+          shy: '😊 خجول', 
+          annoyed: '😤 منزعج', 
+          surprised: '😲 مندهش', 
+          idle: '🙂 محايد' 
+        };
+        moodSpan.textContent = moodText[e.detail.mood] || '🙂 محايد';
       }
     });
+    
+    // استماع لحدث الكتابة من الشخصيات
+    window.addEventListener('characters-typing', () => {
+      if (window.SkyCharacters) SkyCharacters.onTyping(true);
+    });
+  },
+  
+  handleTyping() {
+    if (this.state.typingTimeout) clearTimeout(this.state.typingTimeout);
+    if (!this.state.isTyping) {
+      this.state.isTyping = true;
+      if (window.SkyCharacters) SkyCharacters.onTyping(true);
+    }
+    this.state.typingTimeout = setTimeout(() => {
+      this.state.isTyping = false;
+      if (window.SkyCharacters) SkyCharacters.onTyping(false);
+    }, 1000);
   },
 
   // ==================== الثيمات والخلفية ====================
@@ -82,11 +134,7 @@ const SkyCore = {
       const btn = document.createElement('div');
       btn.id = 'theme-toggle';
       btn.innerHTML = '<i class="fas fa-palette"></i>';
-      btn.style.cursor = 'pointer';
-      btn.style.marginRight = '10px';
-      btn.style.padding = '4px 8px';
-      btn.style.borderRadius = '20px';
-      btn.style.background = 'rgba(255,255,255,0.1)';
+      btn.style.cssText = 'cursor:pointer; margin-right:10px; padding:4px 10px; border-radius:20px; background:rgba(255,255,255,0.1); transition:all 0.2s';
       btn.title = 'تبديل الثيم';
       btn.onclick = () => this.cycleTheme();
       metricsDiv.appendChild(btn);
@@ -100,7 +148,7 @@ const SkyCore = {
     this.state.currentTheme = themes[idx];
     localStorage.setItem('sky_theme', this.state.currentTheme);
     this.applyTheme();
-    if (window.SkyUI) SkyUI.showToast(`الثيم: ${this.state.currentTheme === 'galaxy' ? 'المجرة' : this.state.currentTheme === 'dark' ? 'الليلي' : 'التركيز'}`, 'info');
+    if (window.SkyUI) SkyUI.showToast(`🎨 الثيم: ${this.state.currentTheme === 'galaxy' ? 'المجرة' : this.state.currentTheme === 'dark' ? 'الليلي' : 'التركيز'}`, 'info');
   },
 
   applyTheme() {
@@ -108,17 +156,17 @@ const SkyCore = {
     body.classList.remove('theme-galaxy', 'theme-dark', 'theme-focus');
     body.classList.add(`theme-${this.state.currentTheme}`);
     
-    // تطبيق ألوان الخلفية
     if (this.state.currentTheme === 'galaxy') {
       this.startGalaxyAnimation();
       document.body.style.background = '#050507';
-    } else if (this.state.currentTheme === 'dark') {
+    } else {
       this.stopGalaxyAnimation();
-      document.body.style.background = '#0a0a0f';
-    } else if (this.state.currentTheme === 'focus') {
-      this.stopGalaxyAnimation();
-      document.body.style.background = '#f5f5f7';
-      document.body.style.color = '#1a1a2e';
+      if (this.state.currentTheme === 'dark') {
+        document.body.style.background = '#0a0a0f';
+      } else if (this.state.currentTheme === 'focus') {
+        document.body.style.background = '#f5f5f7';
+        document.body.style.color = '#1a1a2e';
+      }
     }
   },
 
@@ -130,19 +178,14 @@ const SkyCore = {
     if (window.galaxyInterval) return;
     const canvas = document.createElement('canvas');
     canvas.id = 'galaxy-canvas';
-    canvas.style.position = 'fixed';
-    canvas.style.top = '0';
-    canvas.style.left = '0';
-    canvas.style.width = '100%';
-    canvas.style.height = '100%';
-    canvas.style.zIndex = '-2';
-    canvas.style.pointerEvents = 'none';
+    canvas.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; z-index:-2; pointer-events:none';
     document.body.prepend(canvas);
     
     const ctx = canvas.getContext('2d');
     let width, height;
     const stars = [];
     let animationId;
+    let particles = [];
 
     function resize() {
       width = window.innerWidth;
@@ -150,19 +193,34 @@ const SkyCore = {
       canvas.width = width;
       canvas.height = height;
       initStars();
+      initParticles();
     }
 
     function initStars() {
       stars.length = 0;
-      for (let i = 0; i < 400; i++) {
+      for (let i = 0; i < 300; i++) {
         stars.push({
           x: Math.random() * width,
           y: Math.random() * height,
           radius: Math.random() * 1.5 + 0.5,
           alpha: Math.random() * 0.5 + 0.2,
-          speedX: (Math.random() - 0.5) * 0.2,
+          speedX: (Math.random() - 0.5) * 0.15,
           speedY: (Math.random() - 0.5) * 0.1,
           twinkle: Math.random() * Math.PI * 2
+        });
+      }
+    }
+    
+    function initParticles() {
+      particles = [];
+      for (let i = 0; i < 50; i++) {
+        particles.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          radius: Math.random() * 2 + 1,
+          alpha: Math.random() * 0.3,
+          speedX: (Math.random() - 0.5) * 0.05,
+          speedY: (Math.random() - 0.5) * 0.05
         });
       }
     }
@@ -171,20 +229,35 @@ const SkyCore = {
       if (!ctx || !canvas.parentNode) return;
       ctx.clearRect(0, 0, width, height);
       
-      // سدم دوارة
       const time = Date.now() * 0.0003;
-      for (let i = 0; i < 8; i++) {
+      
+      // سدم متحركة ملونة
+      for (let i = 0; i < 6; i++) {
         const gradient = ctx.createLinearGradient(
-          width/2 + Math.sin(time + i) * 80,
-          height/2 + Math.cos(time * 0.7 + i) * 80,
-          width/2 + Math.cos(time * 0.3 + i) * 150,
-          height/2 + Math.sin(time * 0.5 + i) * 150
+          width/2 + Math.sin(time + i) * 100,
+          height/2 + Math.cos(time * 0.6 + i) * 100,
+          width/2 + Math.cos(time * 0.4 + i) * 180,
+          height/2 + Math.sin(time * 0.5 + i) * 180
         );
-        gradient.addColorStop(0, `rgba(99, 102, 241, ${0.04 + Math.sin(time + i) * 0.02})`);
-        gradient.addColorStop(0.5, `rgba(167, 139, 250, ${0.02 + Math.cos(time * 0.8 + i) * 0.01})`);
+        gradient.addColorStop(0, `rgba(99, 102, 241, ${0.05 + Math.sin(time + i) * 0.02})`);
+        gradient.addColorStop(0.5, `rgba(167, 139, 250, ${0.03 + Math.cos(time * 0.7 + i) * 0.01})`);
         gradient.addColorStop(1, `rgba(236, 72, 153, 0.01)`);
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, width, height);
+      }
+      
+      // جسيمات ناعمة
+      for (let p of particles) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(167, 139, 250, ${p.alpha * 0.3})`;
+        ctx.fill();
+        p.x += p.speedX;
+        p.y += p.speedY;
+        if (p.x > width) p.x = 0;
+        if (p.x < 0) p.x = width;
+        if (p.y > height) p.y = 0;
+        if (p.y < 0) p.y = height;
       }
       
       // نجوم متحركة
@@ -251,18 +324,22 @@ const SkyCore = {
     reader.onload = (ev) => {
       const previewDiv = document.createElement('div');
       previewDiv.className = 'image-preview';
-      previewDiv.style.cssText = 'display:flex; align-items:center; gap:8px; padding:8px; background:rgba(0,0,0,0.5); border-radius:12px; margin-bottom:8px;';
       previewDiv.innerHTML = `
-        <img src="${ev.target.result}" style="height:50px; width:50px; object-fit:cover; border-radius:8px;">
-        <span style="flex:1; font-size:12px;">${file.name}</span>
-        <button class="remove-image" style="background:none; border:none; color:#f87171; cursor:pointer;"><i class="fas fa-times-circle"></i></button>
+        <img src="${ev.target.result}" alt="معاينة">
+        <span>${file.name.length > 20 ? file.name.substring(0, 20) + '...' : file.name}</span>
+        <button class="remove-image" title="إزالة"><i class="fas fa-times-circle"></i></button>
       `;
       const inputArea = document.querySelector('.input-area');
       const existingPreview = document.querySelector('.image-preview');
       if (existingPreview) existingPreview.remove();
       inputArea.insertBefore(previewDiv, inputArea.firstChild);
-      previewDiv.querySelector('.remove-image').onclick = () => previewDiv.remove();
+      previewDiv.querySelector('.remove-image').onclick = () => {
+        previewDiv.remove();
+        this.state.imagePreview = null;
+        this.state.imageFile = null;
+      };
       this.state.imagePreview = ev.target.result;
+      this.state.imageFile = file;
     };
     reader.readAsDataURL(file);
   },
@@ -272,7 +349,7 @@ const SkyCore = {
     const id = 'session_' + Date.now();
     const newSession = {
       id,
-      title: 'جلسة جديدة',
+      title: '✨ جلسة جديدة',
       messages: [],
       createdAt: new Date().toISOString()
     };
@@ -290,10 +367,9 @@ const SkyCore = {
       SkyMind.updateMetricsUI();
     }
     
-    // رسالة ترحيب
     setTimeout(() => {
       if (window.SkyUI) {
-        const welcome = "🌌 مرحباً بك في سماء! أنا تراس، وهذه حكيم ولطيفة. نحن هنا لنستمع ونتفاعل معك. كيف تشعر اليوم؟";
+        const welcome = "🌌 مرحباً بك في سماء!\n\nأنا تراس (الوردي)، وهذه حكيم (الأخضر) ولطيفة (الأبيض). نحن هنا لنستمع ونتفاعل معك.\n\nكيف تشعر اليوم؟";
         this.addMessageWithActions('assistant', welcome);
         const current = this.state.sessions.find(s => s.id === this.state.currentSessionId);
         if (current) current.messages.push({ role: 'assistant', content: welcome, timestamp: Date.now() });
@@ -327,7 +403,7 @@ const SkyCore = {
       const div = document.createElement('div');
       div.className = `session-item ${session.id === this.state.currentSessionId ? 'active' : ''}`;
       div.innerHTML = `<span><i class="far fa-comment"></i> ${session.title.substring(0, 25)}</span>
-                       <button class="delete-btn"><i class="fas fa-trash"></i></button>`;
+                       <button class="delete-btn" title="حذف"><i class="fas fa-trash"></i></button>`;
       div.addEventListener('click', (e) => { if (!e.target.closest('.delete-btn')) this.switchSession(session.id); });
       const delBtn = div.querySelector('.delete-btn');
       delBtn.addEventListener('click', (e) => { e.stopPropagation(); this.deleteSession(session.id); });
@@ -337,8 +413,7 @@ const SkyCore = {
     if (this.state.sessions.length > this.state.sessionsPerPage + this.state.archivedSessionsOffset) {
       const loadMore = document.createElement('div');
       loadMore.className = 'load-more-sessions';
-      loadMore.style.cssText = 'text-align:center; padding:10px; color:#a78bfa; cursor:pointer; font-size:0.8rem; margin-top:10px;';
-      loadMore.innerHTML = '<i class="fas fa-chevron-down"></i> تحميل المزيد';
+      loadMore.innerHTML = '<i class="fas fa-chevron-down"></i> تحميل المزيد من الجلسات';
       loadMore.onclick = () => {
         this.state.archivedSessionsOffset += this.state.sessionsPerPage;
         this.renderSessions();
@@ -356,6 +431,7 @@ const SkyCore = {
     this.renderSessions();
     this.loadCurrentSessionMessages();
     this.updateHeaderTitle();
+    if (window.SkyUI) SkyUI.showToast('🗑️ تم حذف الجلسة', 'info');
   },
 
   loadCurrentSessionMessages() {
@@ -372,10 +448,9 @@ const SkyCore = {
 
   updateHeaderTitle() {
     const current = this.state.sessions.find(s => s.id === this.state.currentSessionId);
-    const header = document.querySelector('.mind-status div:first-child div');
-    if (header && current) {
-      const titleSpan = header.querySelector('span:last-child');
-      if (titleSpan) titleSpan.textContent = current.title.substring(0, 30);
+    const titleElement = document.querySelector('.mind-status div:first-child div span:last-child');
+    if (titleElement && current) {
+      titleElement.textContent = current.title;
     }
   },
 
@@ -384,56 +459,71 @@ const SkyCore = {
     if (chatDiv) chatDiv.innerHTML = '';
   },
 
-  // ==================== رسائل مع أزرار إضافية ====================
+  // ==================== رسائل مع أزرار إضافية متطورة ====================
   addMessageWithActions(role, content, timestamp = null) {
     if (!window.SkyUI) return;
     
     const msgId = timestamp || Date.now();
-    const escapedContent = content.replace(/"/g, '&quot;').replace(/\n/g, '<br>');
+    const escapedContent = this.escapeHtml(content);
     
     const actionsHtml = role === 'assistant' ? `
-      <div class="message-actions" style="display:flex; gap:8px; margin-top:8px; justify-content:flex-end;">
-        <button class="msg-action copy-msg" data-msg="${escapedContent}" style="background:none; border:none; color:#64748b; cursor:pointer;"><i class="far fa-copy"></i></button>
-        <button class="msg-action share-msg" data-msg="${escapedContent}" style="background:none; border:none; color:#64748b; cursor:pointer;"><i class="fas fa-share-alt"></i></button>
-        <button class="msg-action regenerate-msg" data-id="${msgId}" style="background:none; border:none; color:#64748b; cursor:pointer;"><i class="fas fa-undo-alt"></i></button>
-        <button class="msg-action export-msg" data-msg="${escapedContent}" style="background:none; border:none; color:#64748b; cursor:pointer;"><i class="fas fa-download"></i></button>
+      <div class="message-actions">
+        <button class="msg-action copy-msg" title="نسخ"><i class="far fa-copy"></i> نسخ</button>
+        <button class="msg-action share-msg" title="مشاركة"><i class="fas fa-share-alt"></i> مشاركة</button>
+        <button class="msg-action regenerate-msg" title="إعادة توليد"><i class="fas fa-undo-alt"></i> إعادة</button>
+        <button class="msg-action export-msg" title="تصدير"><i class="fas fa-download"></i> تصدير</button>
       </div>
     ` : '';
     
     SkyUI.addMessage(role, content, { actions: actionsHtml, msgId });
     
-    // ربط الأحداث بعد الإضافة
     setTimeout(() => {
-      document.querySelectorAll(`.copy-msg[data-msg="${escapedContent}"]`).forEach(btn => {
-        btn.onclick = () => { 
-          navigator.clipboard.writeText(content); 
-          if (window.SkyUI) SkyUI.showToast('تم نسخ الرد', 'success');
+      // ربط أحداث الأزرار
+      document.querySelectorAll(`.copy-msg`).forEach(btn => {
+        btn.onclick = (e) => {
+          const msgDiv = e.target.closest('.message');
+          const msgContent = msgDiv?.querySelector('.message-content')?.innerText;
+          if (msgContent) {
+            navigator.clipboard.writeText(msgContent);
+            if (window.SkyUI) SkyUI.showToast('📋 تم نسخ الرسالة', 'success');
+          }
         };
       });
+      
       document.querySelectorAll('.share-msg').forEach(btn => {
-        btn.onclick = () => { 
-          if (navigator.share) navigator.share({ text: btn.dataset.msg }); 
-          else if (window.SkyUI) SkyUI.showToast('المشاركة غير مدعومة', 'error');
+        btn.onclick = (e) => {
+          const msgDiv = e.target.closest('.message');
+          const msgContent = msgDiv?.querySelector('.message-content')?.innerText;
+          if (msgContent && navigator.share) {
+            navigator.share({ text: msgContent });
+          } else if (window.SkyUI) {
+            SkyUI.showToast('المشاركة غير مدعومة في هذا المتصفح', 'error');
+          }
         };
       });
+      
       document.querySelectorAll('.regenerate-msg').forEach(btn => {
         btn.onclick = () => this.regenerateLastMessage();
       });
+      
       document.querySelectorAll('.export-msg').forEach(btn => {
         btn.onclick = () => this.exportChat();
       });
-    }, 50);
+    }, 100);
   },
 
   async regenerateLastMessage() {
     const current = this.state.sessions.find(s => s.id === this.state.currentSessionId);
-    if (!current || current.messages.length < 2) return;
+    if (!current || current.messages.length < 2) {
+      if (window.SkyUI) SkyUI.showToast('لا توجد رسالة سابقة لإعادة التوليد', 'error');
+      return;
+    }
     
     const lastUserMsg = [...current.messages].reverse().find(m => m.role === 'user');
     if (!lastUserMsg) return;
     
     // حذف آخر رد
-    const lastAssistantIndex = current.messages.map(m => m.role).lastIndexOf('assistant');
+    const lastAssistantIndex = [...current.messages].map(m => m.role).lastIndexOf('assistant');
     if (lastAssistantIndex !== -1) current.messages.splice(lastAssistantIndex, 1);
     
     // حذف آخر رسالة من الواجهة
@@ -444,47 +534,83 @@ const SkyCore = {
       }
     }
     
+    if (window.SkyUI) SkyUI.showToast('🔄 جاري إعادة توليد الرد...', 'info');
     await this.sendMessage(lastUserMsg.content, true);
   },
 
-  async exportChat() {
+  async exportChat(format = 'txt') {
     const current = this.state.sessions.find(s => s.id === this.state.currentSessionId);
     if (!current) return;
     
     const date = new Date().toLocaleString();
-    const text = `سماء - محادثة: ${current.title}\nالتاريخ: ${date}\n\n` + 
-      current.messages.map(m => `${m.role === 'user' ? '👤 المستخدم' : '🤖 سماء'} (${new Date(m.timestamp || Date.now()).toLocaleTimeString()}):\n${m.content}\n`).join('\n');
+    let content = '';
+    let filename = '';
+    let mimeType = '';
     
-    const blob = new Blob([text], { type: 'text/plain' });
+    if (format === 'txt') {
+      content = `سماء - محادثة: ${current.title}\nالتاريخ: ${date}\n\n` + 
+        current.messages.map(m => `${m.role === 'user' ? '👤 المستخدم' : '🤖 سماء'} (${new Date(m.timestamp || Date.now()).toLocaleTimeString()}):\n${m.content}\n`).join('\n');
+      filename = `سماء_محادثة_${current.title.replace(/[^a-z0-9]/gi, '_')}.txt`;
+      mimeType = 'text/plain';
+    } else if (format === 'json') {
+      content = JSON.stringify({
+        title: current.title,
+        date: date,
+        messages: current.messages
+      }, null, 2);
+      filename = `سماء_محادثة_${current.title.replace(/[^a-z0-9]/gi, '_')}.json`;
+      mimeType = 'application/json';
+    }
+    
+    const blob = new Blob([content], { type: mimeType });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `سماء_محادثة_${current.title.replace(/[^a-z0-9]/gi, '_')}.txt`;
+    a.download = filename;
     a.click();
     URL.revokeObjectURL(a.href);
-    if (window.SkyUI) SkyUI.showToast('تم تصدير المحادثة', 'success');
+    if (window.SkyUI) SkyUI.showToast(`📄 تم تصدير المحادثة بتنسيق ${format.toUpperCase()}`, 'success');
   },
 
-  // ==================== إدخال صوتي ====================
+  // ==================== إدخال صوتي محسن ====================
   startVoiceInput() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      if (window.SkyUI) SkyUI.showToast("المتصفح لا يدعم الإدخال الصوتي", "error");
+      if (window.SkyUI) SkyUI.showToast("🎤 المتصفح لا يدعم الإدخال الصوتي", "error");
       return;
     }
     const recognition = new SpeechRecognition();
     recognition.lang = 'ar-SA';
-    recognition.interimResults = false;
+    recognition.interimResults = true;
+    recognition.continuous = false;
 
-    recognition.onresult = (event) => {
-      const text = event.results[0][0].transcript;
-      document.getElementById('user-input').value = text;
-      this.sendMessage();
+    recognition.onstart = () => {
+      if (window.SkyUI) SkyUI.showToast("🎤 جاري الاستماع... تحدث الآن", "info");
+      if (window.SkyCharacters) SkyCharacters.setAllMoods('surprised');
     };
+    
+    recognition.onresult = (event) => {
+      let text = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        text += event.results[i][0].transcript;
+      }
+      const input = document.getElementById('user-input');
+      if (input) input.value = text;
+    };
+    
     recognition.onerror = () => {
       if (window.SkyUI) SkyUI.showToast("حدث خطأ أثناء الاستماع", "error");
+      if (window.SkyCharacters) SkyCharacters.setAllMoods('annoyed');
     };
+    
+    recognition.onend = () => {
+      const input = document.getElementById('user-input');
+      if (input && input.value.trim()) {
+        this.sendMessage();
+      }
+      if (window.SkyCharacters) setTimeout(() => SkyCharacters.setAllMoods('idle'), 500);
+    };
+    
     recognition.start();
-    if (window.SkyUI) SkyUI.showToast("🎤 جاري الاستماع...", "info");
   },
 
   // ==================== إرسال الرسالة الأساسية ====================
@@ -505,7 +631,7 @@ const SkyCore = {
     if (this.state.imagePreview) {
       imageHtml = `<div class="attached-image"><img src="${this.state.imagePreview}" style="max-width:150px; border-radius:12px; margin-bottom:8px;"></div>`;
       imageData = this.state.imagePreview;
-      text = text || '📷 أرسل صورة';
+      if (!text) text = '📷 [صورة]';
     }
 
     const fullMessage = imageHtml + (text ? `<div>${this.escapeHtml(text)}</div>` : '');
@@ -520,27 +646,30 @@ const SkyCore = {
     const preview = document.querySelector('.image-preview');
     if (preview) preview.remove();
     this.state.imagePreview = null;
+    this.state.imageFile = null;
     
-    if (window.SkyCharacters) SkyCharacters.onSend();
-    if (window.SkyCharacters) SkyCharacters.analyzeAndReact(text);
+    // تفعيل الشخصيات
+    if (window.SkyCharacters) {
+      window.SkyCharacters.onSend();
+      window.SkyCharacters.analyzeAndReact(text);
+    }
 
     const current = this.state.sessions.find(s => s.id === this.state.currentSessionId);
     if (current) {
       current.messages.push({ role: 'user', content: text || 'صورة', timestamp: Date.now(), image: imageData });
       if (current.messages.length === 1) {
-        current.title = (text || 'صورة').substring(0, 30);
+        current.title = (text || 'صورة').substring(0, 25);
         this.renderSessions();
       }
     }
 
-    if (window.SkyUI) SkyUI.showThinking('🔮 الشخصيات تتأمل...');
-    if (window.SkyMind3D) window.SkyMind3D?.triggerThinking?.(0.7);
+    if (window.SkyUI) SkyUI.showThinking('🔮 الشخصيات تتأمل رداً...');
     if (window.SkyMind) SkyMind.processMessage?.({ role: 'user', content: text });
 
     try {
       let reply;
       if (this.state.useMockApi) {
-        await new Promise(r => setTimeout(r, 1000 + Math.random() * 500));
+        await new Promise(r => setTimeout(r, 1200 + Math.random() * 600));
         reply = this.getSmartMockReply(text);
       } else {
         const res = await fetch(window.SKY_CONFIG.endpoints.chat, {
@@ -575,25 +704,36 @@ const SkyCore = {
 
   getSmartMockReply(text) {
     const lower = (text || '').toLowerCase();
-    if (lower.includes('مرحب') || lower.includes('السلام')) {
-      return '🌌 أهلاً بك في سماء! تراس، حكيم، ولطيفة هنا ينتظرونك. كيف تشعر اليوم؟';
+    
+    const responses = {
+      greeting: ['مرحب', 'السلام', 'اهلا', 'هلا'],
+      thanks: ['شكر', 'جزيل', 'ممتاز', 'جميل'],
+      sad: ['حزين', 'بكي', 'ضيق', 'تعبان'],
+      shy: ['خجل', 'خجولة', 'خجول'],
+      angry: ['غضب', 'مزعج', 'ضجر', 'تعب'],
+      curious: ['كيف', 'لماذا', 'ماذا لو', 'فضول']
+    };
+    
+    if (responses.greeting.some(w => lower.includes(w))) {
+      return '🌌 أهلاً بك في سماء!\n\nتراس يلوح بيده بحماس، وحكيم يبتسم بلطف، ولطيفة تنظر إليك بفضول.\n\nكيف يمكننا مساعدتك اليوم؟';
     }
-    if (lower.includes('شكر')) {
-      return '💜 الشكر لك! تفاعلك يجعل الشخصيات أكثر حيوية. هل تحب أن نستكشف شيئاً جديداً معاً؟';
+    if (responses.thanks.some(w => lower.includes(w))) {
+      return '💜 الشكر لك من أعماقنا!\n\nتراس سعيد جداً، وحكيم يومئ برأسه، ولطيفة تبتسم بخجل.\n\nهل هناك شيء آخر تريد مناقشته؟';
     }
-    if (lower.includes('حزين') || lower.includes('بكي')) {
-      return '😢 لطيفة تشعر بحزنك... تريد أن تشاركها ما يمر بك؟ أنا هنا لأستمع وأدعمك.';
+    if (responses.sad.some(w => lower.includes(w))) {
+      return '😢 لطيفة تشعر بحزنك وتريد أن تقترب منك...\n\nتراس يقول: "لا تحزن، نحن هنا معك". حكيم ينظر إليك بتفهم.\n\nهل تريد التحدث عما يزعجك؟';
     }
-    if (lower.includes('خجل') || lower.includes('خجولة')) {
-      return '😊 تراس خجول قليلاً الآن! هذا لطيف جداً. ماذا تريد أن تسأل حكيماً؟';
+    if (responses.shy.some(w => lower.includes(w))) {
+      return '😊 تراس خجول قليلاً الآن! لطيفة تغطي وجهها الصغير.\n\nحكيم يقول: "لا بأس، كلنا نشعر بالخجل أحياناً".\n\nماذا تريد أن تسألنا؟';
     }
-    if (lower.includes('غضب') || lower.includes('مزعج')) {
-      return '😤 حكيم منزعج قليلاً... لكنه يتنفس بعمق. هل هناك شيء يزعجك؟ دعنا نتحدث بهدوء.';
+    if (responses.angry.some(w => lower.includes(w))) {
+      return '😤 حكيم منزعج قليلاً... لكنه يتنفس بعمق.\n\nتراس يقول: "دعنا نهدأ ونتحدث بهدوء". لطيفة تمد يدها الصغيرة.\n\nهل هناك شيء يضايقك؟';
     }
-    if (lower.includes('فضول') || lower.includes('كيف') || lower.includes('لماذا')) {
-      return '🤔 حكيم ينظر إليك بفضول! سؤال جميل. دعني أفكر معك في هذا الموضوع...';
+    if (responses.curious.some(w => lower.includes(w))) {
+      return '🤔 حكيم ينظر إليك بعينين واسعتين!\n\nتراس يقفز من الفضول، ولطيفة تميل رأسها.\n\nسؤال جميل! دعني أفكر معك في هذا الموضوع...';
     }
-    return '✨ الشخصيات تتابعك بفضول. تراس يريد أن يعرف: هل هناك شيء محدد تريد مناقشته اليوم؟';
+    
+    return '✨ الشخصيات الثلاثة تتابعك بفضول.\n\nتراس يريد أن يعرف: هل هناك شيء محدد تريد مناقشته اليوم؟\n\nحكيم يقول: "أنا هنا لأفكر معك". ولطيفة تبتسم بتشجيع.';
   },
 
   escapeHtml(str) {
@@ -608,17 +748,17 @@ const SkyCore = {
 
   // ==================== تخزين البيانات ====================
   loadSessionsFromStorage() {
-    const saved = localStorage.getItem('skyos_sessions_v11');
+    const saved = localStorage.getItem('skyos_sessions_v12');
     if (saved) {
       this.state.sessions = JSON.parse(saved);
     } else {
-      const oldSaved = localStorage.getItem('skyos_sessions');
+      const oldSaved = localStorage.getItem('skyos_sessions_v11');
       if (oldSaved) this.state.sessions = JSON.parse(oldSaved);
     }
   },
 
   saveSessionsToStorage() {
-    localStorage.setItem('skyos_sessions_v11', JSON.stringify(this.state.sessions));
+    localStorage.setItem('skyos_sessions_v12', JSON.stringify(this.state.sessions));
   },
 
   initFirstSession() {
@@ -637,7 +777,7 @@ const SkyCore = {
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     SkyCore.init();
-  }, 100);
+  }, 150);
 });
 
 window.SkyCore = SkyCore;
