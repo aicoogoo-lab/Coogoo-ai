@@ -2,135 +2,142 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <meta name="color-scheme" content="dark">
-  <meta name="theme-color" content="#050507">
-  <title>سماء • الشخصيات الحية</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>سماء | محادثة ذكية</title>
   
-  <!-- Three.js (تم تعليقه لأننا نستخدم الشخصيات بدلاً من الكرة) -->
-  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script> -->
+  <!-- Three.js لتأثيرات بصرية خفيفة (اختياري، يمكن إلغاؤه) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   
+  <!-- Fonts & Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  
+  <!-- Styles -->
   <link rel="stylesheet" href="/static/css/core.css">
   
   <style>
-    /* تعديلات بسيطة لاستيعاب الشخصيات */
-    .mind-status {
-      position: relative;
-      z-index: 10;
-      background: rgba(10,10,15,0.8);
-      backdrop-filter: blur(12px);
+    /* تأثيرات إضافية سريعة */
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
     }
-    #characters-area {
-      position: absolute;
-      top: 60px;
-      left: 0;
-      right: 0;
-      display: flex;
-      justify-content: center;
-      pointer-events: none;
-      z-index: 20;
+    
+    /* زر الثيم المؤقت (سيظهر تلقائياً) */
+    .theme-temp-btn {
+      background: rgba(255,255,255,0.08);
+      border-radius: 30px;
+      padding: 6px 12px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: 0.2s;
     }
-    /* إخفاء حاوية العقل القديمة إن وجدت */
-    #mind-container {
-      display: none;
+    .theme-temp-btn:hover {
+      background: rgba(255,255,255,0.15);
     }
   </style>
 </head>
 <body>
 
-  <!-- Mind Status -->
-  <div class="mind-status">
-    <div style="display: flex; align-items: center; gap: 12px;">
-      <button class="sky-icon-btn" id="menu-toggle">
+  <!-- Header -->
+  <div class="app-header">
+    <div class="header-left">
+      <button class="icon-btn" id="menu-toggle" aria-label="القائمة">
         <i class="fas fa-bars"></i>
       </button>
-      <div>
-        <strong>سماء</strong>
-        <span style="color:#64748b; margin: 0 8px;">•</span>
-        <span style="color:#a78bfa;">الشخصيات الحية</span>
+      <div class="logo">
+        <span class="logo-icon">🌙</span>
+        <span class="logo-text">سماء</span>
       </div>
     </div>
-
-    <div class="mind-metrics">
-      <div><i class="fas fa-brain"></i> <span id="mind-confidence">85</span>%</div>
-      <div><i class="fas fa-database"></i> <span id="memory-count">128</span></div>
-      <div id="mind-mood-indicator">
-        <i class="fas fa-smile-wink"></i>
-        <span>محايد</span>
+    <div class="header-right">
+      <div class="theme-temp-btn" id="theme-toggle" title="تبديل الثيم">
+        <i class="fas fa-palette"></i> <span id="theme-name">داكن</span>
       </div>
+      <button class="icon-btn" id="new-session-header" title="جلسة جديدة">
+        <i class="fas fa-plus"></i>
+      </button>
     </div>
   </div>
 
-  <!-- منطقة عرض الشخصيات (سيتم تعبئتها بواسطة JavaScript) -->
-  <div id="characters-area"></div>
-
-  <div class="main-container">
-    <!-- Sidebar -->
-    <aside class="sky-sidebar" id="sidebar">
-      <div class="sidebar-section">
-        <button class="sky-btn-primary" id="new-session-btn">
-          <i class="fas fa-plus"></i> جلسة جديدة
+  <!-- Main Layout -->
+  <div class="app-main">
+    
+    <!-- Sidebar (جلسات) -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <button class="new-session-btn" id="new-session-btn">
+          <i class="fas fa-plus"></i> محادثة جديدة
         </button>
       </div>
-      <div class="sidebar-section" style="flex:1; overflow-y:auto;">
-        <div style="font-size:0.75rem; color:#64748b; margin-bottom:8px;">
-          <i class="fas fa-archive"></i> الجلسات المحفوظة
+      <div class="sessions-list" id="session-list">
+        <!-- ستظهر الجلسات هنا -->
+      </div>
+      <div class="sidebar-footer">
+        <div class="memory-badge">
+          <i class="fas fa-brain"></i> <span id="memory-count">128</span> ذاكرة
         </div>
-        <div id="session-list"></div>
       </div>
     </aside>
 
-    <!-- Main Content -->
-    <div class="chat-container">
-      <!-- Chat Messages -->
-      <div class="chat-messages" id="chat-messages"></div>
-
-      <!-- Input Area -->
-      <div class="input-area">
-        <button class="sky-icon-btn" id="voice-btn"><i class="fas fa-microphone"></i></button>
-        <button class="sky-icon-btn" id="upload-btn"><i class="fas fa-paperclip"></i></button>
-        <textarea id="user-input" placeholder="تحدث مع الشخصيات..." rows="1"></textarea>
-        <button class="send-button" id="send-btn">
-          <i class="fas fa-paper-plane"></i>
-        </button>
+    <!-- Chat Area -->
+    <div class="chat-area">
+      
+      <!-- منطقة الرسائل -->
+      <div class="messages-container" id="messages-container">
+        <div class="messages-list" id="messages-list">
+          <!-- رسالة ترحيب -->
+          <div class="message assistant">
+            <div class="message-avatar"><i class="fas fa-sparkles"></i></div>
+            <div class="message-bubble">
+              <div class="message-text">مرحباً بك في سماء. كيف يمكنني مساعدتك اليوم؟</div>
+              <div class="message-time">الآن</div>
+            </div>
+          </div>
+        </div>
       </div>
+
+      <!-- منطقة الإدخال -->
+      <div class="input-area">
+        <div class="image-preview-area" id="image-preview-area" style="display: none;">
+          <div class="image-preview">
+            <img id="preview-img" src="" alt="معاينة">
+            <button class="remove-preview" id="remove-preview"><i class="fas fa-times"></i></button>
+          </div>
+        </div>
+        <div class="input-wrapper">
+          <button class="input-action" id="upload-btn" title="رفع صورة">
+            <i class="fas fa-image"></i>
+          </button>
+          <textarea id="message-input" placeholder="اكتب رسالتك..." rows="1"></textarea>
+          <button class="input-action" id="voice-btn" title="إدخال صوتي">
+            <i class="fas fa-microphone"></i>
+          </button>
+          <button class="send-btn" id="send-btn">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+      
     </div>
   </div>
 
+  <!-- Toast Container -->
   <div id="toast-container"></div>
 
   <script>
     window.SKY_CONFIG = {
-      endpoints: {
-        chat: "/api/chat",
-        upload: "/upload"
-      },
-      version: "v11",
-      useMockAPI: true
+      useMockAPI: true,
+      version: "2.0"
     };
   </script>
-
-  <!-- السكريبتات الأساسية -->
+  
   <script src="/static/js/ui.js"></script>
-  <script src="/static/js/mind.js"></script>
-  <!-- تم تعطيل three-mind.js لأنه تم الاستغناء عن الكرة -->
-  <!-- <script src="/static/js/three-mind.js"></script> -->
-  <!-- الشخصيات الحية (المحور الأول) -->
-  <script src="/static/js/living-characters.js"></script>
-  <!-- المحرك الأساسي -->
   <script src="/static/js/core.js"></script>
-  <!-- AR controller (اختياري، يمكن تفعيله لاحقاً) -->
-  <!-- <script src="/static/js/ar-controller.js"></script> -->
   
   <script>
-    // تحديث مؤشر المزاج من أحداث الشخصيات
-    window.addEventListener('mind-mood-change', (e) => {
-      const moodSpan = document.querySelector('#mind-mood-indicator span');
-      if (moodSpan) moodSpan.textContent = e.detail.mood === 'happy' ? 'سعيد' : e.detail.mood === 'sad' ? 'حزين' : 'محايد';
+    // تهيئة بسيطة
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.SkyCore) SkyCore.init();
     });
-    console.log('✅ سماء جاهزة مع الشخصيات الحية');
   </script>
 </body>
 </html>
