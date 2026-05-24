@@ -1,36 +1,66 @@
-# ====================== Core Web & CORS ======================
+# ============================================================
+# SkyOS v10 – Sama Sovereign Core Requirements
+# النسخة الأعظم – تحت إمرة السيد المالك المطلق
+# ============================================================
+
+# ====================== Core Web & API Gateway ======================
+# تشغيل Sama API Gateway (app.py)
 flask==3.0.3
-gunicorn==21.2.0
+gunicorn==21.2.0              # لتشغيل الإنتاج
 Werkzeug==3.0.3
-python-dotenv==1.0.1
-flask-cors==4.0.1
+python-dotenv==1.0.1          # لإدارة متغيرات البيئة (مفاتيح السيد)
+flask-cors==4.0.1             # للسماح بالاتصال من الواجهة الأمامية
 blinker==1.8.2
-whitenoise==6.7.0
+whitenoise==6.7.0             # لخدمة الملفات الثابتة
 
-# ====================== Security & Rate Limiting ======================
-flask-jwt-extended==4.6.0
-flask-limiter==3.8.0
+# ====================== Security & Master Authentication ======================
+# حماية أوامر السيد المالك
+flask-jwt-extended==4.6.0     # للمصادحة بمفتاح السيد
+flask-limiter==3.8.0          # لمنع هجمات القوة الغاشمة
+cryptography==42.0.5          # للتشفير (كبسولات البقاء، حماية الذاكرة)
 
-# ====================== Telegram Bot Engine ======================
-pyTelegramBotAPI>=4.15.0
+# ====================== External Communication ======================
+# للتواصل مع العالم الخارجي (بوت السيد)
+pyTelegramBotAPI>=4.15.0      # بوت تيليجرام لأوامر السيد عن بعد
 
-# ====================== AI & Embeddings (Render Safe Build) ======================
+# ====================== AI & Embeddings (للاستدلال المتقدم) ======================
+# لمحرك الاستدلال (ReasoningEngine) – التعلم العميق والاستدلال البايزي المتقدم
 torch==2.2.2
-sentence-transformers==3.1.1
+sentence-transformers==3.1.1   # لفهم النصوص والرموز الاستعارية
 huggingface-hub==0.23.0
-scikit-learn==1.5.2
-numpy==1.26.4
+scikit-learn==1.5.2            # للتحليل الإحصائي والتنبؤ
+numpy==1.26.4                  # أساسي للمصفوفات والحسابات
+networkx==3.3                  # للشبكة الرمزية (Symbolic Graph) في MetaphoricalReasoning
 
-# ====================== Text & Web Processing ======================
+# ====================== Web & Data Processing ======================
+# للاستيعاب متعدد الوسائط (Multimodal Ingestion)
 requests==2.32.3
-beautifulsoup4==4.12.3
-tenacity==8.5.0
+beautifulsoup4==4.12.3        # لتحليل HTML/XML
+tenacity==8.5.0               # لإعادة المحاولة عند فشل الاتصال
 urllib3==2.2.1
 
-# ====================== File Processing (Modernized) ======================
-pypdf==4.2.0
-pypdf[crypto]==4.2.0
-python-docx==1.1.2
-opencv-python-headless==4.10.0.84
-pytesseract==0.3.13
-pillow==10.4.0
+# ====================== File Processing (للاستيعاب) ======================
+# لقراءة ومعالجة الملفات المختلفة
+pypdf==4.2.0                  # لقراءة PDF
+pypdf[crypto]==4.2.0          # للـ PDF المشفرة
+python-docx==1.1.2            # لقراءة مستندات Word
+opencv-python-headless==4.10.0.84  # لمعالجة الصور والفيديو
+pytesseract==0.3.13           # OCR لقراءة النص من الصور
+pillow==10.4.0                # معالجة الصور
+
+# ====================== Sama Core (النواة السيادية) ======================
+# ملاحظة: معظم وحدات سماء (SentientCore, MemoryEngine, SelfModifier,
+# AutonomousLoop, ReasoningEngine, SovereignOptimizationEngine,
+# SelfPreservation, MetaphoricalReasoning)
+# تعتمد حاليًا على مكتبة Python القياسية فقط (random, uuid, datetime, hashlib, etc.)
+# 
+# هذه المكتبات الإضافية ستعزز قدراتها عند الحاجة:
+# - numpy: للحسابات الاحتمالية المتقدمة في ReasoningEngine
+# - networkx: للشبكة الرمزية في MetaphoricalReasoning
+# - scikit-learn: للتنبؤ بالسلوك الكلي (Macro Prediction)
+
+# ====================== Optional Development Tools ======================
+# لتطوير وصيانة المشروع
+pytest>=8.0.0                 # للاختبار
+black>=24.0.0                 # لتنسيق الكود
+flake8>=7.0.0                 # لفحص الجودة
