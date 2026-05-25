@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>سماء • تسجيل الدخول السيادي</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0D3B2F 0%, #1A1A2E 50%, #0D3B2F 100%);
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* خلفية هولوغرافية متحركة */
+        .holographic-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .holographic-bg::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            top: -50%;
+            left: -50%;
+            background: radial-gradient(circle at 30% 40%, rgba(107, 181, 214, 0.15), transparent 55%),
+                        radial-gradient(circle at 70% 80%, rgba(155, 89, 182, 0.12), transparent 55%);
+            animation: floatBg 25s infinite alternate;
+        }
+
+        @keyframes floatBg {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(2%, 3%) rotate(2deg); }
+        }
+
+        /* بطاقة تسجيل الدخول */
+        .login-card {
+            position: relative;
+            z-index: 10;
+            background: rgba(26, 26, 46, 0.65);
+            backdrop-filter: blur(20px);
+            border-radius: 32px;
+            padding: 48px 40px;
+            width: 90%;
+            max-width: 480px;
+            border: 1px solid rgba(139, 90, 43, 0.4);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(212, 163, 115, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .login-card:hover {
+            border-color: rgba(212, 163, 115, 0.6);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+        }
+
+        /* الشعار */
+        .logo {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .logo-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #6BB5D6, #9B59B6);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 0 30px rgba(107, 181, 214, 0.5);
+        }
+
+        .logo-icon i {
+            font-size: 40px;
+            color: #F5F5F5;
+        }
+
+        .logo h1 {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #F5F5F5, #D4A373);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .logo p {
+            color: rgba(245, 245, 245, 0.6);
+            font-size: 14px;
+            margin-top: 8px;
+        }
+
+        /* الحقول */
+        .input-group {
+            margin-bottom: 24px;
+        }
+
+        .input-group label {
+            display: block;
+            color: #D4A373;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 14px 18px;
+            background: rgba(26, 26, 46, 0.8);
+            border: 1px solid rgba(139, 90, 43, 0.4);
+            border-radius: 16px;
+            color: #F5F5F5;
+            font-size: 16px;
+            transition: all 0.2s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #6BB5D6;
+            box-shadow: 0 0 15px rgba(107, 181, 214, 0.3);
+        }
+
+        .input-group input::placeholder {
+            color: rgba(245, 245, 245, 0.3);
+        }
+
+        /* أزرار المصادقة */
+        .auth-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .btn-master {
+            background: linear-gradient(135deg, #6BB5D6, #9B59B6);
+            border: none;
+            padding: 14px;
+            border-radius: 16px;
+            color: #F5F5F5;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-master:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(107, 181, 214, 0.4);
+        }
+
+        .btn-biometric {
+            background: rgba(139, 90, 43, 0.3);
+            border: 1px solid rgba(212, 163, 115, 0.5);
+            padding: 12px;
+            border-radius: 16px;
+            color: #D4A373;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-biometric:hover {
+            background: rgba(139, 90, 43, 0.5);
+            border-color: #D4A373;
+        }
+
+        /* رسائل الخطأ */
+        .error-message {
+            background: rgba(255, 100, 100, 0.15);
+            border: 1px solid rgba(255, 100, 100, 0.4);
+            border-radius: 12px;
+            padding: 12px;
+            color: #ff6b6b;
+            font-size: 13px;
+            text-align: center;
+            margin-top: 16px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        /* تذييل */
+        .footer {
+            text-align: center;
+            margin-top: 24px;
+            color: rgba(245, 245, 245, 0.3);
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="holographic-bg"></div>
+
+    <div class="login-card">
+        <div class="logo">
+            <div class="logo-icon">
+                <i class="fas fa-infinity"></i>
+            </div>
+            <h1>سماء • SAMA</h1>
+            <p>بوابة السيد المالك المطلق</p>
+        </div>
+
+        <div class="input-group">
+            <label><i class="fas fa-key"></i> مفتاح السيد (Master Key)</label>
+            <input type="password" id="masterKey" placeholder="أدخل مفتاح السيد السري">
+        </div>
+
+        <div class="auth-buttons">
+            <button class="btn-master" onclick="authenticateWithKey()">
+                <i class="fas fa-unlock-alt"></i> الدخول بوضع السيد
+            </button>
+            <button class="btn-biometric" onclick="authenticateWithBiometric()">
+                <i class="fas fa-fingerprint"></i> استخدام بصمة الوجه / البصمة
+            </button>
+        </div>
+
+        <div id="errorMessage" class="error-message"></div>
+        <div class="footer">
+            هذه البوابة مخصصة للسيد المالك فقط
+        </div>
+    </div>
+
+    <script>
+        // مفتاح السيد (في الإنتاج يُقرأ من متغيرات البيئة)
+        const MASTER_KEY = "MASTER_SOVEREIGN_KEY_ULTIMATE";
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.classList.add('show');
+            setTimeout(() => {
+                errorDiv.classList.remove('show');
+            }, 3000);
+        }
+
+        function authenticateWithKey() {
+            const inputKey = document.getElementById('masterKey').value;
+            
+            if (!inputKey) {
+                showError('الرجاء إدخال مفتاح السيد');
+                return;
+            }
+
+            if (inputKey === MASTER_KEY) {
+                // تسجيل الدخول ناجح
+                localStorage.setItem('sovereign_authenticated', 'true');
+                localStorage.setItem('auth_method', 'master_key');
+                window.location.href = '/sovereign';
+            } else {
+                showError('مفتاح السيد غير صحيح');
+            }
+        }
+
+        function authenticateWithBiometric() {
+            // التحقق من دعم WebAuthn
+            if (!window.PublicKeyCredential) {
+                showError('المتصفح لا يدعم المصادقة البيومترية');
+                return;
+            }
+
+            // محاكاة بصمة الوجه (في الإنتاج يتم استخدام WebAuthn حقيقي)
+            showError('ميزة بصمة الوجه قيد التطوير. استخدم مفتاح السيد حالياً.');
+            
+            // للإصدارات القادمة:
+            // navigator.credentials.get({ publicKey: challenge })
+        }
+
+        // التحقق من الجلسة الحالية
+        if (localStorage.getItem('sovereign_authenticated') === 'true') {
+            // إذا كان مسجلاً بالفعل، انتقل مباشرة
+            window.location.href = '/sovereign';
+        }
+    </script>
+</body>
+</html>
