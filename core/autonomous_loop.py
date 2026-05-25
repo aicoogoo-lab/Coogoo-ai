@@ -20,7 +20,7 @@ ULTIMATE SOVEREIGN MASTER EDITION — النسخة السيادية المطلق
 import time
 import threading
 from datetime import datetime
-from typing import Optional, Dict, Any, Callable
+from typing import Optional, Dict, Any, Callable, List
 
 
 # محاولة استيراد المكونات الأساسية
