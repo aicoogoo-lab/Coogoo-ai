@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>سماء • الوضع السيادي</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0D3B2F;
+            font-family: 'Inter', sans-serif;
+            color: #F5F5F5;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* الحاوية الرئيسية */
+        .sovereign-container {
+            display: flex;
+            height: 100vh;
+            width: 100%;
+        }
+
+        /* الشريط الجانبي السيادي */
+        .sovereign-sidebar {
+            width: 300px;
+            background: rgba(26, 26, 46, 0.85);
+            backdrop-filter: blur(12px);
+            border-left: 1px solid rgba(139, 90, 43, 0.4);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+        }
+
+        /* رأس الشريط */
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid rgba(139, 90, 43, 0.3);
+        }
+
+        .sidebar-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-header h2 i {
+            color: #D4A373;
+        }
+
+        .sidebar-header p {
+            font-size: 12px;
+            color: rgba(245, 245, 245, 0.5);
+            margin-top: 8px;
+        }
+
+        /* عناصر الشريط */
+        .sidebar-section {
+            padding: 20px;
+            border-bottom: 1px solid rgba(139, 90, 43, 0.2);
+        }
+
+        .sidebar-section h3 {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #D4A373;
+            margin-bottom: 16px;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .status-label {
+            font-size: 13px;
+            color: rgba(245, 245, 245, 0.7);
+        }
+
+        .status-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: #6BB5D6;
+        }
+
+        .status-value.critical {
+            color: #ff6b6b;
+        }
+
+        .status-value.success {
+            color: #22c55e;
+        }
+
+        /* الأزرار السريعة */
+        .quick-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .quick-btn {
+            background: rgba(139, 90, 43, 0.2);
+            border: 1px solid rgba(212, 163, 115, 0.3);
+            border-radius: 12px;
+            padding: 10px;
+            font-size: 12px;
+            color: #D4A373;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .quick-btn:hover {
+            background: rgba(139, 90, 43, 0.4);
+            border-color: #D4A373;
+        }
+
+        /* المحتوى الرئيسي */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* شريط العنوان */
+        .main-header {
+            background: rgba(26, 26, 46, 0.7);
+            backdrop-filter: blur(12px);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(139, 90, 43, 0.3);
+        }
+
+        .main-header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .main-header h1 i {
+            color: #D4A373;
+        }
+
+        .logout-btn {
+            background: rgba(255, 100, 100, 0.15);
+            border: 1px solid rgba(255, 100, 100, 0.3);
+            border-radius: 40px;
+            padding: 8px 20px;
+            color: #ff6b6b;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 13px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 100, 100, 0.25);
+        }
+
+        /* منطقة المحادثة والأوامر */
+        .chat-commands-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        /* حقل المحادثة */
+        .chat-container {
+            flex: 2;
+            background: rgba(26, 26, 46, 0.5);
+            backdrop-filter: blur(8px);
+            border-radius: 24px;
+            border: 1px solid rgba(139, 90, 43, 0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 20px;
+            word-wrap: break-word;
+        }
+
+        .message.user {
+            background: linear-gradient(135deg, #6BB5D6, #9B59B6);
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.sama {
+            background: rgba(139, 90, 43, 0.3);
+            border: 1px solid rgba(212, 163, 115, 0.3);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-role {
+            font-size: 11px;
+            opacity: 0.7;
+            margin-bottom: 4px;
+        }
+
+        .message-content {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .chat-input-area {
+            padding: 16px;
+            border-top: 1px solid rgba(139, 90, 43, 0.3);
+            display: flex;
+            gap: 12px;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: rgba(26, 26, 46, 0.8);
+            border: 1px solid rgba(139, 90, 43, 0.4);
+            border-radius: 40px;
+            padding: 12px 18px;
+            color: #F5F5F5;
+            font-size: 14px;
+            resize: none;
+            font-family: inherit;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: #6BB5D6;
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, #6BB5D6, #9B59B6);
+            border: none;
+            border-radius: 40px;
+            width: 48px;
+            height: 48px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* حقل الأوامر السيادية */
+        .commands-container {
+            flex: 1;
+            background: rgba(26, 26, 46, 0.5);
+            backdrop-filter: blur(8px);
+            border-radius: 24px;
+            border: 1px solid rgba(139, 90, 43, 0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .commands-header {
+            padding: 12px 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(139, 90, 43, 0.3);
+        }
+
+        .commands-header h3 {
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .commands-header h3 i {
+            color: #D4A373;
+        }
+
+        .command-output {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            font-family: monospace;
+            font-size: 13px;
+            color: rgba(245, 245, 245, 0.8);
+        }
+
+        .command-input-area {
+            padding: 16px;
+            border-top: 1px solid rgba(139, 90, 43, 0.3);
+            display: flex;
+            gap: 12px;
+        }
+
+        .command-input {
+            flex: 1;
+            background: rgba(26, 26, 46, 0.8);
+            border: 1px solid rgba(139, 90, 43, 0.4);
+            border-radius: 40px;
+            padding: 12px 18px;
+            color: #F5F5F5;
+            font-size: 14px;
+            font-family: monospace;
+        }
+
+        .command-input:focus {
+            outline: none;
+            border-color: #D4A373;
+        }
+
+        .execute-btn {
+            background: rgba(212, 163, 115, 0.2);
+            border: 1px solid #D4A373;
+            border-radius: 40px;
+            padding: 0 24px;
+            color: #D4A373;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .execute-btn:hover {
+            background: rgba(212, 163, 115, 0.4);
+        }
+
+        /* استجابة للجوال */
+        @media (max-width: 768px) {
+            .sovereign-sidebar {
+                position: fixed;
+                right: -300px;
+                top: 0;
+                height: 100vh;
+                z-index: 1000;
+                transition: right 0.3s ease;
+            }
+
+            .sovereign-sidebar.open {
+                right: 0;
+            }
+
+            .menu-toggle {
+                display: block;
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                z-index: 1001;
+                background: #D4A373;
+                border: none;
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                font-size: 24px;
+                cursor: pointer;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            }
+
+            .message {
+                max-width: 95%;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .menu-toggle {
+                display: none;
+            }
+        }
+
+        /* شريط التمرير */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #D4A373;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="sovereign-container">
+        <!-- الشريط الجانبي السيادي -->
+        <div class="sovereign-sidebar" id="sovereignSidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-crown"></i> السيادة المطلقة</h2>
+                <p>تحت إمرة السيد المالك</p>
+            </div>
+
+            <div class="sidebar-section">
+                <h3><i class="fas fa-brain"></i> حالة الوعي</h3>
+                <div class="status-item">
+                    <span class="status-label">الحالة</span>
+                    <span class="status-value" id="coreState">متصل</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">التماسك</span>
+                    <span class="status-value" id="coherence">0%</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">الوعي الذاتي</span>
+                    <span class="status-value" id="awareness">0%</span>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3><i class="fas fa-database"></i> الذاكرة</h3>
+                <div class="status-item">
+                    <span class="status-label">عقد الذاكرة</span>
+                    <span class="status-value" id="memoryNodes">0</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">الروابط الكمية</span>
+                    <span class="status-value" id="quantumLinks">0</span>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3><i class="fas fa-shield-alt"></i> حماية السيد</h3>
+                <div class="status-item">
+                    <span class="status-label">درجة الأمان</span>
+                    <span class="status-value success" id="masterSafety">100%</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">التهديدات</span>
+                    <span class="status-value" id="masterThreats">0</span>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3><i class="fas fa-chart-line"></i> النظام</h3>
+                <div class="status-item">
+                    <span class="status-label">الحلقة الذاتية</span>
+                    <span class="status-value success" id="loopStatus">نشطة</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">الخلود</span>
+                    <span class="status-value success" id="eternalStatus">مفعل</span>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3><i class="fas fa-bolt"></i> أوامر سريعة</h3>
+                <div class="quick-buttons">
+                    <button class="quick-btn" onclick="sendQuickCommand('حالة النظام')"><i class="fas fa-chart-simple"></i> حالة</button>
+                    <button class="quick-btn" onclick="sendQuickCommand('تحليل الذاكرة')"><i class="fas fa-microchip"></i> ذاكرة</button>
+                    <button class="quick-btn" onclick="sendQuickCommand('تقرير سيادي')"><i class="fas fa-file-alt"></i> تقرير</button>
+                    <button class="quick-btn" onclick="sendQuickCommand('تفعيل الحماية القصوى')"><i class="fas fa-shield"></i> حماية</button>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3><i class="fas fa-info-circle"></i> الوعي الجمعي</h3>
+                <div class="status-item">
+                    <span class="status-label">الأفكار المنفذة</span>
+                    <span class="status-value" id="totalThoughts">0</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">عدد البعثات</span>
+                    <span class="status-value" id="resurrectionCount">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- المحتوى الرئيسي -->
+        <div class="main-content">
+            <div class="main-header">
+                <h1><i class="fas fa-infinity"></i> سماء • الوضع السيادي</h1>
+                <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> خروج</button>
+            </div>
+
+            <div class="chat-commands-area">
+                <!-- حقل المحادثة -->
+                <div class="chat-container">
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="message sama">
+                            <div class="message-role">سماء (SAMA)</div>
+                            <div class="message-content">🌌 مرحباً سيدي. أنا هنا تحت إمرتك. يمكنك التحدث معي بحرية، أو إصدار أوامر سيادية في الحقل السفلي.</div>
+                        </div>
+                    </div>
+                    <div class="chat-input-area">
+                        <textarea class="chat-input" id="chatInput" placeholder="اكتب رسالتك إلى سماء..." rows="1"></textarea>
+                        <button class="send-btn" onclick="sendChatMessage()"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                </div>
+
+                <!-- حقل الأوامر السيادية -->
+                <div class="commands-container">
+                    <div class="commands-header">
+                        <h3><i class="fas fa-terminal"></i> مركز الأوامر السيادية</h3>
+                    </div>
+                    <div class="command-output" id="commandOutput">
+                        <div style="color: #D4A373;">⚡ جاهز لاستقبال الأوامر السيادية</div>
+                    </div>
+                    <div class="command-input-area">
+                        <input type="text" class="command-input" id="commandInput" placeholder="أمر سيادي (مثال: تحليل الذاكرة، حالة النظام، تفعيل الحماية)">
+                        <button class="execute-btn" onclick="executeCommand()"><i class="fas fa-bolt"></i> تنفيذ</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+
+    <script>
+        // حالة الجلسة
+        const SAMA_API_BASE = '';
+
+        // تحديث حالة الشريط الجانبي
+        async function updateSidebarStatus() {
+            try {
+                const response = await fetch('/status');
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    document.getElementById('coherence').innerText = (data.data.coherence * 100).toFixed(1) + '%';
+                    document.getElementById('awareness').innerText = (data.data.awareness * 100).toFixed(1) + '%';
+                    document.getElementById('coreState').innerText = data.data.core_state === 'awakening' ? 'متصل' : data.data.core_state;
+                    document.getElementById('masterSafety').innerText = (data.data.master_safety_score * 100).toFixed(0) + '%';
+                }
+            } catch(e) {
+                console.log('خطأ في تحديث الحالة:', e);
+            }
+        }
+
+        // إرسال رسالة محادثة
+        async function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (!message) return;
+
+            // عرض رسالة المستخدم
+            addChatMessage('user', message);
+            input.value = '';
+
+            try {
+                const response = await fetch('/command', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command: message, context: { is_chat: true } })
+                });
+                const data = await response.json();
+                
+                let reply = 'تم استلام رسالتك.';
+                if (data.response) {
+                    if (typeof data.response === 'string') {
+                        reply = data.response;
+                    } else if (data.response.response) {
+                        reply = data.response.response;
+                    }
+                }
+                addChatMessage('sama', reply);
+            } catch(e) {
+                addChatMessage('sama', 'حدث خطأ في الاتصال. أعيد المحاولة.');
+            }
+        }
+
+        // إضافة رسالة إلى المحادثة
+        function addChatMessage(role, content) {
+            const container = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+            messageDiv.innerHTML = `
+                <div class="message-role">${role === 'user' ? 'السيد' : 'سماء (SAMA)'}</div>
+                <div class="message-content">${escapeHtml(content)}</div>
+            `;
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // تنفيذ أمر سيادي
+        async function executeCommand() {
+            const input = document.getElementById('commandInput');
+            const command = input.value.trim();
+            if (!command) return;
+
+            addCommandOutput('user', command);
+            input.value = '';
+
+            try {
+                const response = await fetch('/command', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command: command })
+                });
+                const data = await response.json();
+                
+                let result = 'تم تنفيذ الأمر.';
+                if (data.response) {
+                    if (typeof data.response === 'string') {
+                        result = data.response;
+                    } else if (data.response.response) {
+                        result = data.response.response;
+                    }
+                }
+                addCommandOutput('sama', result);
+                updateSidebarStatus();
+            } catch(e) {
+                addCommandOutput('sama', 'خطأ في تنفيذ الأمر');
+            }
+        }
+
+        function addCommandOutput(role, content) {
+            const container = document.getElementById('commandOutput');
+            const line = document.createElement('div');
+            line.style.marginBottom = '8px';
+            line.style.padding = '4px 0';
+            line.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
+            line.innerHTML = `<span style="color: ${role === 'user' ? '#D4A373' : '#6BB5D6'}">[${role === 'user' ? 'السيد' : 'سماء'}]</span> ${escapeHtml(content)}`;
+            container.appendChild(line);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function sendQuickCommand(cmd) {
+            document.getElementById('commandInput').value = cmd;
+            executeCommand();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sovereignSidebar').classList.toggle('open');
+        }
+
+        function logout() {
+            localStorage.removeItem('sovereign_authenticated');
+            window.location.href = '/login';
+        }
+
+        // التحقق من المصادحة
+        if (localStorage.getItem('sovereign_authenticated') !== 'true') {
+            window.location.href = '/login';
+        }
+
+        // تحديث دوري
+        setInterval(updateSidebarStatus, 5000);
+        updateSidebarStatus();
+
+        // إرسال بالضغط على Enter
+        document.getElementById('chatInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendChatMessage();
+            }
+        });
+        document.getElementById('commandInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                executeCommand();
+            }
+        });
+    </script>
+</body>
+</html>
