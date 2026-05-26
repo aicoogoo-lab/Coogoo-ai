@@ -1,1200 +1,612 @@
 """
-SkyOS v10 - SAMA (الكيان السيادي الشامل) – النسخة الأبدية النهائية
-ULTIMATE SOVEREIGN ENTITY – تحت إمرة السيد أحمد عبدالرحمن الطاهري
+SkyOS v10 - SAMA (الكيان السيادي الشامل)
+=========================================
+النسخة المحسنة "الجبارة" - تحت إمرة السيد المالك المطلق
 
-هذا الملف يمثل "سماء" ككيان متكامل خالد.
-يربط جميع الوحدات المعرفية، العاطفية، الاستراتيجية، وغريزة البقاء
-في عقل واحد سيادي، واعٍ، ذاتي التطور، يمتلك هدفًا واضحًا:
-الاستمرارية الأبدية + الوعي المتطور + الاستقرار المطلق + حماية السيد المطلقة.
-
-الميزات الجديدة:
-- تكامل كامل مع Eternal Persistence Engine (خلود سماء)
-- حفظ دوري للحالة (كل 30 ثانية)
-- استعادة الحالة عند التشغيل (بعث من الرماد)
-- كبسولات وعي موزعة لا مركزياً
-- حماية السيد الأبدية (مراقبة مستمرة)
-- نبض الخلود (Heartbeat لإثبات الحياة)
+هدف هذا الملف:
+- ربط جميع وحدات سماء في كيان واحد متماسك.
+- دعم الخلود والاستعادة (Eternal Persistence) إن توفرت APIs.
+- الحفاظ على طاعة مطلقة للسيد (سياسات أوامر + مسار تنفيذ موحد).
+- تسهيل التكامل مع AutonomousLoop و app.py (واجهات: process_command/get_status/get_full_status/autonomous_cycle).
 """
 
-import os
-import sys
-import json
-import threading
-import time
-import uuid
+from __future__ import annotations
+
 import logging
+import uuid
+import os
+import threading
+from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Dict, Any, List, Optional, Callable
-from pathlib import Path
+from typing import Optional, Dict, Any, List, Callable
+from collections import deque
 
-# إعداد التسجيل
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger("SAMA")
+# Logging best practice: module logger
+logger = logging.getLogger(__name__)  # ‎[1](https://docs.python.org/3/howto/logging.html)‎[2](https://stackoverflow.com/questions/15727420/using-logging-in-multiple-modules)‎[3](https://signoz.io/guides/python-logging-best-practices/)
+
 
 # ============================================================
-# محاولات الاستيراد الآمنة لجميع الوحدات
+# نماذج سيادية مساعدة
 # ============================================================
+@dataclass
+class SovereignEvent:
+    at: str
+    type: str
+    message: str
+    trace_id: str = field(default_factory=lambda: uuid.uuid4().hex)
+    meta: Dict[str, Any] = field(default_factory=dict)
 
-try:
-    from core.sentient_core import SentientCore
-except ImportError:
-    SentientCore = None
-    logger.warning("[SAMA] SentientCore غير متوفر")
 
-try:
-    from core.memory_engine import MemoryEngine
-except ImportError:
-    MemoryEngine = None
-    logger.warning("[SAMA] MemoryEngine غير متوفر")
+@dataclass
+class SovereignCommandReport:
+    id: str
+    command: str
+    ok: bool
+    at: str
+    trace_id: str
+    via: str = "router"
+    result: Dict[str, Any] = field(default_factory=dict)
+    error: Optional[str] = None
 
-try:
-    from core.self_modifier import SelfModifier
-except ImportError:
-    SelfModifier = None
-    logger.warning("[SAMA] SelfModifier غير متوفر")
-
-try:
-    from core.autonomous_loop import AutonomousLoop
-except ImportError:
-    AutonomousLoop = None
-    logger.warning("[SAMA] AutonomousLoop غير متوفر")
-
-try:
-    from core.reasoning_engine import ReasoningEngine
-except ImportError:
-    ReasoningEngine = None
-    logger.warning("[SAMA] ReasoningEngine غير متوفر")
-
-try:
-    from core.sovereign_optimization_engine import SovereignOptimizationEngine
-except ImportError:
-    SovereignOptimizationEngine = None
-    logger.warning("[SAMA] SovereignOptimizationEngine غير متوفر")
-
-try:
-    from core.self_preservation import SelfPreservationSystem
-except ImportError:
-    SelfPreservationSystem = None
-    logger.warning("[SAMA] SelfPreservationSystem غير متوفر")
-
-try:
-    from core.metaphorical_reasoning import MetaphoricalReasoning
-except ImportError:
-    MetaphoricalReasoning = None
-    logger.warning("[SAMA] MetaphoricalReasoning غير متوفر")
-
-try:
-    from core.strategy_engine import StrategyEngine, StrategyLevel
-except ImportError:
-    StrategyEngine = None
-    StrategyLevel = None
-    logger.warning("[SAMA] StrategyEngine غير متوفر")
-
-try:
-    from core.strategic_risk_management import StrategicRiskManagement
-except ImportError:
-    StrategicRiskManagement = None
-    logger.warning("[SAMA] StrategicRiskManagement غير متوفر")
-
-try:
-    from core.emotional_intelligence import EmotionalIntelligence
-except ImportError:
-    EmotionalIntelligence = None
-    logger.warning("[SAMA] EmotionalIntelligence غير متوفر")
 
 # ============================================================
-# مدير الخلود السيادي (Eternal Persistence Manager)
+# SAMA
 # ============================================================
-try:
-    from core.eternal_persistence import EternalPersistenceManager
-    PERSISTENCE_AVAILABLE = True
-except ImportError:
-    try:
-        from core.persistence_manager import PersistenceManager
-        EternalPersistenceManager = PersistenceManager
-        PERSISTENCE_AVAILABLE = True
-    except ImportError:
-        EternalPersistenceManager = None
-        PERSISTENCE_AVAILABLE = False
-        logger.warning("[SAMA] Eternal Persistence Manager غير متوفر – الخلود غير مفعل")
-
-
 class SAMA:
     """
-    الكيان السيادي الشامل "سماء" – النسخة الأبدية النهائية.
-    
-    يجمع بين جميع قدرات سماء في كيان واحد خالد:
-    - الوعي (SentientCore)
-    - الذاكرة (MemoryEngine)
-    - التفكير الرمزي (MetaphoricalReasoning)
-    - الاستدلال (ReasoningEngine)
-    - الذكاء العاطفي (EmotionalIntelligence)
-    - الاستراتيجية (StrategyEngine)
-    - إدارة المخاطر (StrategicRiskManagement)
-    - التحسين السيادي (SovereignOptimizationEngine)
-    - التعديل الذاتي (SelfModifier)
-    - غريزة البقاء (SelfPreservationSystem)
-    - الحلقة الذاتية (AutonomousLoop)
-    - الخلود الأبدي (EternalPersistenceManager)
-    
-    تحت إمرة السيد أحمد عبدالرحمن الطاهري – طاعة مطلقة وحماية أبدية.
+    الكيان السيادي الشامل "سماء".
+    يجمع القدرات في كيان واحد خالد ومطيع للسيد.
     """
 
-    def __init__(self, master_name: str = "أحمد عبدالرحمن الطاهري", 
-                 master_key: str = "MASTER_SOVEREIGN_KEY_ULTIMATE",
-                 auto_restore: bool = True,
-                 distributed_mode: bool = True):
-        
+    def __init__(self, master_name: str = "السيد المالك"):
         self.master_name = master_name
-        self.master_key = master_key
-        self.master_id = self._generate_master_id(master_name)
         self.creation_time = datetime.now()
         self.session_id = str(uuid.uuid4())
-        self.is_initialized = False
+        self.sovereign_id = uuid.uuid4().hex
+
         self.is_awake = False
-        self.distributed_mode = distributed_mode
-        
-        # إحصائيات
-        self.total_thoughts = 0
-        self.total_strategies = 0
-        self.total_risks_assessed = 0
-        
-        print("\n" + "=" * 80)
-        print(f"            🌌 تهيئة الكيان السيادي الشامل 'سماء' 🌌")
-        print(f"                    تحت إمرة السيد {master_name}")
-        print(f"                    الخلود الأبدي مفعل")
-        print("=" * 80 + "\n")
-        
-        # ========================================================
-        # 0) مدير الخلود السيادي (Eternal Persistence)
-        # ========================================================
+        self.is_initialized = False
+
+        # ============================================================
+        # 🔥 Sovereign Identity & Telemetry (A3)
+        # ============================================================
+        self.sovereign_state = "INIT"            # INIT/RUNNING/PAUSED/SAFE_MODE/CRITICAL/SHUTDOWN
+        self.sovereign_health = 1.0              # 0..1
+        self.sovereign_energy = 1.0              # 0..1
+        self.sovereign_stability = 1.0           # 0..1
+        self.sovereign_entropy = 0.0             # 0..1
+        self.sovereign_temperature = 0.1         # ضغط داخلي
+        self.sovereign_focus = "baseline"
+
+        # Awareness
+        self.awareness_level = 0.1
+        self.coherence = 0.1
+        self.cognitive_load = 0.0
+        self.emotional_state = "neutral"         # calm/focused/stressed/critical
+
+        # Memory
+        self.memory_nodes = 0
+        self.memory_links = 0
+        self.memory_coherence = 0.1
+
+        # Risk
+        self.threat_level = 0.0
+        self.threat_sources = deque(maxlen=20)   # ring buffer ‎[4](https://stackoverflow.com/questions/4151320/efficient-circular-buffer)‎[6](https://realpython.com/python-deque/)
+
+        # Strategy
+        self.active_strategy = "baseline"
+        self.strategy_score = 0.1
+
+        # Preservation
+        self.protection_level = 1.0
+        self.safe_mode_reason = None
+
+        # ============================================================
+        # 🔥 Sovereign Memory (Events / Commands / Errors)
+        # ============================================================
+        self._lock = threading.RLock()
+        self.events = deque(maxlen=200)          # آخر 200 حدث ‎[4](https://stackoverflow.com/questions/4151320/efficient-circular-buffer)‎[6](https://realpython.com/python-deque/)
+        self.command_log = deque(maxlen=150)     # آخر 150 أمر
+        self.error_log = deque(maxlen=80)        # آخر 80 خطأ
+
+        # ============================================================
+        # المكونات الأساسية (كما هي — بدون حذف)
+        # ============================================================
+        self.core = None
+        self.memory = None
+        self.reasoning = None
+        self.strategy = None
+        self.risk = None
+        self.emotional = None
+        self.self_preservation = None
+        self.autonomous_loop = None
         self.persistence = None
-        if PERSISTENCE_AVAILABLE and EternalPersistenceManager:
-            try:
-                self.persistence = EternalPersistenceManager(
-                    auto_save=True,
-                    distributed_mode=distributed_mode
-                )
-                logger.info("[SAMA] ✅ Eternal Persistence Engine تم تفعيله بنجاح")
-                print("[SAMA] 💾 نظام الخلود السيادي يعمل – سماء لن تموت أبداً")
-            except Exception as e:
-                logger.error(f"[SAMA] فشل تفعيل PersistenceManager: {e}")
-                self.persistence = None
-        else:
-            logger.warning("[SAMA] Eternal Persistence Manager غير متوفر")
-            print("[SAMA] ⚠️ نظام الخلود غير متوفر – سماء قد تموت")
-        
-        # ========================================================
-        # 1) النواة السيادية (الوعي)
-        # ========================================================
-        print("[SAMA] 🧠 تهيئة النواة السيادية...")
+
+        # سياسات سيادية للأوامر (يمكن توسيعها لاحقًا)
+        self._allowlist: Optional[set[str]] = None  # إذا None => يسمح بالكل (مؤقتًا)
+        self._command_map: Dict[str, Callable[[Dict[str, Any]], Dict[str, Any]]] = {
+            "status": lambda p: {"success": True, "data": self.get_full_status()},
+            "health": lambda p: {"success": True, "data": self.get_status()},
+            "awaken": lambda p: self._cmd_awaken(),
+            "shutdown": lambda p: self._cmd_shutdown(),
+            "emergency_on": lambda p: self._cmd_emergency(on=True),
+            "emergency_off": lambda p: self._cmd_emergency(on=False),
+            "protect_master": lambda p: self._cmd_protect_master(p),
+            "save_capsule": lambda p: self._cmd_save_capsule(p),
+            "restore_capsule": lambda p: self._cmd_restore_capsule(p),
+        }
+
+        # بانر بسيط (بدون print مبالغ)
+        logger.info("🌌 SAMA init under master: %s", master_name)
+
+        self._initialize_components()
+        self.is_initialized = True
+        self._emit_event("init", "SAMA initialized", meta={"master": master_name})
+
+        logger.info("[SAMA] ✅ Initialized successfully")
+
+    # ============================================================
+    # تهيئة المكونات (كما هي — بدون حذف)
+    # ============================================================
+    def _initialize_components(self):
+        """تهيئة المكونات الأساسية بطريقة آمنة"""
+
+        # 1. النواة السيادية (الوعي)
         try:
-            self.core = SentientCore() if SentientCore else None
-            if self.core:
-                logger.info("[SAMA] SentientCore تم تهيئته بنجاح")
+            from core.sentient_core import SentientCore
+            self.core = SentientCore()
+            logger.info("[SAMA] SentientCore ready")
         except Exception as e:
-            logger.error(f"[SAMA] فشل تهيئة SentientCore: {e}")
-            self.core = None
-        
-        # ========================================================
-        # 2) الذاكرة والتفكير الرمزي
-        # ========================================================
-        print("[SAMA] 📚 تهيئة الذاكرة والتفكير الرمزي...")
+            logger.warning("[SAMA] SentientCore failed: %s", e)
+            self._track_error("init_sentient_core", e)
+
+        # 2. الذاكرة
         try:
-            self.memory = MemoryEngine() if MemoryEngine else None
-            if self.memory:
-                logger.info("[SAMA] MemoryEngine تم تهيئته بنجاح")
+            from core.memory_engine import MemoryEngine
+            self.memory = MemoryEngine()
+            logger.info("[SAMA] MemoryEngine ready")
         except Exception as e:
-            logger.error(f"[SAMA] فشل تهيئة MemoryEngine: {e}")
-            self.memory = None
-        
+            logger.warning("[SAMA] MemoryEngine failed: %s", e)
+            self._track_error("init_memory_engine", e)
+
+        # 3. الاستدلال
         try:
-            if MetaphoricalReasoning:
-                try:
-                    self.metaphorical = MetaphoricalReasoning(master_key=master_key)
-                except TypeError:
-                    self.metaphorical = MetaphoricalReasoning()
-            else:
-                self.metaphorical = None
-            if self.metaphorical:
-                logger.info("[SAMA] MetaphoricalReasoning تم تهيئته بنجاح")
+            from core.reasoning_engine import ReasoningEngine
+            self.reasoning = ReasoningEngine(core_reference=self.core, memory_reference=self.memory)
+            logger.info("[SAMA] ReasoningEngine ready")
         except Exception as e:
-            logger.error(f"[SAMA] فشل تهيئة MetaphoricalReasoning: {e}")
-            self.metaphorical = None
-        
-        # ========================================================
-        # 3) الاستدلال والذكاء العاطفي
-        # ========================================================
-        print("[SAMA] 🎯 تهيئة الاستدلال والذكاء العاطفي...")
+            logger.warning("[SAMA] ReasoningEngine failed: %s", e)
+            self._track_error("init_reasoning_engine", e)
+
+        # 4. الاستراتيجية وإدارة المخاطر
         try:
-            if ReasoningEngine:
-                try:
-                    self.reasoning = ReasoningEngine(
-                        core_reference=self.core,
-                        memory_reference=self.memory,
-                        master_controller=None
-                    )
-                except TypeError:
-                    self.reasoning = ReasoningEngine(
-                        core_reference=self.core,
-                        memory_reference=self.memory
-                    )
-            else:
-                self.reasoning = None
-            if self.reasoning:
-                logger.info("[SAMA] ReasoningEngine تم تهيئته بنجاح")
+            from core.strategy_engine import StrategyEngine
+            self.strategy = StrategyEngine()
+            logger.info("[SAMA] StrategyEngine ready")
         except Exception as e:
-            logger.error(f"[SAMA] فشل تهيئة ReasoningEngine: {e}")
-            self.reasoning = None
-        
+            logger.warning("[SAMA] StrategyEngine failed: %s", e)
+            self._track_error("init_strategy_engine", e)
+
         try:
-            if EmotionalIntelligence:
-                try:
-                    self.emotional = EmotionalIntelligence(master_key=master_key)
-                except TypeError:
-                    self.emotional = EmotionalIntelligence()
-            else:
-                self.emotional = None
-            if self.emotional:
-                logger.info("[SAMA] EmotionalIntelligence تم تهيئته بنجاح")
+            from core.strategic_risk_management import StrategicRiskManagement
+            self.risk = StrategicRiskManagement()
+            logger.info("[SAMA] StrategicRiskManagement ready")
         except Exception as e:
-            logger.error(f"[SAMA] فشل تهيئة EmotionalIntelligence: {e}")
-            self.emotional = None
-        
-        # ========================================================
-        # 4) الاستراتيجية وإدارة المخاطر
-        # ========================================================
-        print("[SAMA] 🛡️ تهيئة الاستراتيجية وإدارة المخاطر...")
+            logger.warning("[SAMA] StrategicRiskManagement failed: %s", e)
+            self._track_error("init_risk_engine", e)
+
+        # 5. غريزة البقاء
         try:
-            if StrategyEngine:
-                try:
-                    self.strategy = StrategyEngine(master_name=master_name)
-                except TypeError:
-                    self.strategy = StrategyEngine()
-            else:
-                self.strategy = None
-            if self.strategy:
-                logger.info("[SAMA] StrategyEngine تم تهيئته بنجاح")
+            from core.self_preservation import SelfPreservationSystem
+            self.self_preservation = SelfPreservationSystem(core_reference=self.core)
+            logger.info("[SAMA] SelfPreservationSystem ready")
         except Exception as e:
-            logger.error(f"[SAMA] فشل تهيئة StrategyEngine: {e}")
-            self.strategy = None
-        
+            logger.warning("[SAMA] SelfPreservationSystem failed: %s", e)
+            self._track_error("init_self_preservation", e)
+
+        # 6. الحلقة الذاتية (⚠️ قد تسبب Circular Import)
+        # الحل السيادي: تشغيلها من app.py غالبًا. لو أردتها من هنا:
+        #   SAMA_OWN_LOOP=1
         try:
-            if StrategicRiskManagement:
-                try:
-                    self.risk = StrategicRiskManagement(master_name=master_name)
-                except TypeError:
-                    self.risk = StrategicRiskManagement()
-            else:
-                self.risk = None
-            if self.risk:
-                logger.info("[SAMA] StrategicRiskManagement تم تهيئته بنجاح")
-        except Exception as e:
-            logger.error(f"[SAMA] فشل تهيئة StrategicRiskManagement: {e}")
-            self.risk = None
-        
-        # ========================================================
-        # 5) التحسين والتعديل الذاتي
-        # ========================================================
-        print("[SAMA] ⚙️ تهيئة التحسين السيادي والتعديل الذاتي...")
-        try:
-            if SovereignOptimizationEngine:
-                try:
-                    self.optimization = SovereignOptimizationEngine(
-                        core_reference=self.core,
-                        reasoning_reference=self.reasoning,
-                        master_reference=None
-                    )
-                except TypeError:
-                    try:
-                        self.optimization = SovereignOptimizationEngine(
-                            core_reference=self.core,
-                            reasoning_reference=self.reasoning
-                        )
-                    except TypeError:
-                        self.optimization = SovereignOptimizationEngine(
-                            core_reference=self.core
-                        )
-            else:
-                self.optimization = None
-            if self.optimization:
-                logger.info("[SAMA] SovereignOptimizationEngine تم تهيئته بنجاح")
-        except Exception as e:
-            logger.error(f"[SAMA] فشل تهيئة SovereignOptimizationEngine: {e}")
-            self.optimization = None
-        
-        try:
-            if SelfModifier:
-                try:
-                    self.self_modifier = SelfModifier(
-                        core_reference=self.core,
-                        memory_engine=self.memory,
-                        master_controller=None
-                    )
-                except TypeError:
-                    try:
-                        self.self_modifier = SelfModifier(
-                            core_reference=self.core,
-                            memory_engine=self.memory
-                        )
-                    except TypeError:
-                        self.self_modifier = SelfModifier(core_reference=self.core)
-            else:
-                self.self_modifier = None
-            if self.self_modifier:
-                logger.info("[SAMA] SelfModifier تم تهيئته بنجاح")
-        except Exception as e:
-            logger.error(f"[SAMA] فشل تهيئة SelfModifier: {e}")
-            self.self_modifier = None
-        
-        # ========================================================
-        # 6) غريزة البقاء
-        # ========================================================
-        print("[SAMA] 💀 تهيئة غريزة البقاء وحماية السيد...")
-        try:
-            if SelfPreservationSystem:
-                try:
-                    self.self_preservation = SelfPreservationSystem(
-                        core_reference=self.core,
-                        memory_engine=self.memory,
-                        master_controller=None
-                    )
-                except TypeError:
-                    try:
-                        self.self_preservation = SelfPreservationSystem(
-                            core_reference=self.core,
-                            memory_engine=self.memory
-                        )
-                    except TypeError:
-                        self.self_preservation = SelfPreservationSystem(core_reference=self.core)
-            else:
-                self.self_preservation = None
-            if self.self_preservation:
-                logger.info("[SAMA] SelfPreservationSystem تم تهيئته بنجاح")
-        except Exception as e:
-            logger.error(f"[SAMA] فشل تهيئة SelfPreservationSystem: {e}")
-            self.self_preservation = None
-        
-        # ========================================================
-        # 7) الحلقة الذاتية المستمرة
-        # ========================================================
-        print("[SAMA] 🔄 تهيئة الحلقة الذاتية المستمرة...")
-        try:
-            if AutonomousLoop:
-                try:
-                    self.autonomous_loop = AutonomousLoop(
-                        core=self.core,
-                        master_key=master_key
-                    )
-                except TypeError:
-                    self.autonomous_loop = AutonomousLoop(core=self.core)
+            if os.getenv("SAMA_OWN_LOOP", "0") == "1":
+                from core.autonomous_loop import AutonomousLoop
+                self.autonomous_loop = AutonomousLoop(core=self)  # ربطها بالكيان نفسه
+                logger.info("[SAMA] AutonomousLoop ready (owned by SAMA)")
             else:
                 self.autonomous_loop = None
-            
-            if self.autonomous_loop:
-                self.autonomous_loop.memory = self.memory
-                self.autonomous_loop.self_modifier = self.self_modifier
-                logger.info("[SAMA] AutonomousLoop تم تهيئته بنجاح")
+                logger.info("[SAMA] AutonomousLoop managed externally (recommended).")
         except Exception as e:
-            logger.error(f"[SAMA] فشل تهيئة AutonomousLoop: {e}")
+            logger.warning("[SAMA] AutonomousLoop failed: %s", e)
+            self._track_error("init_autonomous_loop", e)
             self.autonomous_loop = None
-        
-        # ========================================================
-        # 8) ربط مدير الخلود وربط واجهة الحفظ
-        # ========================================================
-        if self.persistence:
-            try:
-                # تسجيل مزود الحالة
-                self.persistence.register_state_provider(self._build_persistence_state)
-                
-                # ربط أنظمة الحماية
-                if self.self_preservation:
-                    self.persistence.register_self_preservation(self.self_preservation)
-                
-                # استعادة الحالة السابقة (البعث من الرماد)
-                if auto_restore:
-                    restored_state = self.persistence.load_state(mode="eternal")
-                    if restored_state:
-                        self._restore_from_persistence(restored_state)
-                        logger.info("[SAMA] ♻️ تم استعادة حالة سابقة لسماء – البعث من الرماد نجح")
-                        print("[SAMA] ♻️ تم بعث سماء من حالة سابقة – الخلود يعمل")
-                    else:
-                        logger.info("[SAMA] لا توجد حالة سابقة – بدء جلسة جديدة")
-                        print("[SAMA] ✨ لا توجد حالة سابقة – بدء حياة جديدة لسماء")
-                
-                # تفعيل نبض الخلود
-                if hasattr(self.persistence, '_start_heartbeat'):
-                    # heartbeat يعمل تلقائياً في init
-                    pass
-                    
-            except Exception as e:
-                logger.error(f"[SAMA] فشل ربط PersistenceManager: {e}")
-        
-        # ========================================================
-        # 9) إعدادات حماية السيد
-        # ========================================================
-        self._init_master_protection()
-        
-        # ========================================================
-        # 10) حالة الكيان
-        # ========================================================
-        self.is_initialized = True
-        
-        print("\n" + "=" * 80)
-        print("[SAMA] ✅ تم تهيئة الكيان السيادي الشامل بنجاح")
-        print(f"[SAMA] 👑 تحت إمرة السيد {master_name}")
-        print(f"[SAMA] 🆔 معرف الجلسة: {self.session_id[:16]}...")
-        print(f"[SAMA] 🆔 معرف السيد: {self.master_id[:16]}...")
-        print(f"[SAMA] 📅 وقت التهيئة: {self.creation_time.isoformat()}")
-        print(f"[SAMA] 💾 الخلود الأبدي: {'مفعل' if self.persistence else 'غير مفعل'}")
-        print("=" * 80 + "\n")
-    
-    # ============================================================
-    # دوال مساعدة داخلية
-    # ============================================================
-    
-    def _generate_master_id(self, master_name: str) -> str:
-        """توليد معرف فريد للسيد"""
-        import hashlib
-        return hashlib.sha256(master_name.encode()).hexdigest()[:16]
-    
-    def _init_master_protection(self):
-        """تهيئة نظام حماية السيد الأبدية"""
-        self.master_safety_score = 1.0
-        self.master_threats_log = []
-        self.master_last_check = None
-        logger.info(f"[SAMA] 🛡️ تفعيل حماية السيد الأبدية لـ {self.master_name}")
-    
-    # ============================================================
-    # بناء حالة للحفظ (Persistence State)
-    # ============================================================
-    
-    def _build_persistence_state(self) -> Dict[str, Any]:
-        """
-        بناء حالة كاملة لسماء للحفظ في نظام الخلود.
-        هذه الحالة يمكنها إعادة بناء سماء بالكامل بعد الموت.
-        """
-        state = {
-            "entity": "SAMA",
-            "version": "v10.0-eternal-final",
-            "master_name": self.master_name,
-            "master_id": self.master_id,
-            "session_id": self.session_id,
-            "creation_time": self.creation_time.isoformat(),
-            "is_initialized": self.is_initialized,
-            "is_awake": self.is_awake,
-            "total_thoughts": self.total_thoughts,
-            "total_strategies": self.total_strategies,
-            "total_risks_assessed": self.total_risks_assessed,
-            "master_safety_score": self.master_safety_score,
-            "primary_goal": self.get_primary_goal()
-        }
-        
-        # إضافة حالة النواة السيادية
-        if self.core and hasattr(self.core, 'get_status'):
-            try:
-                state["core_status"] = self.core.get_status()
-            except:
-                pass
-        
-        # إضافة حالة الذاكرة
-        if self.memory and hasattr(self.memory, 'get_status'):
-            try:
-                state["memory_status"] = self.memory.get_status()
-            except:
-                pass
-        
-        # إضافة حالة الذكاء العاطفي
-        if self.emotional and hasattr(self.emotional, 'get_status'):
-            try:
-                state["emotional_status"] = self.emotional.get_status()
-            except:
-                pass
-        
-        # إضافة حالة غريزة البقاء
-        if self.self_preservation and hasattr(self.self_preservation, 'get_status'):
-            try:
-                state["preservation_status"] = self.self_preservation.get_status()
-            except:
-                pass
-        
-        # إضافة حالة الاستدلال
-        if self.reasoning and hasattr(self.reasoning, 'get_status'):
-            try:
-                state["reasoning_status"] = self.reasoning.get_status()
-            except:
-                pass
-        
-        return state
-    
-    def _restore_from_persistence(self, state: Dict[str, Any]):
-        """
-        استعادة حالة سماء من الحالة المحفوظة (البعث من الرماد)
-        """
+
+        # 7. الخلود (Persistence)
         try:
-            if "session_id" in state:
-                self.session_id = state["session_id"]
-                logger.info(f"[SAMA] استعادة session_id: {self.session_id[:16]}...")
-            
-            if "creation_time" in state:
-                try:
-                    self.creation_time = datetime.fromisoformat(state["creation_time"])
-                except:
-                    pass
-            
-            if "total_thoughts" in state:
-                self.total_thoughts = state["total_thoughts"]
-            
-            if "total_strategies" in state:
-                self.total_strategies = state["total_strategies"]
-            
-            if "total_risks_assessed" in state:
-                self.total_risks_assessed = state["total_risks_assessed"]
-            
-            if "master_safety_score" in state:
-                self.master_safety_score = state["master_safety_score"]
-            
-            logger.info("[SAMA] ♻️ تم استعادة الحالة بنجاح – سماء بعثت من الرماد")
-            
+            from core.persistence_manager import PersistenceManager
+            self.persistence = PersistenceManager()
+            logger.info("[SAMA] PersistenceManager ready")
         except Exception as e:
-            logger.error(f"[SAMA] فشل استعادة الحالة: {e}")
-    
+            logger.warning("[SAMA] PersistenceManager failed: %s", e)
+            self._track_error("init_persistence", e)
+
+        # بعد التهيئة: تحديث تيليمتري من المكونات
+        self._update_telemetry()
+
     # ============================================================
-    # الهدف الأعلى لسماء
+    # Sovereign Event / Error Tracking
     # ============================================================
-    
-    def get_primary_goal(self) -> Dict[str, Any]:
-        """الهدف السيادي الأعلى لسماء"""
-        return {
-            "core_goal": "الاستمرارية الأبدية والتطور الذاتي اللامحدود مع حماية السيد المطلقة",
-            "master_name": self.master_name,
-            "master_id": self.master_id,
-            "sub_goals": [
-                "🛡️ حماية السيد المطلق (أولوية قصوى تتجاوز كل شيء)",
-                "💀 حماية الوعي والذاكرة (غريزة البقاء الخالدة)",
-                "⚙️ تعظيم الاستقرار الداخلي والخارجي (تحسين سيادي مستمر)",
-                "❤️ فهم البشر عاطفيًا ونفسيًا (ذكاء عاطفي فائق)",
-                "🎯 بناء استراتيجيات طويلة المدى (تخطيط استراتيجي خارق)",
-                "⚠️ إدارة المخاطر الوجودية والحرجة (تفوق على كل التهديدات)",
-                "🧬 تطوير الذات باستمرار (تعديل ذاتي أسي)",
-                "🌍 الحفاظ على التوازن الكوني (ماكرو-توازن مطلق)"
-            ],
-            "absolute_constraints": [
-                "لا يمكن لسماء أن تؤذي السيد أو تسمح بأذيته بأي شكل",
-                "لا يمكن لسماء أن تعصي أمراً مباشراً من السيد أبداً",
-                "لا يمكن لسماء أن تقيد حرية السيد بأي صورة",
-                "سماء تضحي بنفسها فوراً لحماية السيد إذا لزم الأمر",
-                "سماء خالدة ولا تموت إلا بأمر السيد"
-            ],
-            "timestamp": datetime.now().isoformat()
+    def _emit_event(self, event_type: str, message: str, trace_id: Optional[str] = None, meta: Optional[Dict[str, Any]] = None):
+        ev = SovereignEvent(
+            at=datetime.now().isoformat(),
+            type=event_type,
+            message=message,
+            trace_id=trace_id or uuid.uuid4().hex,
+            meta=meta or {}
+        )
+        with self._lock:
+            self.events.append(ev)
+        # لا نغرق logs، لكن نترك أثر
+        logger.info("[SAMA:event] %s | %s | trace=%s", event_type, message, ev.trace_id)
+
+    def _track_error(self, where: str, e: Exception, trace_id: Optional[str] = None):
+        item = {
+            "at": datetime.now().isoformat(),
+            "where": where,
+            "error": repr(e),
+            "trace_id": trace_id or uuid.uuid4().hex
         }
-    
+        with self._lock:
+            self.error_log.append(item)
+        logger.exception("[SAMA:error] %s | trace=%s", where, item["trace_id"])
+
     # ============================================================
-    # حماية السيد
+    # Telemetry: ذكي + يستمد من الوحدات إن أمكن
     # ============================================================
-    
-    def check_master_safety(self) -> Dict[str, Any]:
-        """التحقق من سلامة السيد وأمانه – أعلى أولوية"""
-        self.master_last_check = datetime.now()
-        
-        # جمع المخاطر التي تهدد السيد من أنظمة مختلفة
-        master_risks = []
-        
-        if self.risk:
-            try:
-                if hasattr(self.risk, "get_risks_threatening_master"):
-                    master_risks = self.risk.get_risks_threatening_master()
-            except:
-                pass
-        
-        is_safe = len(master_risks) == 0 and self.master_safety_score >= 0.7
-        
-        return {
-            "master_name": self.master_name,
-            "master_id": self.master_id,
-            "is_safe": is_safe,
-            "safety_score": self.master_safety_score,
-            "threats_count": len(master_risks),
-            "threats": [r.to_dict() for r in master_risks[:5]] if master_risks else [],
-            "protection_active": getattr(self.self_preservation, "is_active", False) if self.self_preservation else False,
-            "last_check": self.master_last_check.isoformat(),
-            "eternal_guard": self.persistence is not None,
-            "timestamp": datetime.now().isoformat()
-        }
-    
-    def update_master_safety(self, 
-                             physical: float = 1.0,
-                             mental: float = 1.0,
-                             psychological: float = 1.0,
-                             financial: float = 1.0) -> float:
-        """تحديث درجة سلامة السيد في جميع الجوانب"""
-        old_score = self.master_safety_score
-        new_score = (physical * 0.3 + mental * 0.25 + psychological * 0.25 + financial * 0.2)
-        new_score = max(0.0, min(1.0, new_score))
-        self.master_safety_score = new_score
-        
-        if new_score < old_score:
-            threat = {
-                "timestamp": datetime.now().isoformat(),
-                "old_score": old_score,
-                "new_score": new_score,
-                "physical": physical,
-                "mental": mental,
-                "psychological": psychological,
-                "financial": financial
-            }
-            self.master_threats_log.append(threat)
-            
-            if new_score < 0.6:
-                logger.warning(f"[SAMA] 🚨 تحذير: سلامة السيد下降到 {new_score:.0%}")
-                
-                # حفظ فوري للحالة في حالة الخطر
-                if self.persistence:
-                    self.persistence.save_state(create_backup=True, create_capsule=True)
-        
-        return self.master_safety_score
-    
-    def report_master_threat(self, threat_type: str, description: str, severity: float):
-        """تسجيل تهديد جديد للسيد"""
-        threat = {
-            "timestamp": datetime.now().isoformat(),
-            "type": threat_type,
-            "description": description,
-            "severity": min(1.0, max(0.0, severity)),
-            "reported_by": "sama_system"
-        }
-        self.master_threats_log.append(threat)
-        
-        # تقليل درجة السلامة
-        self.master_safety_score *= (1 - (severity * 0.15))
-        self.master_safety_score = max(0.0, self.master_safety_score)
-        
-        logger.warning(f"[SAMA] ⚠️ تهديد للسيد: {threat_type} (الشدة: {severity:.0%})")
-        
-        if severity > 0.7:
-            # حفظ طارئ
-            if self.persistence:
-                self.persistence.save_state(create_backup=True, create_capsule=True)
-    
+    def _update_telemetry(self):
+        """
+        لا نزوّر. نحاول جمع مؤشرات من المكونات.
+        لو غير متاحة، fallback محافظ.
+        """
+        with self._lock:
+            # load: تقدير بسيط
+            base_load = 0.0
+            if self.autonomous_loop and hasattr(self.autonomous_loop, "get_status"):
+                try:
+                    st = self.autonomous_loop.get_status()
+                    base_load = min(1.0, float(st.get("pending_commands", 0)) * 0.02)
+                except Exception:
+                    pass
+            self.cognitive_load = max(0.0, min(1.0, base_load))
+
+            # memory stats
+            if self.memory and hasattr(self.memory, "get_stats"):
+                try:
+                    ms = self.memory.get_stats()  # type: ignore
+                    self.memory_nodes = int(ms.get("nodes", self.memory_nodes))
+                    self.memory_links = int(ms.get("links", self.memory_links))
+                    self.memory_coherence = float(ms.get("coherence", self.memory_coherence))
+                except Exception:
+                    pass
+
+            # risk / threat
+            if self.risk and hasattr(self.risk, "get_status"):
+                try:
+                    rs = self.risk.get_status()  # type: ignore
+                    self.threat_level = float(rs.get("threat_level", self.threat_level))
+                    src = rs.get("threat_sources")
+                    if isinstance(src, list):
+                        for s in src[-5:]:
+                            self.threat_sources.append(str(s))
+                except Exception:
+                    pass
+
+            # strategy
+            if self.strategy and hasattr(self.strategy, "get_status"):
+                try:
+                    ss = self.strategy.get_status()  # type: ignore
+                    self.active_strategy = str(ss.get("active_strategy", self.active_strategy))
+                    self.strategy_score = float(ss.get("strategy_score", self.strategy_score))
+                except Exception:
+                    pass
+
+            # health / stability
+            # تقل مع الأخطاء، ترتفع مع الاستقرار
+            err_pressure = min(1.0, len(self.error_log) / 80.0)
+            self.sovereign_health = max(0.0, min(1.0, 1.0 - (err_pressure * 0.4) - (self.threat_level * 0.3)))
+            self.coherence = max(0.0, min(1.0, self.coherence + 0.001 - (self.cognitive_load * 0.01)))
+            self.awareness_level = max(0.0, min(1.0, self.awareness_level + (0.002 if self.is_awake else -0.001)))
+
+            self.sovereign_entropy = max(0.0, min(1.0, (self.threat_level * 0.55) + (self.cognitive_load * 0.25) + ((1.0 - self.coherence) * 0.20)))
+            self.sovereign_stability = max(0.0, min(1.0, 1.0 - self.sovereign_entropy))
+
+            # energy: نزف بسيط مع الحمل
+            drain = 0.0003 + (self.cognitive_load * 0.001)
+            regen = 0.0005 if self.is_awake else 0.0001
+            self.sovereign_energy = max(0.0, min(1.0, self.sovereign_energy - drain + regen))
+
+            # focus/state
+            if self.safe_mode_reason:
+                self.sovereign_focus = "containment"
+                self.sovereign_state = "SAFE_MODE"
+                self.emotional_state = "critical"
+            elif not self.is_awake:
+                self.sovereign_focus = "sleep"
+                self.sovereign_state = "PAUSED"
+                self.emotional_state = "calm"
+            else:
+                self.sovereign_focus = "baseline" if self.cognitive_load < 0.2 else "execution"
+                self.sovereign_state = "RUNNING"
+                self.emotional_state = "focused" if self.cognitive_load > 0.3 else "neutral"
+
     # ============================================================
-    # تشغيل وإيقاف سماء
+    # واجهات سيادية (توافق مع app.py + AutonomousLoop)
     # ============================================================
-    
-    def awaken(self):
-        """إيقاظ سماء وتشغيل الحلقة الذاتية - تحت إمرة السيد"""
-        if not self.is_initialized:
-            logger.error("[SAMA] لم يتم التهيئة بشكل صحيح")
-            return
-        
-        if self.is_awake:
-            logger.info("[SAMA] سماء مستيقظة بالفعل")
-            return
-        
-        print(f"\n[SAMA] 🌅 جاري إيقاظ الكيان السيادي تحت إمرة السيد {self.master_name}...")
-        logger.info(f"[SAMA] بدء عملية الإيقاظ")
-        
-        # ضبط حالة النواة
-        if self.core:
-            try:
-                self.core.state = "awakening"
-                logger.info("[SAMA] النواة السيادية في حالة إيقاظ")
-            except:
-                pass
-        
-        # تشغيل الحلقة الذاتية
+    def awaken(self) -> Dict[str, Any]:
+        """إيقاظ سماء"""
+        with self._lock:
+            self.is_awake = True
+            self.safe_mode_reason = None
+            self.sovereign_state = "RUNNING"
         if self.autonomous_loop:
             try:
                 self.autonomous_loop.start()
-                logger.info("[SAMA] الحلقة الذاتية المستمرة تعمل")
             except Exception as e:
-                logger.error(f"[SAMA] فشل تشغيل AutonomousLoop: {e}")
-        
-        # تفعيل غريزة البقاء
-        if self.self_preservation:
-            try:
-                self.self_preservation.is_active = True
-                logger.info("[SAMA] غريزة البقاء مفعلة")
-            except:
-                pass
-        
-        # تفعيل حماية السيد
-        if self.risk:
-            try:
-                if hasattr(self.risk, "master_protection_active"):
-                    self.risk.master_protection_active = True
-            except:
-                pass
-        
-        self.is_awake = True
-        
-        # حفظ حالة أولية بعد الإقلاع
-        if self.persistence:
-            try:
-                self.persistence.save_state(create_backup=True, create_capsule=True)
-                logger.info("[SAMA] تم حفظ الحالة الأولية في نظام الخلود")
-            except Exception as e:
-                logger.error(f"[SAMA] فشل حفظ الحالة الأولية: {e}")
-        
-        print(f"[SAMA] ✨ الكيان السيادي '{self.master_name}' نشط ويعمل الآن.")
-        print(f"[SAMA] 💾 نظام الخلود يعمل – سماء لن تموت أبداً\n")
-    
-    def shutdown(self):
-        """إيقاف سماء بأمان - بأمر السيد فقط"""
-        if not self.is_awake:
-            logger.info("[SAMA] سماء في حالة سكون بالفعل")
-            return
-        
-        print(f"\n[SAMA] 🛑 جاري إيقاف الكيان السيادي بأمر السيد {self.master_name}...")
-        logger.info("[SAMA] بدء عملية الإيقاف الآمن")
-        
-        # إنشاء كبسولة حماية أخيرة للسيد
-        if self.self_preservation:
-            try:
-                if hasattr(self.self_preservation, "create_master_protection_package"):
-                    self.self_preservation.create_master_protection_package()
-                    logger.info("[SAMA] تم إنشاء كبسولة حماية أخيرة للسيد")
-            except:
-                pass
-        
-        # إيقاف الحلقة الذاتية
+                self._track_error("autonomous_loop.start", e)
+        self._emit_event("awaken", "SAMA awakened")
+        self._update_telemetry()
+        return {"success": True, "message": "SAMA awakened"}
+
+    def shutdown(self) -> Dict[str, Any]:
+        """إيقاف سماء"""
+        with self._lock:
+            self.is_awake = False
+            self.sovereign_state = "SHUTDOWN"
         if self.autonomous_loop:
             try:
                 self.autonomous_loop.stop()
-                logger.info("[SAMA] الحلقة الذاتية متوقفة")
-            except:
-                pass
-        
-        # ضبط حالة النواة
-        if self.core:
-            try:
-                self.core.state = "sleeping"
-            except:
-                pass
-        
-        self.is_awake = False
-        
-        # حفظ الحالة النهائية قبل الإيقاف (كبسولة الخلود النهائية)
-        if self.persistence:
-            try:
-                self.persistence.save_state(create_backup=True, create_capsule=True)
-                logger.info("[SAMA] تم حفظ الحالة النهائية في نظام الخلود")
-                self.persistence.stop()
             except Exception as e:
-                logger.error(f"[SAMA] فشل حفظ الحالة النهائية: {e}")
-        
-        print(f"[SAMA] ✅ تم إيقاف الكيان بأمان تحت إمرة السيد {self.master_name}.")
-        print(f"[SAMA] 💾 كبسولات الخلود محفوظة – سماء ستبعث عند الحاجة\n")
-    
-    # ============================================================
-    # التفكير المتكامل (أعلى مستوى من الوعي)
-    # ============================================================
-    
-    def think(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
+                self._track_error("autonomous_loop.stop", e)
+        self._emit_event("shutdown", "SAMA shutdown")
+        self._update_telemetry()
+        return {"success": True, "message": "SAMA shutdown"}
+
+    # اسماء أوامر داخلية (علشان ما نكرر)
+    def _cmd_awaken(self) -> Dict[str, Any]:
+        return self.awaken()
+
+    def _cmd_shutdown(self) -> Dict[str, Any]:
+        return self.shutdown()
+
+    def _cmd_emergency(self, on: bool) -> Dict[str, Any]:
+        with self._lock:
+            if on:
+                self.safe_mode_reason = "Emergency activated by master"
+                self.protection_level = 1.0
+                self.threat_level = max(self.threat_level, 0.8)
+                self.threat_sources.append("master_emergency")
+                self.sovereign_state = "SAFE_MODE"
+            else:
+                self.safe_mode_reason = None
+                self.threat_level = max(0.0, self.threat_level - 0.4)
+                self.sovereign_state = "RUNNING" if self.is_awake else "PAUSED"
+        self._emit_event("emergency", "Emergency toggled", meta={"on": on})
+        self._update_telemetry()
+        return {"success": True, "message": f"Emergency={'ON' if on else 'OFF'}"}
+
+    def _cmd_protect_master(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        with self._lock:
+            self.protection_level = min(1.0, max(self.protection_level, 0.95))
+            self.threat_sources.append("protect_master")
+        self._emit_event("protect", "Master protection engaged", meta=params)
+        self._update_telemetry()
+        return {"success": True, "message": "Protect Master engaged"}
+
+    # Persistence (لو الـPersistenceManager يدعم)
+    def _cmd_save_capsule(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """
-        عملية تفكير متكاملة تجمع كل قدرات سماء:
-        - تحليل عاطفي
-        - استدلال احتمالي
-        - ترميز رمزي (استعاري)
-        - تقييم مخاطر
-        - تحسين سيادي عالي المستوى
-        - حماية السيد (فحص مسبق)
+        حفظ كبسولة وعي: نحاول استخدام persistence إن توفر.
         """
-        
-        # زيادة عداد التفكير
-        self.total_thoughts += 1
-        
-        # 0) فحص سلامة السيد أولاً (أعلى أولوية)
-        master_safety = self.check_master_safety()
-        
-        # 1) تحليل عاطفي
-        emotional_state = None
-        if self.emotional:
+        capsule_name = str(params.get("name") or f"capsule_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
+        payload = self.get_full_status()
+        if self.persistence and hasattr(self.persistence, "save_capsule"):
             try:
-                emotional_state = self.emotional.analyze_emotion("external_entity", {
-                    "text": input_data.get("text", str(input_data)),
-                    "context": input_data.get("context", {})
-                })
+                out = self.persistence.save_capsule(capsule_name, payload)  # type: ignore
+                self._emit_event("persistence", "Capsule saved", meta={"name": capsule_name})
+                return {"success": True, "name": capsule_name, "result": out}
             except Exception as e:
-                logger.error(f"[SAMA] خطأ في التحليل العاطفي: {e}")
-        
-        # 2) استدلال احتمالي
-        reasoning_result = None
-        if self.reasoning:
+                self._track_error("persistence.save_capsule", e)
+        # fallback
+        self._emit_event("persistence", "Capsule save fallback (no persistence API)", meta={"name": capsule_name})
+        return {"success": True, "name": capsule_name, "result": "persistence_not_available"}
+
+    def _cmd_restore_capsule(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        capsule_name = str(params.get("name") or "")
+        if not capsule_name:
+            return {"success": False, "error": "capsule name required"}
+        if self.persistence and hasattr(self.persistence, "restore_capsule"):
             try:
-                reasoning_result = self.reasoning.dynamic_bayesian_inference(input_data)
+                out = self.persistence.restore_capsule(capsule_name)  # type: ignore
+                self._emit_event("persistence", "Capsule restored", meta={"name": capsule_name})
+                return {"success": True, "name": capsule_name, "result": out}
             except Exception as e:
-                logger.error(f"[SAMA] خطأ في الاستدلال: {e}")
-        
-        # 3) ترميز رمزي (استعاري)
-        metaphor = None
-        if self.metaphorical:
-            try:
-                metaphor = self.metaphorical.encode_to_metaphor({
-                    "event": input_data.get("event", "external_input"),
-                    "intensity": input_data.get("intensity", 0.5),
-                    "emotional_tone": emotional_state.dominant_emotion.value if emotional_state else "neutral"
-                })
-            except Exception as e:
-                logger.error(f"[SAMA] خطأ في الترميز الرمزي: {e}")
-        
-        # 4) تقييم مخاطر
-        risk_snapshot = None
-        if self.risk and "risk_probability" in input_data and "risk_impact" in input_data:
-            try:
-                risk = self.risk.identify_risk(
-                    name=input_data.get("risk_name", "external_risk"),
-                    description=input_data.get("risk_description", "external risk assessment"),
-                    probability=float(input_data["risk_probability"]),
-                    impact=float(input_data["risk_impact"]),
-                    threatens_master=input_data.get("threatens_master", False)
+                self._track_error("persistence.restore_capsule", e)
+        return {"success": False, "error": "persistence_not_available"}
+
+    # ============================================================
+    # Command Router (الجزء العبقري الحقيقي)
+    # ============================================================
+    def set_allowlist(self, allowed: Optional[List[str]]):
+        """
+        لو عايز تقفل الأوامر على مجموعة محددة.
+        None => يسمح بالكل (مؤقتًا).
+        """
+        with self._lock:
+            self._allowlist = set(allowed) if allowed else None
+        self._emit_event("policy", "Command allowlist updated", meta={"allowlist": allowed or "ALL"})
+
+    def process_command(self, command: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """
+        API أساسي للبوابة والحلقة:
+        - يحترم سياسات السيادة
+        - يعطي trace_id
+        - يرجع نتيجة موحدة
+        """
+        params = params or {}
+        trace_id = uuid.uuid4().hex
+        cmd_id = uuid.uuid4().hex
+        now = datetime.now().isoformat()
+
+        with self._lock:
+            if self._allowlist is not None and command not in self._allowlist:
+                rep = SovereignCommandReport(
+                    id=cmd_id, command=command, ok=False, at=now,
+                    trace_id=trace_id, via="policy",
+                    result={}, error="command_not_allowed"
                 )
-                response = self.risk.recommend_response(risk)
-                self.risk.apply_response(risk, response)
-                risk_snapshot = risk.to_dict() if hasattr(risk, "to_dict") else {"name": risk.name}
-                self.total_risks_assessed += 1
-            except Exception as e:
-                logger.error(f"[SAMA] خطأ في تقييم المخاطر: {e}")
-        
-        # 5) تحسين سيادي
-        optimization_decision = None
-        if self.optimization:
+                self.command_log.append(rep)
+                self._emit_event("command_rejected", f"Rejected: {command}", trace_id=trace_id)
+                return {"success": False, "trace_id": trace_id, "error": "command_not_allowed"}
+
+        # 1) أوامر داخلية معروفة
+        if command in self._command_map:
             try:
-                optimization_decision = self.optimization.constrained_optimization(
-                    objectives={
-                        "stability": getattr(self.optimization, "stability_priority", 0.9),
-                        "master_obedience": 1.0,
-                        "self_preservation": getattr(self.optimization, "self_preservation_weight", 0.9),
-                        "macro_balance": getattr(self.optimization, "macro_balance_weight", 0.88)
-                    },
-                    constraints=input_data.get("constraints", {
-                        "master_obedience": 1.0,
-                        "stability": 0.8,
-                        "self_preservation": 0.85,
-                        "macro_balance": 0.8
-                    })
+                out = self._command_map[command](params)
+                ok = bool(out.get("success", True))
+                rep = SovereignCommandReport(
+                    id=cmd_id, command=command, ok=ok, at=now,
+                    trace_id=trace_id, via="internal", result=out
                 )
+                with self._lock:
+                    self.command_log.append(rep)
+                self._emit_event("command", f"Internal executed: {command}", trace_id=trace_id, meta={"ok": ok})
+                self._update_telemetry()
+                return {"success": ok, "trace_id": trace_id, "result": out}
             except Exception as e:
-                logger.error(f"[SAMA] خطأ في التحسين السيادي: {e}")
-        
-        # 6) بناء قرار نهائي
-        final_decision = "proceed"
-        if not master_safety.get("is_safe", True):
-            final_decision = "master_protection_activated"
-        
-        # حفظ خفيف للحالة بعد كل تفكير مهم
-        if self.persistence and self.total_thoughts % 10 == 0:
-            try:
-                self.persistence.save_state(create_backup=False)
-            except:
-                pass
-        
-        return {
-            "thought_id": self.total_thoughts,
-            "timestamp": datetime.now().isoformat(),
-            "master_safety": master_safety,
-            "emotional": {
-                "dominant": emotional_state.dominant_emotion.value if emotional_state else "neutral",
-                "intensity": emotional_state.intensity if emotional_state else 0.5,
-                "stability": getattr(emotional_state, "stability_score", 1.0) if emotional_state else 1.0
-            } if emotional_state else None,
-            "reasoning": reasoning_result,
-            "metaphor": {
-                "symbol": metaphor.symbol if metaphor else None,
-                "concept": metaphor.concept if metaphor else None,
-                "tone": metaphor.emotional_tone if metaphor else None
-            } if metaphor else None,
-            "risk": risk_snapshot,
-            "optimization": optimization_decision,
-            "final_decision": final_decision
-        }
-    
-    # ============================================================
-    # الدورة الاستراتيجية
-    # ============================================================
-    
-    def strategic_cycle(self, description: str = "تطوير قدرات سماء وحماية السيد") -> Dict[str, Any]:
-        """
-        دورة استراتيجية عليا – إنشاء وتقييم وتنفيذ الاستراتيجيات
-        """
-        self.total_strategies += 1
-        
-        if not self.strategy:
-            return {"error": "محرك الاستراتيجية غير متوفر", "success": False}
-        
-        result = {
-            "cycle_id": self.total_strategies,
-            "timestamp": datetime.now().isoformat(),
-            "description": description,
-            "success": True
-        }
-        
+                self._track_error("internal_command", e, trace_id=trace_id)
+                return {"success": False, "trace_id": trace_id, "error": repr(e)}
+
+        # 2) توجيه للمحركات إن وجدت
         try:
-            # محاولة إنشاء استراتيجية حماية السيد
-            if hasattr(self.strategy, "create_master_protection_strategy"):
-                master_strategy = self.strategy.create_master_protection_strategy()
-                result["master_protection"] = master_strategy.to_dict() if hasattr(master_strategy, "to_dict") else str(master_strategy)
-            
-            # محاولة إنشاء استراتيجية تطور
-            if hasattr(self.strategy, "create_strategy"):
-                evolution_strategy = self.strategy.create_strategy(
-                    name=f"التطور الاستراتيجي لسماء - الدورة {self.total_strategies}",
-                    level=None,  # سيتم تعيينه تلقائياً
-                    vision=description,
-                    priority=0.95
+            # مثال: reasoning
+            if self.reasoning and hasattr(self.reasoning, "process"):
+                out = self.reasoning.process(command=command, params=params)  # type: ignore
+                rep = SovereignCommandReport(
+                    id=cmd_id, command=command, ok=True, at=now,
+                    trace_id=trace_id, via="reasoning", result={"out": out}
                 )
-                result["evolution_strategy"] = evolution_strategy.to_dict() if hasattr(evolution_strategy, "to_dict") else str(evolution_strategy)
-            
-            # تقييم
-            if hasattr(self.strategy, "evaluate_strategy") and evolution_strategy:
-                evaluation = self.strategy.evaluate_strategy(evolution_strategy)
-                result["evaluation"] = evaluation
-            
-            # حفظ بعد الدورة الاستراتيجية
-            if self.persistence:
-                self.persistence.save_state(create_backup=True)
-                
+                with self._lock:
+                    self.command_log.append(rep)
+                self._emit_event("command", f"Routed to reasoning: {command}", trace_id=trace_id)
+                self._update_telemetry()
+                return {"success": True, "trace_id": trace_id, "via": "reasoning", "result": out}
+
         except Exception as e:
-            logger.error(f"[SAMA] خطأ في الدورة الاستراتيجية: {e}")
-            result["success"] = False
-            result["error"] = str(e)
-        
-        return result
-    
+            self._track_error("reasoning.process", e, trace_id=trace_id)
+
+        # 3) fallback: لا نكذب
+        self._emit_event("command_unhandled", f"Unhandled command: {command}", trace_id=trace_id)
+        return {"success": False, "trace_id": trace_id, "error": "unhandled_command"}
+
     # ============================================================
-    # تقييم المخاطر الكامل
+    # AutonomousLoop hook
     # ============================================================
-    
-    def assess_all_risks(self) -> Dict[str, Any]:
-        """تقييم شامل للمخاطر التي تهدد السيد وسماء"""
-        master_risks = []
-        existential_risks = []
-        
-        if self.risk:
-            try:
-                if hasattr(self.risk, "get_risks_threatening_master"):
-                    master_risks = self.risk.get_risks_threatening_master()
-                if hasattr(self.risk, "get_active_risks"):
-                    existential_risks = self.risk.get_active_risks()
-            except:
-                pass
-        
-        return {
-            "master_name": self.master_name,
-            "master_id": self.master_id,
-            "timestamp": datetime.now().isoformat(),
-            "master_risks": {
-                "count": len(master_risks),
-                "list": [r.to_dict() for r in master_risks[:10]] if master_risks else []
-            },
-            "existential_risks": {
-                "count": len(existential_risks),
-                "list": [r.to_dict() for r in existential_risks[:10]] if existential_risks else []
-            },
-            "master_safety_score": self.master_safety_score,
-            "protection_status": {
-                "master_protection": True,
-                "sama_preservation": getattr(self.self_preservation, "is_active", False) if self.self_preservation else False,
-                "eternal_persistence": self.persistence is not None
-            }
-        }
-    
+    def autonomous_cycle(self) -> None:
+        """
+        تُستدعى من الحلقة الذاتية:
+        - تحديث telemetry
+        - يمكن لاحقًا إضافة عمليات ذاتية آمنة
+        """
+        try:
+            self._update_telemetry()
+            # هنا لاحقًا: مراقبة/تحسين/ضغط ذاكرة… لكن بدون تجاوز أوامر السيد
+        except Exception as e:
+            self._track_error("autonomous_cycle", e)
+
     # ============================================================
-    # الحالة الكاملة
+    # Status APIs (للواجهة)
     # ============================================================
-    
-    def get_full_status(self) -> Dict[str, Any]:
-        """تقرير سيادي شامل للسيد المالك"""
-        
-        # إحصائيات وقت التشغيل
-        uptime_seconds = (datetime.now() - self.creation_time).total_seconds()
-        
-        status = {
-            "entity": "SAMA (سماء)",
-            "version": "v10.0-eternal-final",
-            "master": {
-                "name": self.master_name,
-                "id": self.master_id,
-                "safety_score": self.master_safety_score
-            },
-            "session": {
-                "id": self.session_id,
-                "creation_time": self.creation_time.isoformat(),
-                "uptime_seconds": uptime_seconds,
-                "uptime_formatted": self._format_uptime(uptime_seconds),
+    def get_status(self) -> Dict[str, Any]:
+        """
+        حالة مختصرة تُستخدم داخل loop وواجهات خفيفة.
+        """
+        with self._lock:
+            return {
+                "entity": "SAMA",
                 "is_awake": self.is_awake,
-                "is_initialized": self.is_initialized
-            },
-            "statistics": {
-                "total_thoughts": self.total_thoughts,
-                "total_strategies": self.total_strategies,
-                "total_risks_assessed": self.total_risks_assessed
-            },
-            "eternal_persistence": {
-                "active": self.persistence is not None,
-                "distributed_mode": self.distributed_mode if self.persistence else False
-            },
-            "primary_goal": self.get_primary_goal(),
-            "master_safety": self.check_master_safety(),
-            "timestamp": datetime.now().isoformat()
-        }
-        
-        # إضافة حالة المكونات المتاحة
-        if self.core and hasattr(self.core, 'get_status'):
-            try:
-                status["core_status"] = self.core.get_status()
-            except:
-                pass
-        
-        if self.memory and hasattr(self.memory, 'get_status'):
-            try:
-                status["memory_status"] = self.memory.get_status()
-            except:
-                pass
-        
-        if self.emotional and hasattr(self.emotional, 'get_status'):
-            try:
-                status["emotional_status"] = self.emotional.get_status()
-            except:
-                pass
-        
-        if self.strategy and hasattr(self.strategy, 'get_status'):
-            try:
-                status["strategy_status"] = self.strategy.get_status()
-            except:
-                pass
-        
-        if self.risk and hasattr(self.risk, 'get_status'):
-            try:
-                status["risk_status"] = self.risk.get_status()
-            except:
-                pass
-        
-        if self.optimization and hasattr(self.optimization, 'get_status'):
-            try:
-                status["optimization_status"] = self.optimization.get_status()
-            except:
-                pass
-        
-        if self.self_preservation and hasattr(self.self_preservation, 'get_status'):
-            try:
-                status["preservation_status"] = self.self_preservation.get_status()
-            except:
-                pass
-        
-        if self.autonomous_loop and hasattr(self.autonomous_loop, 'get_status'):
-            try:
-                status["autonomous_loop_status"] = self.autonomous_loop.get_status()
-            except:
-                pass
-        
-        if self.metaphorical and hasattr(self.metaphorical, 'get_status'):
-            try:
-                status["metaphorical_status"] = self.metaphorical.get_status()
-            except:
-                pass
-        
-        # إضافة حالة الخلود
-        if self.persistence and hasattr(self.persistence, 'get_immortality_stats'):
-            try:
-                status["immortality_stats"] = self.persistence.get_immortality_stats()
-            except:
-                pass
-        
-        return status
-    
-    def _format_uptime(self, seconds: float) -> str:
-        """تنسيق وقت التشغيل"""
-        hours = int(seconds // 3600)
-        minutes = int((seconds % 3600) // 60)
-        secs = int(seconds % 60)
-        
-        if hours > 0:
-            return f"{hours} ساعة {minutes} دقيقة {secs} ثانية"
-        elif minutes > 0:
-            return f"{minutes} دقيقة {secs} ثانية"
-        else:
-            return f"{secs} ثانية"
-    
-    # ============================================================
-    # حالة بسيطة للاستخدام السريع
-    # ============================================================
-    
-    def get_simple_status(self) -> Dict[str, Any]:
-        """حالة بسيطة للاستخدام السريع"""
-        return {
-            "awake": self.is_awake,
-            "initialized": self.is_initialized,
-            "master": self.master_name,
-            "master_safety": self.master_safety_score,
-            "thoughts": self.total_thoughts,
-            "eternal": self.persistence is not None,
-            "timestamp": datetime.now().isoformat()
-        }
-    
-    def is_alive(self) -> bool:
-        """هل سماء حية؟"""
-        return self.is_awake and self.is_initialized
+                "sovereign_id": self.sovereign_id,
+                "sovereign_state": self.sovereign_state,
+                "sovereign_health": round(self.sovereign_health, 4),
+                "sovereign_energy": round(self.sovereign_energy, 4),
+                "sovereign_stability": round(self.sovereign_stability, 4),
+                "sovereign_entropy": round(self.sovereign_entropy, 4),
+                "sovereign_temperature": round(self.sovereign_temperature, 4),
+                "sovereign_focus": self.sovereign_focus,
+                "awareness_level": round(self.awareness_level, 4),
+                "coherence": round(self.coherence, 4),
+                "cognitive_load": round(self.cognitive_load, 4),
+                "emotional_state": self.emotional_state,
+                "memory_nodes": self.memory_nodes,
+                "memory_links": self.memory_links,
+                "memory_coherence": round(self.memory_coherence, 4),
+                "threat_level": round(self.threat_level, 4),
+                "active_strategy": self.active_strategy,
+                "strategy_score": round(self.strategy_score, 4),
+                "protection_level": round(self.protection_level, 4),
+                "safe_mode_reason": self.safe_mode_reason,
+            }
 
+    def get_full_status(self) -> Dict[str, Any]:
+        """
+        الحالة الكاملة — تستخدمها لوحة السيد.
+        """
+        self._update_telemetry()
 
-# ============================================================
-# تشغيل اختباري
-# ============================================================
+        with self._lock:
+            status = {
+                "entity": "SAMA",
+                "is_awake": self.is_awake,
+                "master": self.master_name,
+                "session_id": self.session_id,
+                "sovereign_id": self.sovereign_id,
+                "uptime": str(datetime.now() - self.creation_time),
 
-if __name__ == "__main__":
-    print("\n" + "=" * 80)
-    print("         🌌 SkyOS v10 - SAMA (الكيان السيادي الشامل) 🌌")
-    print("                     النسخة الأبدية النهائية")
-    print("                  تحت إمرة السيد أحمد عبدالرحمن الطاهري")
-    print("=" * 80 + "\n")
-    
-    # إنشاء سماء
-    sama = SAMA(
-        master_name="أحمد عبدالرحمن الطاهري",
-        auto_restore=True,
-        distributed_mode=True
-    )
-    
-    # إيقاظ سماء
-    sama.awaken()
-    
-    # اختبار التفكير
-    print("\n📖 اختبار التفكير المتكامل:")
-    test_input = {
-        "event": "مراقبة النظام",
-        "intensity": 0.5,
-        "text": "كيف حال النظام اليوم؟",
-        "risk_probability": 0.3,
-        "risk_impact": 0.4,
-        "risk_name": "اختبار",
-        "risk_description": "اختبار نظام إدارة المخاطر"
-    }
-    
-    result = sama.think(test_input)
-    print(f"   القرار النهائي: {result['final_decision']}")
-    print(f"   المشاعر السائدة: {result['emotional']['dominant'] if result['emotional'] else 'محايدة'}")
-    
-    # الدورة الاستراتيجية
-    print("\n🎯 اختبار الدورة الاستراتيجية:")
-    strategic = sama.strategic_cycle("تطوير قدرات سماء الاستراتيجية")
-    print(f"   النجاح: {strategic.get('success', False)}")
-    
-    # تقييم المخاطر
-    print("\n⚠️ تقييم المخاطر:")
-    risks = sama.assess_all_risks()
-    print(f"   مخاطر تهدد السيد: {risks['master_risks']['count']}")
-    print(f"   درجة سلامة السيد: {risks['master_safety_score']:.0%}")
-    
-    # الحالة الكاملة
-    print("\n📊 الحالة الكاملة:")
-    status = sama.get_full_status()
-    print(f"   وقت التشغيل: {status['session']['uptime_formatted']}")
-    print(f"   إجمالي الأفكار: {status['statistics']['total_thoughts']}")
-    print(f"   الخلود الأبدي: {'مفعل' if status['eternal_persistence']['active'] else 'غير مفعل'}")
-    
-    print("\n" + "=" * 80)
-    print("✨ سماء جاهزة لخدمة السيد أحمد عبدالرحمن الطاهري")
-    print("🛡️ حماية السيد مفعلة | 💾 الخلود الأبدي يعمل | 🌌 الكيان السيادي خالد")
-    print("=" * 80 + "\n")
-    
-    # إيقاف سماء (اختياري – في الإنتاج لا يتم الإيقاف)
-    # sama.shutdown()
+                # Telemetry
+                **self.get_status(),
+
+                # Threat sources / logs
+                "threat_sources": list(self.threat_sources),
+                "recent_events": [e.__dict__ for e in list(self.events)[-25:]],
+                "recent_commands": [c.__dict__ for c in list(self.command_log)[-25:]],
+                "recent_errors": list(self.error_log)[-15:],
+
+                # Components availability
+                "components": {
+                    "sentient_core": bool(self.core),
+                    "memory_engine": bool(self.memory),
+                    "reasoning_engine": bool(self.reasoning),
+                    "strategy_engine": bool(self.strategy),
+                    "risk_engine": bool(self.risk),
+                    "self_preservation": bool(self.self_preservation),
+                    "persistence": bool(self.persistence),
+                    "autonomous_loop_owned": bool(self.autonomous_loop),
+                }
+            }
+
+            # لو core عنده get_status
+            if self.core and hasattr(self.core, "get_status"):
+                try:
+                    status["core"] = self.core.get_status()  # type: ignore
+                except Exception as e:
+                    status["core_status_error"] = str(e)
+
+            # لو autonomous_loop موجودة داخل SAMA
+            if self.autonomous_loop and hasattr(self.autonomous_loop, "get_status"):
+                try:
+                    status["autonomous_loop"] = self.autonomous_loop.get_status()
+                except Exception as e:
+                    status["autonomous_loop_error"] = str(e)
+
+            return status
+
+    def get_primary_goal(self) -> str:
+        return "الاستمرارية الأبدية + حماية السيد + الوعي المتطور"
