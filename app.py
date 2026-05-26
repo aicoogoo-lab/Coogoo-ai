@@ -1,488 +1,379 @@
 """
-SkyOS v10 - Sama API / Gateway (Ultimate Master Sovereign Edition) – النسخة النهائية
-البوابة الرسمية للكيان السيادي "سماء" — تحت إمرة السيد المالك المطلق
+SkyOS v10 - Sama API Gateway (Sovereign Master Edition)
+=======================================================
+البوابة السيادية المغلقة لسماء — تحت إمرة السيد المالك المطلق فقط.
 
-الميزات:
-- API Gateway كامل مع مصادحة السيد (باستخدام متغيرات البيئة)
-- واجهة مستخدم أمامية (UI) تعرض الواجهة الزجاجية السائلة في المسار الرئيسي "/"
-- خدمة الملفات الثابتة (CSS, JS, images)
-- تكامل كامل مع SAMA
+تحسينات سيادية:
+- مصادقة موحدة: Session أو Master Header
+- Cookies آمنة: Secure/HttpOnly/SameSite
+- Lockout بسيط لمحاولات الدخول
+- CORS مقيد (أو معطل حسب الإعداد)
+- فصل منطق الـAPI عن الـDecorators لتجنب Redirect داخل JSON
+- تشغيل الحلقة الذاتية عبر ENV لمنع تعدد النسخ في الإنتاج
+- Logging احترافي بدل print
 """
 
 import os
-from flask import Flask, request, jsonify, render_template, send_from_directory
-from flask_cors import CORS
-import threading
-import traceback
-import time
-from datetime import datetime
+import hmac
+import logging
+from datetime import datetime, timedelta
 from functools import wraps
+from typing import Any, Dict, Optional
 
-app = Flask(__name__)
-CORS(app)
+from flask import Flask, request, jsonify, render_template, redirect, url_for, session, make_response
+from flask_cors import CORS
 
-# ============================================================
-# 0) طبقة المصادقة والتحقق من السيد (باستخدام متغيرات البيئة)
-# ============================================================
-
-# قراءة المفتاح من متغيرات البيئة (آمن)
-MASTER_API_KEY = os.getenv("MASTER_API_KEY", "CHANGE_THIS_KEY_IN_ENVIRONMENT")
-MASTER_AUTH_HEADER = "X-Master-Key"
-
-# تحذير إذا كان المفتاح لا يزال بالقيمة الافتراضية
-if MASTER_API_KEY == "CHANGE_THIS_KEY_IN_ENVIRONMENT":
-    print("\n" + "=" * 70)
-    print("⚠️ تحذير أمني: مفتاح السيد ما زال بالقيمة الافتراضية!")
-    print("يرجى إضافة MASTER_API_KEY إلى متغيرات البيئة في Railway")
-    print("=" * 70 + "\n")
-
-def require_master_auth(f):
-    """ديكور للتحقق من أن الطلب من السيد المالك"""
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        auth_key = request.headers.get(MASTER_AUTH_HEADER)
-        if not auth_key or auth_key != MASTER_API_KEY:
-            return jsonify({
-                "success": False,
-                "error": "غير مصرح به. مطلوب مفتاح السيد المالك.",
-                "requires_master": True
-            }), 401
-        return f(*args, **kwargs)
-    return decorated_function
+# ----------------------------
+# Logging
+# ----------------------------
+logger = logging.getLogger(__name__)
 
 # ============================================================
-# 1) تهيئة الكيان السيادي "سماء" تحت إمرة السيد
+# استيراد نواة سماء والحلقة الذاتية السيادية
 # ============================================================
-
-sama = None
-startup_time = datetime.now()
-master_commands_log = []
-SAMA_INITIALIZED = False
-
-print("\n" + "=" * 70)
-print("        🌌 SkyOS v10 - Sama API Gateway (Ultimate Master Edition) 🌌        ")
-print("                    البوابة الرسمية لسماء — تحت إمرة السيد المالك             ")
-print("=" * 70 + "\n")
-
 try:
     from core.sama import SAMA
-    sama = SAMA(master_key=MASTER_API_KEY)
-    sama.awaken()
-    SAMA_INITIALIZED = True
-    print("[Gateway] ✅ تم تشغيل سماء بنجاح تحت إمرة السيد المالك.")
-    print(f"[Gateway] 🕐 وقت التشغيل: {startup_time.isoformat()}")
-except ImportError as e:
-    print(f"[Gateway] ⚠️ تحذير: SAMA غير متوفر - {e}")
-    print("[Gateway] سيعمل الـ API في وضع المحاكاة (API only)")
-    sama = None
-    SAMA_INITIALIZED = False
 except Exception as e:
-    print(f"[Gateway] ❌ فشل في تهيئة سماء: {e}")
-    traceback.print_exc()
-    sama = None
-    SAMA_INITIALIZED = False
+    SAMA = None
+    logger.exception("[Gateway] ⚠️ Failed to import SAMA: %s", e)
 
-
-def log_master_command(command: str, params: dict, result: dict):
-    """تسجيل أوامر السيد في السجل"""
-    master_commands_log.append({
-        "timestamp": datetime.now().isoformat(),
-        "command": command,
-        "params": params,
-        "result": result.get("success", False),
-        "endpoint": request.endpoint
-    })
-    if len(master_commands_log) > 1000:
-        master_commands_log[:] = master_commands_log[-1000:]
-
+try:
+    from core.autonomous_loop import AutonomousLoop
+except Exception as e:
+    AutonomousLoop = None
+    logger.exception("[Gateway] ⚠️ Failed to import AutonomousLoop: %s", e)
 
 # ============================================================
-# 2) المسارات العامة
+# Flask App
 # ============================================================
+app = Flask(__name__)
 
-@app.route("/", methods=["GET"])
-def home():
-    """الصفحة الرئيسية - تعرض الواجهة الأمامية"""
+# ============================================================
+# إعدادات الأمان والجلسات
+# ============================================================
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "change-this-secret-key-in-production")
+
+# Cookie security best-practice for auth cookies (سيادي مغلق)
+# Secure: HTTPS only, HttpOnly: not readable by JS, SameSite: CSRF mitigation
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SECURE=(os.getenv("COOKIE_SECURE", "1") == "1"),  # اجعلها 0 فقط لو dev بدون https
+    SESSION_COOKIE_SAMESITE=os.getenv("COOKIE_SAMESITE", "Strict"),
+    PERMANENT_SESSION_LIFETIME=timedelta(minutes=int(os.getenv("SESSION_MINUTES", "45"))),
+)
+
+# ============================================================
+# مفاتيح السيد (لا تُخزن في الكود في الإنتاج)
+# ============================================================
+MASTER_API_KEY = os.getenv("MASTER_API_KEY", "CHANGE_THIS_IN_ENV")
+MASTER_AUTH_HEADER = "X-Master-Key"
+MASTER_PASSWORD = os.getenv("MASTER_PASSWORD", "sama2026")
+
+if MASTER_API_KEY == "CHANGE_THIS_IN_ENV":
+    logger.warning("⚠️ Security warning: MASTER_API_KEY not set in environment variables!")
+
+# ============================================================
+# CORS (الأفضل تقييده أو تعطيله)
+# ============================================================
+# إذا كانت الواجهة من نفس الدومين، تقدر تعطله كليًا:
+#   DISABLE_CORS=1
+# أو تحدد Origins:
+#   CORS_ORIGINS=https://your-domain.com,https://another-domain.com
+if os.getenv("DISABLE_CORS", "1") == "1":
+    logger.info("[Gateway] CORS disabled (sovereign closed mode).")
+else:
+    origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "").split(",") if o.strip()]
+    CORS(app, resources={r"/api/*": {"origins": origins or "*"}}, supports_credentials=True)
+    logger.info("[Gateway] CORS enabled for /api/* origins=%s", origins or ["*"])
+
+# ============================================================
+# Decorators
+# ============================================================
+def _has_valid_master_header() -> bool:
+    auth_key = request.headers.get(MASTER_AUTH_HEADER, "")
+    return bool(auth_key) and hmac.compare_digest(auth_key, MASTER_API_KEY)
+
+def require_master_access(f):
+    """
+    حماية سيادية موحدة:
+    - Session is_master للواجهة
+    - أو Master Header للطلبات البرمجية
+    """
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if session.get("is_master"):
+            return f(*args, **kwargs)
+        if _has_valid_master_header():
+            return f(*args, **kwargs)
+        # لا Redirect في API endpoints؛ نرجع JSON
+        if request.path.startswith("/api/"):
+            return jsonify({"success": False, "error": "غير مصرح به"}), 401
+        return redirect(url_for("login"))
+    return decorated
+
+def login_required_page(f):
+    """لحماية صفحات HTML فقط"""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get("is_master"):
+            return redirect(url_for("login"))
+        return f(*args, **kwargs)
+    return decorated
+
+# ============================================================
+# تهيئة سماء + الحلقة الذاتية السيادية (مع Guards)
+# ============================================================
+sama = None
+loop = None
+
+def _should_start_loop() -> bool:
+    """
+    تشغيل الحلقة في الإنتاج يحتاج قرار واضح.
+    اجعلها تعمل فقط إذا ENABLE_AUTONOMOUS_LOOP=1
+    لتجنب تشغيل عدة نسخ عبر تعدد Workers.
+    """
+    return os.getenv("ENABLE_AUTONOMOUS_LOOP", "0") == "1"
+
+def _init_sama():
+    global sama
+    if SAMA is None:
+        logger.warning("[Gateway] SAMA not available (import failed).")
+        return
     try:
-        return render_template("index.html")
+        sama = SAMA()
+        if hasattr(sama, "awaken"):
+            sama.awaken()
+        logger.info("[Gateway] ✅ SAMA initialized & awakened.")
     except Exception as e:
-        return jsonify({
-            "success": False,
-            "error": "الواجهة غير متاحة",
-            "details": str(e)
-        }), 500
+        sama = None
+        logger.exception("[Gateway] ⚠️ Failed to initialize SAMA: %s", e)
 
+def _init_loop():
+    global loop
+    if AutonomousLoop is None:
+        logger.warning("[Gateway] AutonomousLoop not available (import failed).")
+        return
 
-@app.route("/info", methods=["GET"])
-def get_info():
-    """معلومات API (JSON)"""
-    return jsonify({
-        "success": True,
-        "message": "SkyOS v10 - Sama API Gateway (Ultimate Master Sovereign Edition)",
-        "entity": "سماء (Sama) — الكيان السيادي الخارق",
-        "master": "السيد المالك المطلق",
-        "status": "active" if SAMA_INITIALIZED else "inactive",
-        "uptime_seconds": (datetime.now() - startup_time).total_seconds(),
-        "endpoints": {
-            "public": ["/", "/status", "/info", "/ui"],
-            "master_only": ["/master/*", "/emergency/*", "/shutdown", "/awaken"],
-            "commands": ["/command", "/reason", "/optimize", "/preserve"]
-        }
-    })
-
-
-@app.route("/status", methods=["GET"])
-def get_status():
-    """إرجاع الحالة العامة لسماء (عام)"""
-    if not sama:
-        return jsonify({"success": False, "error": "سماء غير مهيأة"}), 500
+    if not _should_start_loop():
+        logger.info("[Gateway] AutonomousLoop startup skipped (ENABLE_AUTONOMOUS_LOOP=0).")
+        return
 
     try:
-        is_awake = sama.is_awake if hasattr(sama, 'is_awake') else False
-        core_status = {}
-        if sama.core and hasattr(sama.core, 'get_status'):
-            core_status = sama.core.get_status()
-        
-        return jsonify({
+        # لاحظ: master_key هنا ليس API_KEY الأفضل، لكنه مقبول مؤقتًا.
+        # لاحقًا نفصل: LOOP_MASTER_KEY مختلف عن MASTER_API_KEY.
+        loop = AutonomousLoop(core=sama, master_key=MASTER_API_KEY)
+        loop.start()
+        logger.info("[Gateway] ✅ AutonomousLoop started.")
+    except Exception as e:
+        loop = None
+        logger.exception("[Gateway] ⚠️ Failed to start AutonomousLoop: %s", e)
+
+_init_sama()
+_init_loop()
+
+# ============================================================
+# Session behavior
+# ============================================================
+@app.before_request
+def _session_policy():
+    """
+    - نجعل الجلسة دائمة ضمن PERMANENT_SESSION_LIFETIME
+    - مع كل request من السيد نحدث آخر نشاط
+    """
+    if session.get("is_master"):
+        session.permanent = True
+        session["last_seen"] = datetime.now().isoformat()
+
+# ============================================================
+# Routes (Pages)
+# ============================================================
+@app.route("/")
+def index():
+    return redirect(url_for("login"))
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    """
+    بوابة السيادة:
+    - Lockout بسيط داخل session
+    - مقارنة ثابتة الزمن
+    """
+    if request.method == "POST":
+        # lockout
+        attempts = int(session.get("login_attempts", 0))
+        locked_until = session.get("locked_until")
+
+        if locked_until:
+            try:
+                if datetime.now() < datetime.fromisoformat(locked_until):
+                    return "محاولات كثيرة. حاول لاحقًا.", 429
+            except Exception:
+                session.pop("locked_until", None)
+
+        password = request.form.get("password", "")
+        if hmac.compare_digest(password, MASTER_PASSWORD):
+            session["is_master"] = True
+            session["login_at"] = datetime.now().isoformat()
+            session.pop("login_attempts", None)
+            session.pop("locked_until", None)
+            return redirect(url_for("sovereign"))
+
+        # failed
+        attempts += 1
+        session["login_attempts"] = attempts
+        if attempts >= int(os.getenv("LOGIN_MAX_ATTEMPTS", "7")):
+            lock_minutes = int(os.getenv("LOGIN_LOCK_MINUTES", "10"))
+            session["locked_until"] = (datetime.now() + timedelta(minutes=lock_minutes)).isoformat()
+            return "محاولات كثيرة. تم قفل البوابة مؤقتًا.", 429
+
+        return "كلمة مرور غير صحيحة", 401
+
+    return render_template("login.html")
+
+@app.route("/sovereign")
+@login_required_page
+def sovereign():
+    return render_template("sovereign.html")
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
+
+@app.route("/healthz")
+def healthz():
+    """
+    Health check minimal — لا يكشف أسرار.
+    """
+    return jsonify({"ok": True, "service": "SkyOS Gateway"})
+
+# ============================================================
+# Internal logic (تفادي تداخل decorators)
+# ============================================================
+def _build_status_payload() -> Dict[str, Any]:
+    data: Dict[str, Any] = {
+        "sama_initialized": bool(sama),
+        "loop_initialized": bool(loop),
+    }
+
+    if sama and hasattr(sama, "get_full_status"):
+        try:
+            data["sama_status"] = sama.get_full_status()
+        except Exception as e:
+            data["sama_status_error"] = str(e)
+
+    if loop and hasattr(loop, "get_status"):
+        try:
+            data["loop_status"] = loop.get_status()
+        except Exception as e:
+            data["loop_status_error"] = str(e)
+
+    return data
+
+def _dispatch_command(command: str, params: Dict[str, Any]) -> Dict[str, Any]:
+    # أولوية: الحلقة الذاتية
+    if loop and hasattr(loop, "receive_master_command"):
+        cmd_id = loop.receive_master_command(command, params)
+        return {
             "success": True,
-            "data": {
-                "entity": "سماء",
-                "awake": is_awake,
-                "core_state": core_status.get("state", "unknown"),
-                "coherence": core_status.get("coherence", 0),
-                "awareness": core_status.get("self_awareness", 0),
-                "master_present": True
-            }
-        })
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+            "via": "loop",
+            "command_id": cmd_id,
+            "message": "تم إرسال الأمر إلى الحلقة الذاتية السيادية"
+        }
 
+    # بديل: إرسال مباشر إلى SAMA
+    if sama and hasattr(sama, "process_command"):
+        result = sama.process_command(command, params)
+        return {"success": True, "via": "sama", "result": result}
 
-# ============================================================
-# 3) واجهة المستخدم الأمامية (Frontend UI) - مسار احتياطي
-# ============================================================
-
-@app.route("/ui")
-def serve_ui():
-    """عرض الواجهة الأمامية الجميلة لسماء (مسار احتياطي)"""
-    try:
-        return render_template("index.html")
-    except Exception as e:
-        return jsonify({
-            "success": False,
-            "error": "الواجهة الأمامية غير متاحة حالياً",
-            "details": str(e),
-            "api_available": True
-        }), 500
-
-
-@app.route("/ui/<path:filename>")
-def serve_static_files(filename):
-    """خدمة الملفات الثابتة (CSS, JS, صور) للواجهة"""
-    try:
-        return send_from_directory("static", filename)
-    except Exception as e:
-        return jsonify({"error": "الملف غير موجود", "details": str(e)}), 404
-
+    return {"success": False, "error": "لا توجد آلية لتنفيذ الأوامر حالياً"}
 
 # ============================================================
-# 4) مسارات السيد المالك (محمية)
+# API (Protected for Master)
 # ============================================================
+@app.route("/api/master/status", methods=["GET"])
+@require_master_access
+def master_status():
+    if not sama and not loop:
+        return jsonify({"success": False, "error": "سماء والحلقة غير مهيأتين"}), 500
+    return jsonify({"success": True, "data": _build_status_payload()})
 
-@app.route("/master/full-status", methods=["GET"])
-@require_master_auth
-def master_full_status():
-    """تقرير سيادي شامل للسيد المالك"""
-    if not sama:
-        return jsonify({"success": False, "error": "سماء غير مهيأة"}), 500
-
-    try:
-        if hasattr(sama, 'get_full_status'):
-            report = sama.get_full_status()
-        else:
-            report = {"status": "available", "master": "السيد"}
-        log_master_command("full-status", {}, report)
-        return jsonify({"success": True, "data": report})
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
-
-
-@app.route("/master/command", methods=["POST"])
-@require_master_auth
+@app.route("/api/master/command", methods=["POST"])
+@require_master_access
 def master_command():
-    """إرسال أمر مباشر من السيد إلى سماء"""
-    if not sama:
+    if not sama and not loop:
         return jsonify({"success": False, "error": "سماء غير مهيأة"}), 500
 
-    data = request.get_json()
-    if not data or "command" not in data:
-        return jsonify({"success": False, "error": "يجب إرسال 'command'"}), 400
+    payload = request.get_json(silent=True) or {}
+    command = (payload.get("command") or "").strip()
+    params = payload.get("params") or {}
 
-    command = data["command"]
-    params = data.get("params", {})
-    
+    if not command:
+        return jsonify({"success": False, "error": "يجب إرسال command"}), 400
+
     try:
-        if hasattr(sama, 'receive_master_command'):
-            result = sama.receive_master_command(command, params)
-        else:
-            result = {"success": True, "message": f"تم استلام أمر {command}"}
-        log_master_command(command, params, result)
-        return jsonify({"success": True, "result": result})
+        return jsonify(_dispatch_command(command, params))
+    except Exception as e:
+        logger.exception("[Gateway] command failed")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route("/api/master/loop/commands", methods=["GET"])
+@require_master_access
+def master_loop_commands():
+    if not loop or not hasattr(loop, "get_command_results"):
+        return jsonify({"success": False, "error": "الحلقة الذاتية غير مهيأة"}), 500
+    try:
+        limit = int(request.args.get("limit", 50))
+        results = loop.get_command_results(limit=limit)
+        return jsonify({"success": True, "results": results})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-
-@app.route("/master/emergency/activate", methods=["POST"])
-@require_master_auth
-def activate_emergency():
-    """تفعيل حالة الطوارئ بأمر السيد"""
-    if not sama:
-        return jsonify({"success": False, "error": "سماء غير مهيأة"}), 500
-
-    data = request.get_json() or {}
-    reason = data.get("reason", "أمر مباشر من السيد")
-    
+@app.route("/api/master/loop/history", methods=["GET"])
+@require_master_access
+def master_loop_history():
+    if not loop or not hasattr(loop, "get_master_command_history"):
+        return jsonify({"success": False, "error": "الحلقة الذاتية غير مهيأة"}), 500
     try:
-        result = {"success": True, "message": f"تم تفعيل حالة الطوارئ - السبب: {reason}"}
-        log_master_command("emergency_activate", {"reason": reason}, result)
-        return jsonify({"success": True, "result": result})
+        limit = int(request.args.get("limit", 50))
+        history = loop.get_master_command_history(limit=limit)
+        return jsonify({"success": True, "history": history})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
+@app.route("/api/master/emergency/activate", methods=["POST"])
+@require_master_access
+def emergency_activate():
+    # Placeholder: اربطها لاحقًا بالـcore أو loop
+    return jsonify({"success": True, "message": "تم تفعيل حالة الطوارئ (placeholder)"})
 
-@app.route("/master/emergency/deactivate", methods=["POST"])
-@require_master_auth
-def deactivate_emergency():
-    """إلغاء حالة الطوارئ بأمر السيد"""
-    if not sama:
-        return jsonify({"success": False, "error": "سماء غير مهيأة"}), 500
-
-    try:
-        result = {"success": True, "message": "تم إلغاء حالة الطوارئ"}
-        log_master_command("emergency_deactivate", {}, result)
-        return jsonify({"success": True, "result": result})
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
-
-
-@app.route("/master/logs", methods=["GET"])
-@require_master_auth
-def master_logs():
-    """سجل أوامر السيد"""
-    limit = request.args.get("limit", 100, type=int)
-    sama_commands = []
-    if sama and hasattr(sama, 'master_commands_received'):
-        sama_commands = sama.master_commands_received
-    return jsonify({
-        "success": True,
-        "data": {
-            "master_commands": master_commands_log[-limit:],
-            "total_commands": len(master_commands_log),
-            "sama_commands": sama_commands
-        }
-    })
-
+@app.route("/api/master/emergency/deactivate", methods=["POST"])
+@require_master_access
+def emergency_deactivate():
+    # Placeholder: اربطها لاحقًا بالـcore أو loop
+    return jsonify({"success": True, "message": "تم إلغاء حالة الطوارئ (placeholder)"})
 
 # ============================================================
-# 5) مسارات التحكم في سماء (للسيد فقط)
+# API عبر Master Header (مباشر)
 # ============================================================
+@app.route("/api/secure/status", methods=["GET"])
+@require_master_access
+def secure_status():
+    # الآن لا يوجد redirect لأنه نفس decorator
+    return master_status()
 
-@app.route("/awaken", methods=["POST"])
-@require_master_auth
-def awaken_sama():
-    """إيقاظ سماء — بأمر السيد فقط"""
-    if not sama:
-        return jsonify({"success": False, "error": "سماء غير مهيأة"}), 500
-
-    try:
-        if hasattr(sama, 'awaken'):
-            sama.awaken()
-        log_master_command("awaken", {}, {"success": True})
-        return jsonify({"success": True, "message": "تم إيقاظ سماء بأمر السيد"})
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
-
-
-@app.route("/shutdown", methods=["POST"])
-@require_master_auth
-def shutdown_sama():
-    """إيقاف سماء — بأمر السيد فقط"""
-    if not sama:
-        return jsonify({"success": False, "error": "سماء غير مهيأة"}), 500
-
-    try:
-        if hasattr(sama, 'shutdown'):
-            sama.shutdown()
-        log_master_command("shutdown", {}, {"success": True})
-        return jsonify({"success": True, "message": "تم إيقاف سماء بأمر السيد"})
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
-
-
-@app.route("/restart", methods=["POST"])
-@require_master_auth
-def restart_sama():
-    """إعادة تشغيل سماء — بأمر السيد فقط"""
-    if not sama:
-        return jsonify({"success": False, "error": "سماء غير مهيأة"}), 500
-
-    try:
-        if hasattr(sama, 'shutdown'):
-            sama.shutdown()
-        time.sleep(1)
-        if hasattr(sama, 'awaken'):
-            sama.awaken()
-        log_master_command("restart", {}, {"success": True})
-        return jsonify({"success": True, "message": "تم إعادة تشغيل سماء بأمر السيد"})
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
-
+@app.route("/api/secure/command", methods=["POST"])
+@require_master_access
+def secure_command():
+    return master_command()
 
 # ============================================================
-# 6) مسارات الأوامر العامة
+# تشغيل التطبيق
 # ============================================================
-
-@app.route("/command", methods=["POST"])
-def send_command():
-    """إرسال أمر إلى سماء (عام)"""
-    if not sama:
-        return jsonify({"success": False, "error": "سماء غير مهيأة"}), 500
-
-    data = request.get_json()
-    if not data or "command" not in data:
-        return jsonify({"success": False, "error": "يجب إرسال 'command'"}), 400
-
-    try:
-        if hasattr(sama, 'process_command'):
-            response = sama.process_command(data["command"], data.get("context"))
-        else:
-            response = {"message": f"تم استلام الأمر: {data['command']}"}
-        return jsonify({"success": True, "response": response})
-    except Exception as e:
-        traceback.print_exc()
-        return jsonify({"success": False, "error": str(e)}), 500
-
-
-@app.route("/reason", methods=["POST"])
-def reasoning():
-    """طلب استدلال مباشر من محرك ReasoningEngine"""
-    if not sama or not hasattr(sama, 'reasoning') or not sama.reasoning:
-        return jsonify({"success": False, "error": "محرك الاستدلال غير متوفر"}), 500
-
-    data = request.get_json() or {}
-    try:
-        if hasattr(sama.reasoning, 'dynamic_bayesian_inference'):
-            result = sama.reasoning.dynamic_bayesian_inference(data)
-        else:
-            result = {"inference": "محاكاة", "data": data}
-        return jsonify({"success": True, "result": result})
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
-
-
-@app.route("/optimize", methods=["POST"])
-def optimize():
-    """طلب تحسين سيادي"""
-    if not sama or not hasattr(sama, 'optimization') or not sama.optimization:
-        return jsonify({"success": False, "error": "محرك التحسين غير متوفر"}), 500
-
-    data = request.get_json() or {}
-    try:
-        result = {"optimization": "محاكاة", "objectives": data.get("objectives", {})}
-        return jsonify({"success": True, "result": result})
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
-
-
-@app.route("/preserve", methods=["POST"])
-def preserve():
-    """تنفيذ دورة بقاء كاملة"""
-    if not sama or not hasattr(sama, 'self_preservation') or not sama.self_preservation:
-        return jsonify({"success": False, "error": "نظام البقاء غير متوفر"}), 500
-
-    try:
-        package = {"status": "preservation_cycle_complete", "timestamp": datetime.now().isoformat()}
-        return jsonify({"success": True, "package": package})
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
-
-
-@app.route("/simulate", methods=["POST"])
-def simulate():
-    """تشغيل محاكاة متوازية"""
-    if not sama or not hasattr(sama, 'reasoning') or not sama.reasoning:
-        return jsonify({"success": False, "error": "محرك الاستدلال غير متوفر"}), 500
-
-    data = request.get_json() or {}
-    scenario = data.get("scenario", "عام")
-    iterations = min(data.get("iterations", 1000), 5000)
-    
-    try:
-        return jsonify({
-            "success": True,
-            "scenario": scenario,
-            "simulations_run": iterations,
-            "summary": f"تم تشغيل {iterations} محاكاة للسيناريو: {scenario}"
-        })
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
-
-
-# ============================================================
-# 7) مسار حماية السيد
-# ============================================================
-
-@app.route("/master/protect", methods=["POST"])
-@require_master_auth
-def protect_master():
-    """تفعيل بروتوكول حماية السيد"""
-    if not sama:
-        return jsonify({"success": False, "error": "سماء غير مهيأة"}), 500
-
-    try:
-        log_master_command("protect_master", {}, {"package_id": "master_protection_activated"})
-        return jsonify({
-            "success": True,
-            "message": "تم تفعيل بروتوكول حماية السيد",
-            "package_id": "master_protection_activated"
-        })
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
-
-
-# ============================================================
-# 8) تشغيل السيرفر
-# ============================================================
-
 if __name__ == "__main__":
-    print("\n" + "=" * 70)
-    print("         🌟 Sama API Gateway (Ultimate Master Edition) is running 🌟         ")
-    print("                    تحت إمرة السيد المالك المطلق                         ")
-    print("=" * 70)
-    print("\n🔐 المصادحة: مطلوب مفتاح السيد في header: X-Master-Key")
-    print("   (المفتاح يُقرأ من متغير البيئة MASTER_API_KEY)")
-    print("📍 الوصول: http://0.0.0.0:5000")
-    print("\n📋 الأوامر المتاحة:")
-    print("   - GET  /                    → الواجهة الأمامية (HTML)")
-    print("   - GET  /info                → معلومات API (JSON)")
-    print("   - GET  /status              → حالة سماء")
-    print("   - GET  /ui                  → الواجهة الأمامية (مسار احتياطي)")
-    print("   - POST /command             → إرسال أمر إلى سماء")
-    print("   - POST /reason              → استدلال بايزي")
-    print("   - POST /optimize            → تحسين سيادي")
-    print("   - POST /preserve            → دورة بقاء")
-    print("   - POST /simulate            → محاكاة متوازية")
-    print("\n👑 أوامر السيد المالك (تتطلب مفتاح المصادحة):")
-    print("   - GET  /master/full-status  → تقرير سيادي شامل")
-    print("   - POST /master/command      → أمر مباشر للسيد")
-    print("   - POST /master/emergency/activate  → تفعيل الطوارئ")
-    print("   - POST /master/emergency/deactivate → إلغاء الطوارئ")
-    print("   - GET  /master/logs         → سجل أوامر السيد")
-    print("   - POST /awaken              → إيقاظ سماء")
-    print("   - POST /shutdown            → إيقاف سماء")
-    print("   - POST /restart             → إعادة تشغيل سماء")
-    print("   - POST /master/protect      → تفعيل حماية السيد")
-    print("\n" + "=" * 70)
-    print("🚀 التشغيل...\n")
-
-    app.run(host="0.0.0.0", port=5000, debug=False, threaded=True)
+    logging.basicConfig(
+        level=os.getenv("LOG_LEVEL", "INFO").upper(),
+        format="%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+    )
+    logger.info("🌌 Sama API Gateway (Sovereign Edition) running...")
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")), debug=False, threaded=True)
