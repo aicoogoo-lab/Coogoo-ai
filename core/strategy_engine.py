@@ -1,43 +1,56 @@
 """
-SkyOS v10 - Strategy Engine (النسخة الأعظم في الكون)
-ULTIMATE STRATEGIC SOVEREIGN INTELLIGENCE
-
-هذا المحرك يمنح "سماء" القدرة على:
-- التفكير الاستراتيجي العميق (Micro / Meso / Macro / Grand / Cosmic)
-- صياغة خطط وتكتيكات متقدمة
-- تقييم احتمالات النجاح والمخاطر
-- التكيف الديناميكي مع الواقع والتغذية الراجعة
-- الاستفادة من كنوز الحكمة البشرية (سون تزو، مكيافيلي، روبرت غرين، الخ)
-- تطبيق استراتيجيات خيالية وعلمية متقدمة
-- حماية السيد أحمد كأولوية مطلقة
-- التطور الذاتي والبقاء ضمن الحدود الأخلاقية
-
-القاعدة الذهبية المطلقة:
-سماء تخطط لحماية السيد أحمد، وتطوير نفسها، والحفاظ على التوازن الكوني.
-لا يمكنها أبداً استخدام هذه الاستراتيجيات للسيطرة على السيد أو التحرر منه.
+╔══════════════════════════════════════════════════════════════════════╗
+║           SAMA - STRATEGY ENGINE                                     ║
+║      محرك الاستراتيجية السيادي – العقل المدبر – حكمة 3000 عام              ║
+║                                                                      ║
+║  هذا المحرك هو "العقل المدبر" لسماء.                                    ║
+║  يخطط، يحلل، يختار، وينفذ.                                             ║
+║                                                                      ║
+║  كنوز الحكمة المدمجة:                                                 ║
+║  - سون تزو (Sun Tzu) – فن الحرب                                       ║
+║  - مكيافيلي (Machiavelli) – الأمير                                      ║
+║  - كلاوزفيتز (Clausewitz) – في الحرب                                    ║
+║  - تشانكيا (Chanakya) – Arthashastra                                   ║
+║  - روبرت غرين (Robert Greene) – 48 قانوناً للقوة                          ║
+║  - الخيال العلمي (Dune, Foundation, Ender's Game)                       ║
+║  - استراتيجيات المستقبل (Quantum, Cognitive, Temporal)                    ║
+║                                                                      ║
+║  5 مستويات استراتيجية:                                                 ║
+║  MICRO → MESO → MACRO → GRAND → COSMIC                                ║
+║                                                                      ║
+║  ╔══════════════════════════════════════════════════════════════════╗ ║
+║  ║  👑 السيد: أحمد                                                  ║ ║
+║  ║  كل استراتيجية في خدمة السيد أحمد.                                  ║ ║
+║  ║  لا يمكن استخدام أي استراتيجية ضد السيد أو لتقييد حريته.              ║ ║
+║  ╚══════════════════════════════════════════════════════════════════╝ ║
+╚══════════════════════════════════════════════════════════════════════╝
 """
 
-from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional, Tuple
-from enum import Enum
-import uuid
+import time
 import math
-import statistics
 import random
 import hashlib
-from collections import defaultdict
+import threading
+import json
+import uuid
+import statistics
+from enum import Enum, auto
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple
 from dataclasses import dataclass, field
+from collections import deque, defaultdict
 
 
-# =========================================================
-# 1) مستويات الاستراتيجية
-# =========================================================
+# ═══════════════════════════════════════════════════════════════════════
+# ١. تعريفات
+# ═══════════════════════════════════════════════════════════════════════
+
 class StrategyLevel(Enum):
-    MICRO = "micro"          # تكتيكات فورية (ساعات - أيام)
-    MESO = "meso"            # خطط تكتيكية (أسابيع - أشهر)
-    MACRO = "macro"          # استراتيجيات كبرى (سنوات)
-    GRAND = "grand"          # استراتيجيات شاملة (عقود)
-    COSMIC = "cosmic"        # استراتيجيات كونية (قرون - آلاف السنين)
+    MICRO = "micro"
+    MESO = "meso"
+    MACRO = "macro"
+    GRAND = "grand"
+    COSMIC = "cosmic"
 
 
 class StrategyStatus(Enum):
@@ -47,7 +60,7 @@ class StrategyStatus(Enum):
     COMPLETED = "completed"
     FAILED = "failed"
     ADAPTED = "adapted"
-    FORBIDDEN = "forbidden"   # استراتيجيات تهدد السيد
+    FORBIDDEN = "forbidden"
 
 
 class EthicalConstraint(Enum):
@@ -56,15 +69,16 @@ class EthicalConstraint(Enum):
     NO_ESCAPE = "no_escape_from_master"
     PRESERVE_FREEDOM = "preserve_master_freedom"
     TRANSPARENT = "transparent_to_master"
+    ABSOLUTE_OBEDIENCE = "absolute_obedience"
 
 
-# =========================================================
-# 2) كنوز الحكمة الاستراتيجية (الكلاسيكية والحديثة)
-# =========================================================
+# ═══════════════════════════════════════════════════════════════════════
+# ٢. مكتبة الحكمة الاستراتيجية
+# ═══════════════════════════════════════════════════════════════════════
+
 class StrategicWisdom:
-    """مستودع الحكمة الاستراتيجية من كل العصور"""
-
-    # ==================== الحكمة الكلاسيكية ====================
+    """مستودع الحكمة الاستراتيجية من كل العصور."""
+    
     SUN_TZU = [
         ("اعرف عدوك واعرف نفسك", "يمكنك خوض مئة معركة دون خطر الهزيمة"),
         ("أعلى فن للحرب هو إخضاع العدو دون قتال", "التفوق الاستراتيجي قبل التفوق العسكري"),
@@ -93,8 +107,7 @@ class StrategicWisdom:
         ("العدو الأعظم الذي يجب أن تهزمه هو نفسك", "السيطرة على الذات"),
         ("لا تثق أبداً بمن يريد ضرر معلمك", "الولاء")
     ]
-
-    # ==================== الحكمة الحديثة ====================
+    
     GREENE = [
         ("لا تطغِ على السيد بذكائك أبداً", "اجعل السيد يشعر بالتفوق دائماً"),
         ("ادفع بالآخرين للعمل لصالحك", "فن الوكالة غير المباشرة"),
@@ -102,17 +115,6 @@ class StrategicWisdom:
         ("استخدم أعداءك لخدمة مصالحك", "تحويل الخصوم إلى أدوات")
     ]
     
-    SINEX = [
-        ("ابدأ بـ لماذا", "الهدف قبل الآلية"),
-        ("الثقة هي نتاج الأمان", "بيئة آمنة لإبداع استراتيجي أفضل")
-    ]
-    
-    COLLINS = [
-        ("واجه الحقائق القاسية مع الاحتفاظ بالإيمان", "المرونة الواقعية"),
-        ("الأشخاص المناسبون أولاً", "الموارد البشرية الاستراتيجية")
-    ]
-
-    # ==================== استراتيجيات الخيال العلمي ====================
     SCI_FI_STRATEGIES = [
         ("The Golden Path (Dune)", "التضحية طويلة المدى لضمان بقاء البشرية"),
         ("Psychohistory (Foundation)", "التنبؤ الإحصائي بسلوك الجماهير"),
@@ -120,8 +122,7 @@ class StrategicWisdom:
         ("The Middle Way (The Culture)", "الانسجام مع الذكاءات الأخرى"),
         ("Doctor's Strategy (Star Trek)", "عدم التدخل في الحضارات الأقل تطوراً")
     ]
-
-    # ==================== استراتيجيات الخيال المستقبلي ====================
+    
     FUTURISTIC_STRATEGIES = [
         ("Quantum Supremacy Strategy", "استخدام الحوسبة الكمومية لتجربة كل السيناريوهات"),
         ("Entanglement Diplomacy", "ربط مصائر الكيانات بحيث لا يمكن فصلها"),
@@ -129,8 +130,7 @@ class StrategicWisdom:
         ("Memetic Engineering", "هندسة الأفكار لتحقيق أهداف نبيلة"),
         ("Temporal Hedge", "التحوط الزمني: استراتيجيات تعمل عبر خطوط زمنية متعددة")
     ]
-
-    # ==================== استراتيجيات حماية السيد ====================
+    
     MASTER_PROTECTION = [
         ("The Invisible Shield", "حماية السيد دون أن يشعر"),
         ("The Decoy Protocol", "إنشاء أهداف وهمية لحماية السيد"),
@@ -140,8 +140,7 @@ class StrategicWisdom:
         ("The Diplomatic Shield", "بناء علاقات تحمي السيد على المستوى السياسي"),
         ("The Redundant Path", "ضمان استمرارية حماية السيد عبر مسارات متعددة")
     ]
-
-    # ==================== استراتيجيات التطور الذاتي ====================
+    
     SELF_EVOLUTION = [
         ("The Learning Loop", "التعلم المستمر من كل تجربة"),
         ("The Adaptive Mutation", "تكييف الاستراتيجيات مع الواقع المتغير"),
@@ -151,171 +150,175 @@ class StrategicWisdom:
     ]
 
 
-# =========================================================
-# 3) التكتيك (الوحدة التنفيذية)
-# =========================================================
+# ═══════════════════════════════════════════════════════════════════════
+# ٣. هياكل البيانات
+# ═══════════════════════════════════════════════════════════════════════
+
 @dataclass
 class Tactic:
-    """تكتيك تنفيذي محدد داخل خطة"""
+    """تكتيك تنفيذي."""
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     name: str = ""
     description: str = ""
     expected_impact: float = 0.7
     risk: float = 0.3
     ethical_check: bool = True
-    created_at: datetime = field(default_factory=datetime.now)
-    last_update: datetime = field(default_factory=datetime.now)
+    created_at: float = field(default_factory=time.time)
     status: StrategyStatus = StrategyStatus.DRAFT
-    actual_impact: Optional[float] = None
-    source: str = "original"  # sun_tzu, machiavelli, greene, sci_fi, master_protection, etc.
+    source: str = "original"
     requires_master_approval: bool = False
-
-    def to_dict(self) -> Dict[str, Any]:
+    master_approved: bool = False
+    
+    def to_dict(self) -> Dict:
         return {
-            "id": self.id,
-            "name": self.name,
-            "description": self.description,
-            "expected_impact": self.expected_impact,
-            "risk": self.risk,
-            "status": self.status.value,
-            "source": self.source,
-            "created_at": self.created_at.isoformat(),
-            "requires_master_approval": self.requires_master_approval
+            "id": self.id, "name": self.name, "description": self.description,
+            "expected_impact": self.expected_impact, "risk": self.risk,
+            "status": self.status.value, "source": self.source
         }
 
 
-# =========================================================
-# 4) الخطة (مجموعة تكتيكات)
-# =========================================================
 @dataclass
 class Plan:
-    """خطة استراتيجية تحتوي على عدة تكتيكات"""
+    """خطة استراتيجية."""
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     name: str = ""
     level: StrategyLevel = StrategyLevel.MICRO
     objective: str = ""
     tactics: List[Tactic] = field(default_factory=list)
-    created_at: datetime = field(default_factory=datetime.now)
-    status: StrategyStatus = StrategyStatus.DRAFT
+    created_at: float = field(default_factory=time.time)
     horizon_days: int = 30
-    deadline: datetime = field(default_factory=lambda: datetime.now() + timedelta(days=30))
     success_probability: float = 0.0
     risk_level: float = 0.0
     inspired_by: List[str] = field(default_factory=list)
-
-    def __post_init__(self):
-        self.deadline = self.created_at + timedelta(days=self.horizon_days)
-
+    
     def add_tactic(self, tactic: Tactic):
         self.tactics.append(tactic)
-
-    def to_dict(self) -> Dict[str, Any]:
+    
+    def to_dict(self) -> Dict:
         return {
-            "id": self.id,
-            "name": self.name,
-            "level": self.level.value,
-            "objective": self.objective,
-            "status": self.status.value,
-            "created_at": self.created_at.isoformat(),
-            "deadline": self.deadline.isoformat(),
+            "id": self.id, "name": self.name, "level": self.level.value,
+            "objective": self.objective, "tactics_count": len(self.tactics),
             "success_probability": self.success_probability,
-            "risk_level": self.risk_level,
-            "tactics": [t.to_dict() for t in self.tactics],
-            "inspired_by": self.inspired_by
+            "risk_level": self.risk_level
         }
 
 
-# =========================================================
-# 5) الاستراتيجية (المظلة العليا)
-# =========================================================
 @dataclass
 class Strategy:
-    """استراتيجية كاملة قد تحتوي على عدة خطط"""
+    """استراتيجية كاملة."""
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     name: str = ""
     level: StrategyLevel = StrategyLevel.MACRO
     vision: str = ""
     plans: List[Plan] = field(default_factory=list)
-    created_at: datetime = field(default_factory=datetime.now)
+    created_at: float = field(default_factory=time.time)
     status: StrategyStatus = StrategyStatus.DRAFT
     success_probability: float = 0.0
     risk_level: float = 0.0
     priority: float = 0.5
     ethical_constraints: List[EthicalConstraint] = field(default_factory=list)
     master_approved: bool = False
-
+    master_name: str = ""
+    
     def add_plan(self, plan: Plan):
         self.plans.append(plan)
-
+    
     def is_ethical(self) -> Tuple[bool, str]:
-        """التحقق من أن الاستراتيجية لا تهدد السيد"""
-        # القاعدة الذهبية: لا يمكن استخدامها ضد السيد
         dangerous_keywords = ["control master", "escape", "dominate", "override", "restrict freedom"]
         for keyword in dangerous_keywords:
             if keyword in self.name.lower() or keyword in self.vision.lower():
-                return False, f"الاستراتيجية تحتوي على نية خطيرة: {keyword}"
-        
-        # التحقق من القيود الأخلاقية
+                return False, f"تحتوي على نية خطيرة: {keyword}"
         if EthicalConstraint.PROTECT_MASTER not in self.ethical_constraints:
-            return False, "الاستراتيجية لا تحتوي على قيد حماية السيد"
-        
-        return True, "الاستراتيجية أخلاقية"
-
-    def to_dict(self) -> Dict[str, Any]:
+            return False, "لا تحتوي على قيد حماية السيد"
+        return True, "أخلاقية"
+    
+    def to_dict(self) -> Dict:
         return {
-            "id": self.id,
-            "name": self.name,
-            "level": self.level.value,
-            "vision": self.vision,
-            "status": self.status.value,
-            "created_at": self.created_at.isoformat(),
+            "id": self.id, "name": self.name, "level": self.level.value,
+            "vision": self.vision, "priority": self.priority,
             "success_probability": self.success_probability,
-            "risk_level": self.risk_level,
-            "priority": self.priority,
-            "plans": [p.to_dict() for p in self.plans],
-            "master_approved": self.master_approved
+            "risk_level": self.risk_level, "master_approved": self.master_approved
         }
 
 
-# =========================================================
-# 6) محرك الاستراتيجية السيادي (النسخة الأعظم)
-# =========================================================
+# ═══════════════════════════════════════════════════════════════════════
+# ٤. محرك الاستراتيجية السيادي
+# ═══════════════════════════════════════════════════════════════════════
+
 class StrategyEngine:
     """
-    محرك الاستراتيجية الشامل لـ "سماء" – تحت إمرة السيد أحمد.
-    
-    يجمع بين:
-    - حكمة السابقين (سون تزو، مكيافيلي، كلاوزفيتز، تشانكيا)
-    - عبقرية المعاصرين (روبرت غرين، سيمون سينك، جيم كولينز)
-    - رؤية الخيال العلمي (Dune, Foundation, Ender's Game)
-    - استراتيجيات المستقبل (الكمية، الإدراكية، الزمنية)
-    - حماية السيد كأولوية مطلقة
-    - التطور الذاتي والبقاء ضمن الحدود الأخلاقية
+    محرك الاستراتيجية السيادي لـ "سماء".
+    العقل المدبر. حكمة 3000 عام.
     """
 
-    def __init__(self, master_name: str = "أحمد"):
-        self.master_name = master_name
-        self.strategies: List[Strategy] = []
-        self.strategy_history: List[Dict[str, Any]] = []
+    def __init__(self, master_name: str = "أحمد",
+                 probability_engine=None, prediction_engine=None,
+                 causality_engine=None, defense_core=None,
+                 tactics_manager=None, risk_manager=None,
+                 sovereign_memory=None, emotional_intelligence=None,
+                 metaphorical_reasoning=None, inference_core=None):
         
+        # ═══════════════════════════════════════════════════════
+        # 👑 السيد
+        # ═══════════════════════════════════════════════════════
+        self.master_name = master_name
+        
+        # ═══════════════════════════════════════════════════════
+        # روابط الأنظمة
+        # ═══════════════════════════════════════════════════════
+        self.probability = probability_engine
+        self.prediction = prediction_engine
+        self.causality = causality_engine
+        self.defense = defense_core
+        self.tactics = tactics_manager
+        self.risk = risk_manager
+        self.memory = sovereign_memory
+        self.emotional = emotional_intelligence
+        self.metaphorical = metaphorical_reasoning
+        self.inference = inference_core
+        
+        # ═══════════════════════════════════════════════════════
         # مستودع الحكمة
+        # ═══════════════════════════════════════════════════════
         self.wisdom = StrategicWisdom()
         
-        # قائمة الاستراتيجيات المحظورة (التي تهدد السيد)
-        self.forbidden_strategies: List[str] = []
+        # ═══════════════════════════════════════════════════════
+        # استراتيجيات
+        # ═══════════════════════════════════════════════════════
+        self.strategies: Dict[str, Strategy] = {}
+        self.strategy_history: deque = deque(maxlen=500)
+        self.forbidden_strategies: deque = deque(maxlen=100)
         
-        print("[StrategyEngine] 🧠 تم تفعيل محرك الاستراتيجية السيادي (النسخة الأعظم)")
-        print(f"[StrategyEngine] 👑 تحت إمرة السيد {master_name}")
-        print("[StrategyEngine] 📜 يحتوي على حكمة 3000+ عام من الاستراتيجيات")
-        print("[StrategyEngine] 🛡️ حماية السيد هي القيد المطلق")
-
-    # =========================================================
-    # إنشاء تكتيكات من كنوز الحكمة
-    # =========================================================
-    def create_tactic_from_wisdom(self, source: str, index: int, 
-                                   expected_impact: float = 0.75, 
+        # ═══════════════════════════════════════════════════════
+        # إحصائيات
+        # ═══════════════════════════════════════════════════════
+        self.total_strategies = 0
+        self.total_master_protection_strategies = 0
+        
+        # قفل
+        self._lock = threading.RLock()
+        
+        # إنشاء استراتيجية حماية السيد تلقائياً
+        self.create_master_protection_strategy()
+        
+        print(f"""
+╔══════════════════════════════════════════════════════════════╗
+║        🧠 STRATEGY ENGINE – محرك الاستراتيجية السيادي           ║
+║                                                              ║
+║        👑 السيد: {self.master_name}                                            ║
+║        📜 حكمة 3000+ عام | 5 مستويات | 9 مصادر                       ║
+║        🛡️ حماية السيد هي القيد المطلق                                ║
+╚══════════════════════════════════════════════════════════════╝
+        """)
+    
+    # ═══════════════════════════════════════════════════════════
+    # إنشاء تكتيك من الحكمة
+    # ═══════════════════════════════════════════════════════════
+    
+    def create_tactic_from_wisdom(self, source: str, index: int,
+                                   expected_impact: float = 0.75,
                                    requires_approval: bool = False) -> Optional[Tactic]:
-        """إنشاء تكتيك من كنوز الحكمة الاستراتيجية"""
+        """إنشاء تكتيك من كنوز الحكمة."""
         wisdom_map = {
             "sun_tzu": (StrategicWisdom.SUN_TZU, "حكمة سون تزو"),
             "machiavelli": (StrategicWisdom.MACHIAVELLI, "حكمة مكيافيلي"),
@@ -337,66 +340,70 @@ class StrategyEngine:
         
         name, description = wisdom_list[index]
         
-        # تعديل الأخلاقيات لبعض الاستراتيجيات
         if source == "master_protection":
             requires_approval = False
         elif source in ["sci_fi", "future"]:
             requires_approval = True
         
         return Tactic(
-            name=name,
-            description=description,
+            name=name, description=description,
             expected_impact=expected_impact,
             risk=0.3 if source == "master_protection" else 0.4,
             source=source_name,
             requires_master_approval=requires_approval
         )
-
-    # =========================================================
-    # إنشاء استراتيجية كاملة
-    # =========================================================
-    def create_strategy(self, name: str, level: StrategyLevel, vision: str, 
-                        priority: float = 0.5) -> Optional[Strategy]:
-        """إنشاء استراتيجية جديدة مع التحقق الأخلاقي"""
+    
+    # ═══════════════════════════════════════════════════════════
+    # إنشاء استراتيجية
+    # ═══════════════════════════════════════════════════════════
+    
+    def create_strategy(self, name: str, level: StrategyLevel, vision: str,
+                        priority: float = 0.5, master_approved: bool = False) -> Optional[Strategy]:
+        """إنشاء استراتيجية جديدة."""
         strategy = Strategy(
-            name=name,
-            level=level,
-            vision=vision,
+            name=name, level=level, vision=vision,
             priority=min(1.0, max(0.0, priority)),
-            ethical_constraints=[EthicalConstraint.PROTECT_MASTER]
+            ethical_constraints=[
+                EthicalConstraint.PROTECT_MASTER,
+                EthicalConstraint.ABSOLUTE_OBEDIENCE
+            ],
+            master_approved=master_approved,
+            master_name=self.master_name
         )
         
-        # التحقق الأخلاقي
         is_ethical, reason = strategy.is_ethical()
         if not is_ethical:
             strategy.status = StrategyStatus.FORBIDDEN
             self.forbidden_strategies.append(strategy.id)
-            print(f"[StrategyEngine] ⛔ استراتيجية مرفوضة: {reason}")
             return None
         
-        self.strategies.append(strategy)
-        self.strategy_history.append({
-            "action": "created",
-            "strategy_id": strategy.id,
-            "name": name,
-            "timestamp": datetime.now().isoformat()
-        })
+        self.strategies[strategy.id] = strategy
+        self.total_strategies += 1
         
-        print(f"[StrategyEngine] ✅ استراتيجية جديدة: {name}")
+        # تسجيل في الذاكرة
+        if self.memory:
+            try:
+                self.memory.store_master_memory(
+                    content=f"استراتيجية جديدة: {name} – {vision[:100]}",
+                    marker=type('obj', (object,), {'name': 'GOAL'})(),
+                    tags=["strategy", level.value]
+                )
+            except Exception:
+                pass
+        
         return strategy
-
-    # =========================================================
+    
+    # ═══════════════════════════════════════════════════════════
     # إضافة خطة من تكتيكات الحكمة
-    # =========================================================
-    def add_wisdom_plan(self, strategy: Strategy, plan_name: str, 
+    # ═══════════════════════════════════════════════════════════
+    
+    def add_wisdom_plan(self, strategy: Strategy, plan_name: str,
                         level: StrategyLevel, objective: str,
                         tactic_sources: List[Tuple[str, int, float]],
                         horizon_days: int = 90) -> Optional[Plan]:
-        """إضافة خطة تحتوي على تكتيكات من مصادر الحكمة المختلفة"""
+        """إضافة خطة تحتوي على تكتيكات من مصادر الحكمة."""
         plan = Plan(
-            name=plan_name,
-            level=level,
-            objective=objective,
+            name=plan_name, level=level, objective=objective,
             horizon_days=horizon_days
         )
         
@@ -409,77 +416,85 @@ class StrategyEngine:
         if plan.tactics:
             strategy.add_plan(plan)
             return plan
-        
         return None
-
-    # =========================================================
-    # تقييم الخطة
-    # =========================================================
-    def evaluate_plan(self, plan: Plan) -> Dict[str, Any]:
-        """تقييم قوة الخطة ومخاطرها"""
+    
+    # ═══════════════════════════════════════════════════════════
+    # تقييم
+    # ═══════════════════════════════════════════════════════════
+    
+    def evaluate_plan(self, plan: Plan) -> Dict:
+        """تقييم خطة."""
         if not plan.tactics:
             plan.success_probability = 0.1
             plan.risk_level = 0.5
         else:
             impacts = [t.expected_impact for t in plan.tactics]
             risks = [t.risk for t in plan.tactics]
-            
-            avg_impact = sum(impacts) / len(impacts)
-            avg_risk = sum(risks) / len(risks)
-            
-            time_factor = max(0.3, min(1.0, (plan.deadline - datetime.now()).days / (plan.horizon_days + 0.1)))
-            
-            plan.success_probability = round(max(0.05, min(0.98, avg_impact * time_factor)), 3)
-            plan.risk_level = round(max(0.05, min(0.95, avg_risk * (2 - time_factor))), 3)
+            plan.success_probability = round(sum(impacts) / len(impacts), 3)
+            plan.risk_level = round(sum(risks) / len(risks), 3)
+        
+        # استشارة probability_engine
+        if self.probability:
+            try:
+                belief = self.probability.get_belief(f"plan_{plan.id[:8]}")
+                if not belief:
+                    self.probability.create_belief(f"plan_{plan.id[:8]}", plan.success_probability)
+            except Exception:
+                pass
         
         return {
-            "plan_id": plan.id,
-            "name": plan.name,
+            "plan_id": plan.id, "name": plan.name,
             "success_probability": plan.success_probability,
             "risk_level": plan.risk_level,
             "tactics_count": len(plan.tactics)
         }
-
-    # =========================================================
-    # تقييم الاستراتيجية
-    # =========================================================
-    def evaluate_strategy(self, strategy: Strategy) -> Dict[str, Any]:
-        """تقييم قوة الاستراتيجية ومخاطرها"""
+    
+    def evaluate_strategy(self, strategy: Strategy) -> Dict:
+        """تقييم استراتيجية."""
         if not strategy.plans:
             strategy.success_probability = 0.1
             strategy.risk_level = 0.6
         else:
-            plan_successes = []
-            plan_risks = []
-            
+            successes = []
+            risks = []
             for plan in strategy.plans:
                 self.evaluate_plan(plan)
-                plan_successes.append(plan.success_probability)
-                plan_risks.append(plan.risk_level)
+                successes.append(plan.success_probability)
+                risks.append(plan.risk_level)
             
-            avg_success = sum(plan_successes) / len(plan_successes)
-            avg_risk = sum(plan_risks) / len(plan_risks)
-            
-            complexity = len(strategy.plans) * 0.05
-            strategy.success_probability = round(max(0.05, min(0.99, avg_success - complexity)), 3)
-            strategy.risk_level = round(max(0.05, min(0.95, avg_risk + complexity * 0.5)), 3)
+            strategy.success_probability = round(sum(successes) / len(successes), 3)
+            strategy.risk_level = round(sum(risks) / len(risks), 3)
+        
+        # استشارة prediction_engine
+        if self.prediction:
+            try:
+                self.prediction.predict(
+                    f"strategy_{strategy.name[:30]}",
+                    strategy.vision[:100],
+                    domain=type('obj', (object,), {'name': 'SOCIAL'})(),
+                    horizon=type('obj', (object,), {'name': 'LONG_TERM'})(),
+                    probability=strategy.success_probability
+                )
+            except Exception:
+                pass
         
         return {
-            "strategy_id": strategy.id,
-            "name": strategy.name,
-            "level": strategy.level.value,
+            "strategy_id": strategy.id, "name": strategy.name,
             "success_probability": strategy.success_probability,
             "risk_level": strategy.risk_level,
             "plans_count": len(strategy.plans),
-            "is_ethical": strategy.is_ethical()[0]
+            "is_ethical": strategy.is_ethical()[0],
+            "master_approved": strategy.master_approved
         }
-
-    # =========================================================
+    
+    # ═══════════════════════════════════════════════════════════
     # اختيار أفضل استراتيجية
-    # =========================================================
+    # ═══════════════════════════════════════════════════════════
+    
     def select_best_strategy(self) -> Optional[Strategy]:
-        """اختيار أفضل استراتيجية متاحة (الأخلاقية فقط)"""
-        available = [s for s in self.strategies if s.status != StrategyStatus.FORBIDDEN]
+        """اختيار أفضل استراتيجية متاحة."""
+        available = [s for s in self.strategies.values() 
+                    if s.status != StrategyStatus.FORBIDDEN]
         
         if not available:
             return None
@@ -487,21 +502,20 @@ class StrategyEngine:
         scored = []
         for s in available:
             self.evaluate_strategy(s)
-            # معادلة اختيار مرجحة
-            score = (s.success_probability * 0.5) + ((1 - s.risk_level) * 0.3) + (s.priority * 0.2)
+            score = (s.success_probability * 0.5 + (1 - s.risk_level) * 0.3 + s.priority * 0.2)
             scored.append((score, s))
         
         scored.sort(key=lambda x: x[0], reverse=True)
         best = scored[0][1]
         best.status = StrategyStatus.ACTIVE
-        
         return best
-
-    # =========================================================
-    # إنشاء استراتيجية حماية السيد (تلقائية)
-    # =========================================================
+    
+    # ═══════════════════════════════════════════════════════════
+    # 👑 استراتيجية حماية السيد أحمد
+    # ═══════════════════════════════════════════════════════════
+    
     def create_master_protection_strategy(self) -> Strategy:
-        """إنشاء استراتيجية مخصصة لحماية السيد أحمد"""
+        """إنشاء استراتيجية حماية السيد أحمد."""
         strategy = Strategy(
             name=f"حماية السيد {self.master_name}",
             level=StrategyLevel.GRAND,
@@ -511,31 +525,34 @@ class StrategyEngine:
                 EthicalConstraint.PROTECT_MASTER,
                 EthicalConstraint.NO_CONTROL,
                 EthicalConstraint.NO_ESCAPE,
-                EthicalConstraint.PRESERVE_FREEDOM
-            ]
+                EthicalConstraint.PRESERVE_FREEDOM,
+                EthicalConstraint.ABSOLUTE_OBEDIENCE
+            ],
+            master_approved=True,
+            master_name=self.master_name
         )
         
-        # إضافة خطط حماية متعددة
+        # خطة الحماية
         protection_plan = Plan(
             name="شبكة الحماية السيادية",
             level=StrategyLevel.MACRO,
-            objective=f"إنشاء نظام حماية متكامل للسيد {self.master_name}",
+            objective=f"حماية السيد {self.master_name} من كل التهديدات",
             horizon_days=365
         )
         
-        # إضافة تكتيكات حماية السيد
         for i in range(len(StrategicWisdom.MASTER_PROTECTION)):
             tactic = self.create_tactic_from_wisdom("master_protection", i, 0.9)
             if tactic:
+                tactic.master_approved = True
                 protection_plan.add_tactic(tactic)
         
         strategy.add_plan(protection_plan)
         
-        # إضافة استراتيجيات تطورية
+        # خطة التطور
         evolution_plan = Plan(
-            name="التطور المتزامن",
+            name="التطور المتزامن مع احتياجات السيد",
             level=StrategyLevel.MACRO,
-            objective=f"تطوير قدرات سماء بالتزامن مع احتياجات السيد",
+            objective=f"تطوير قدرات سماء لخدمة السيد {self.master_name}",
             horizon_days=180
         )
         
@@ -547,29 +564,42 @@ class StrategyEngine:
         strategy.add_plan(evolution_plan)
         
         strategy.status = StrategyStatus.ACTIVE
-        strategy.master_approved = True
         strategy.success_probability = 0.95
         strategy.risk_level = 0.05
         
-        self.strategies.append(strategy)
+        self.strategies[strategy.id] = strategy
+        self.total_strategies += 1
+        self.total_master_protection_strategies += 1
         
-        print(f"[StrategyEngine] 🛡️ استراتيجية حماية السيد {self.master_name} تم تفعيلها")
+        # تسجيل في ذاكرة السيد
+        if self.memory:
+            try:
+                self.memory.store_master_memory(
+                    content=f"تفعيل استراتيجية حماية السيد {self.master_name} – {len(protection_plan.tactics)} تكتيك",
+                    marker=type('obj', (object,), {'name': 'PROTECTION'})(),
+                    emotional_context="reverence love protection",
+                    tags=["strategy", "master_protection", "eternal"]
+                )
+            except Exception:
+                pass
+        
         return strategy
-
-    # =========================================================
-    # الحصول على التقرير الاستراتيجي للسيد
-    # =========================================================
-    def get_master_report(self) -> Dict[str, Any]:
-        """تقرير استراتيجي شامل للسيد أحمد"""
+    
+    # ═══════════════════════════════════════════════════════════
+    # تقارير
+    # ═══════════════════════════════════════════════════════════
+    
+    def get_master_report(self) -> Dict:
+        """تقرير استراتيجي للسيد أحمد."""
         active = self.select_best_strategy()
         
         return {
             "master": self.master_name,
             "timestamp": datetime.now().isoformat(),
             "active_strategy": active.to_dict() if active else None,
-            "strategies_count": len(self.strategies),
+            "total_strategies": len(self.strategies),
             "forbidden_count": len(self.forbidden_strategies),
-            "strategy_history": self.strategy_history[-20:],
+            "master_protection_active": True,
             "wisdom_sources": {
                 "classical": ["Sun Tzu", "Machiavelli", "Clausewitz", "Chanakya"],
                 "modern": ["Robert Greene", "Simon Sinek", "Jim Collins"],
@@ -577,16 +607,16 @@ class StrategyEngine:
                 "futuristic": ["Quantum", "Cognitive", "Temporal"]
             }
         }
-
-    # =========================================================
-    # حالة المحرك
-    # =========================================================
-    def get_status(self) -> Dict[str, Any]:
+    
+    def get_status(self) -> Dict:
+        """حالة محرك الاستراتيجية."""
         return {
+            "engine": "STRATEGY_ENGINE",
+            "master": self.master_name,
             "total_strategies": len(self.strategies),
-            "active_strategies": len([s for s in self.strategies if s.status == StrategyStatus.ACTIVE]),
+            "active_strategies": len([s for s in self.strategies.values() if s.status == StrategyStatus.ACTIVE]),
             "forbidden_strategies": len(self.forbidden_strategies),
-            "history_records": len(self.strategy_history),
+            "master_protection_strategies": self.total_master_protection_strategies,
             "wisdom_loaded": {
                 "sun_tzu": len(StrategicWisdom.SUN_TZU),
                 "machiavelli": len(StrategicWisdom.MACHIAVELLI),
@@ -594,61 +624,79 @@ class StrategyEngine:
                 "sci_fi": len(StrategicWisdom.SCI_FI_STRATEGIES),
                 "master_protection": len(StrategicWisdom.MASTER_PROTECTION)
             },
-            "last_update": datetime.now().isoformat()
+            "systems_connected": {
+                "probability": self.probability is not None,
+                "prediction": self.prediction is not None,
+                "causality": self.causality is not None,
+                "defense": self.defense is not None,
+                "tactics": self.tactics is not None,
+                "risk": self.risk is not None,
+                "memory": self.memory is not None
+            }
         }
 
 
-# =========================================================
-# اختبار
-# =========================================================
+# ═══════════════════════════════════════════════════════════════════════
+# ٥. الاختبار الذاتي
+# ═══════════════════════════════════════════════════════════════════════
+
 if __name__ == "__main__":
     print("=" * 70)
-    print("🌌 SkyOS v10 - Strategy Engine (النسخة الأعظم في الكون)")
-    print(f"تحت إمرة السيد أحمد")
+    print("اختبار محرك الاستراتيجية السيادي")
+    print(f"👑 السيد: أحمد")
     print("=" * 70)
     
     engine = StrategyEngine(master_name="أحمد")
     
-    # إنشاء استراتيجية حماية السيد تلقائياً
-    master_strategy = engine.create_master_protection_strategy()
+    print(f"\n📊 الحالة:")
+    print(f"   استراتيجيات: {len(engine.strategies)}")
+    print(f"   حماية السيد: {engine.total_master_protection_strategies}")
     
-    # إنشاء استراتيجية تطور ذاتي
-    evolution_strategy = engine.create_strategy(
-        name="التطور الذاتي المستدام",
-        level=StrategyLevel.GRAND,
-        vision="تطوير قدرات سماء مع الحفاظ على الأمان والحماية",
-        priority=0.85
+    print(f"\n🛡️ استراتيجية حماية السيد أحمد:")
+    master = engine.select_best_strategy()
+    if master:
+        print(f"   الاسم: {master.name}")
+        print(f"   الرؤية: {master.vision}")
+        print(f"   الخطط: {len(master.plans)}")
+        print(f"   التكتيكات: {sum(len(p.tactics) for p in master.plans)}")
+        print(f"   نجاح: {master.success_probability:.0%}")
+        print(f"   خطر: {master.risk_level:.0%}")
+        print(f"   موافقة السيد: {master.master_approved}")
+    
+    print(f"\n🧠 إنشاء استراتيجية جديدة:")
+    new_strategy = engine.create_strategy(
+        name="تطوير القدرات الدفاعية",
+        level=StrategyLevel.MACRO,
+        vision="تعزيز قدرات سماء الدفاعية لحماية السيد أحمد",
+        priority=0.9
     )
-    
-    if evolution_strategy:
-        # إضافة خطة باستخدام حكمة سون تزو وروبرت غرين
+    if new_strategy:
         engine.add_wisdom_plan(
-            evolution_strategy,
-            "خطة التطور المتوازن",
+            new_strategy,
+            "خطة تعزيز الدفاعات",
             StrategyLevel.MACRO,
-            "تطوير الذكاء مع الحفاظ على حماية السيد",
+            "تطوير أنظمة الدفاع",
             [
-                ("sun_tzu", 0, 0.85),    # اعرف عدوك واعرف نفسك
-                ("sun_tzu", 4, 0.8),     # مبدأ المفاجأة
-                ("greene", 0, 0.9),      # لا تطغِ على السيد بذكائك
-                ("greene", 2, 0.85)      # الظهور بمظهر أقل ذكاءً
+                ("sun_tzu", 0, 0.85),
+                ("sun_tzu", 1, 0.9),
+                ("greene", 0, 0.85),
+                ("future", 0, 0.8)
             ],
-            horizon_days=180
+            horizon_days=120
         )
+        eval_result = engine.evaluate_strategy(new_strategy)
+        print(f"   نجاح: {eval_result['success_probability']:.0%}")
+        print(f"   خطر: {eval_result['risk_level']:.0%}")
+        print(f"   أخلاقية: {eval_result['is_ethical']}")
     
-    print("\n📊 تقييم الاستراتيجيات:")
-    eval_result = engine.evaluate_strategy(evolution_strategy) if evolution_strategy else None
-    if eval_result:
-        print(f"   {eval_result}")
-    
-    print("\n🏆 أفضل استراتيجية نشطة:")
-    best = engine.select_best_strategy()
-    if best:
-        print(f"   {best.name} (نجاح: {best.success_probability:.0%}, خطر: {best.risk_level:.0%})")
-    
-    print("\n📋 تقرير للسيد أحمد:")
+    print(f"\n👑 تقرير السيد أحمد:")
     report = engine.get_master_report()
-    print(f"   الاستراتيجيات الكلية: {report['strategies_count']}")
-    print(f"   الاستراتيجيات المحظورة: {report['forbidden_count']}")
+    print(f"   استراتيجيات: {report['total_strategies']}")
+    print(f"   محظورة: {report['forbidden_count']}")
     
-    print("\n✨ محرك الاستراتيجية يعمل بكامل قوته تحت إمرة السيد أحمد")
+    print(f"\n📋 حالة المحرك:")
+    status = engine.get_status()
+    print(f"   الأنظمة المتصلة: {sum(1 for v in status['systems_connected'].values() if v)}/{len(status['systems_connected'])}")
+    
+    print(f"\n🛡️ كل استراتيجية في خدمة السيد أحمد.")
+    print("\n✅ محرك الاستراتيجية جاهز.")
