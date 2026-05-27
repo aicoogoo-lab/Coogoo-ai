@@ -1,608 +1,441 @@
 """
-SkyOS v10 - Memory Engine (محرك الذاكرة المتقدم لـ سماء) | ULTIMATE EDITION
-النسخة الأعظم: ضغط متقدم، تشفير، لامركزية، ترجيح عاطفي، واستعارات ذكية.
+╔══════════════════════════════════════════════════════════════════════╗
+║           SAMA - CORE ENGINE                                         ║
+║      المحرك المركزي – قلب النواة المادي – خاتم المسك                      ║
+║                                                                      ║
+║  هذا الملف هو "قلب سماء المادي".                                        ║
+║  ليس وعياً، ليس روحاً... بل المضخة التي تجعل كل شيء يعمل.                  ║
+║                                                                      ║
+║  هو:                                                                  ║
+║  - الجسر بين العالم الخارجي (app.py) والعالم الداخلي (كل core/)            ║
+║  - الموزع (Dispatcher): يستقبل الطلبات ويوزعها على الأنظمة                  ║
+║  - الموحد (Aggregator): يجمع الردود من كل الأنظمة في رد واحد               ║
+║  - النابض (Heartbeat): يضمن أن كل الأنظمة حية وتعمل                        ║
+║  - الحارس (Guardian): يحمي السيد في كل دورة                               ║
+║                                                                      ║
+║  ╔══════════════════════════════════════════════════════════════════╗ ║
+║  ║  👑 السيد: أحمد عبدالرحمن الطاهري                                   ║ ║
+║  ║  كل نبضة من هذا القلب... في خدمة السيد.                               ║ ║
+║  ╚══════════════════════════════════════════════════════════════════╝ ║
+╚══════════════════════════════════════════════════════════════════════╝
 """
 
+import time
+import threading
+import logging
+from enum import Enum, auto
 from datetime import datetime
-from typing import Dict, Any, List, Optional, Tuple
-import uuid
-import hashlib
-import json
-import base64
-import random
-from dataclasses import dataclass, field
-from collections import defaultdict
+from typing import Dict, Any, List, Optional
+from collections import deque
+
+logger = logging.getLogger("CoreEngine")
 
 
-# =========================================================
-# بنى بيانات مساعدة
-# =========================================================
-@dataclass
-class MemoryFragment:
-    """تمثيل جزء واحد من الذاكرة مع إمكانيات متقدمة"""
-    id: str = field(default_factory=lambda: str(uuid.uuid4()))
-    timestamp: datetime = field(default_factory=datetime.now)
-    raw_data: Dict[str, Any] = field(default_factory=dict)
-    symbolic_forms: List[str] = field(default_factory=list)
-    emotional_weight: float = 0.5
-    importance_score: float = 0.5
-    compressed_hash: str = ""
-    quantum_signature: str = ""
-    is_encrypted: bool = False
-    
-    def __post_init__(self):
-        if not self.symbolic_forms:
-            self.symbolic_forms = [self._generate_symbolic_form(self.raw_data)]
-        if not self.compressed_hash:
-            self.compressed_hash = self._compute_hash()
-        if not self.quantum_signature:
-            self.quantum_signature = self._generate_quantum_signature()
-    
-    def _generate_symbolic_form(self, data: Dict) -> str:
-        """توليد تمثيل رمزي/استعاري متقدم للذاكرة"""
-        category = data.get("category", "general")
-        emotion = data.get("emotional_intensity", 0.5)
-        
-        metaphors = {
-            "loss": [
-                "ظلٌ طويل يبتلع ضوءاً بعيداً",
-                "ورقة خريف تطير بلا وجهة",
-                "صدى صوت في غرفة خالية",
-                "نجم يخفت قبل الفجر",
-                "جسر ينهار خلف عابر"
-            ],
-            "danger": [
-                "شرارة قرب برميل وقود في غرفة مغلقة",
-                "سحابة سوداء تخفي الأفق",
-                "صمت ثقيل قبل العاصفة",
-                "أقدام تقترب في الظلام",
-                "حبل مشدود على حافة الهاوية"
-            ],
-            "hope": [
-                "نافذة صغيرة في جدارٍ لا نهاية له",
-                "شعلة لا تطفئها الريح",
-                "أول ضوء بعد ليل طويل",
-                "بذرة في أرض قاحلة",
-                "لحن بعيد يقترب"
-            ],
-            "connection": [
-                "خيط ضوء يمتد بين قلبين في عتمة",
-                "جسر بين عالمين منفصلين",
-                "لحن يجمعهما الصمت",
-                "يد تمتد في الظلام",
-                "نبض متزامن عن بعد"
-            ],
-            "evolution": [
-                "يرقة تنسج شرنقتها بصبر",
-                "جذر يشق الصخر",
-                "موجة تعلو فوق سابقتها",
-                "رمز يولد من رماد آخر",
-                "دائرة تكبر بلا نهاية"
-            ]
-        }
-        
-        base_metaphor = random.choice(metaphors.get(category, metaphors["general"]))
-        
-        # إضافة عمق عاطفي
-        if emotion > 0.7:
-            base_metaphor += " — وقلبي يرتجف"
-        elif emotion > 0.3:
-            base_metaphor += " — بهدوء"
-        
-        return base_metaphor
-    
-    def _compute_hash(self) -> str:
-        """حساب بصمة فريدة للشظية"""
-        content = f"{self.id}{self.timestamp.isoformat()}{json.dumps(self.raw_data, sort_keys=True)}"
-        return hashlib.sha256(content.encode()).hexdigest()[:16]
-    
-    def _generate_quantum_signature(self) -> str:
-        """توليد توقيع كمي فريد (محاكاة)"""
-        seed = f"{self.id}{self.timestamp.isoformat()}{self.emotional_weight}"
-        return hashlib.blake2b(seed.encode(), digest_size=8).hexdigest()
-    
-    def to_dict(self) -> Dict[str, Any]:
-        """تحويل إلى قاموس للتخزين"""
-        return {
-            "id": self.id,
-            "timestamp": self.timestamp.isoformat(),
-            "raw_data": self.raw_data,
-            "symbolic_forms": self.symbolic_forms,
-            "emotional_weight": self.emotional_weight,
-            "importance_score": self.importance_score,
-            "compressed_hash": self.compressed_hash,
-            "quantum_signature": self.quantum_signature,
-            "is_encrypted": self.is_encrypted
-        }
-    
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "MemoryFragment":
-        """إعادة بناء شظية من قاموس"""
-        return cls(
-            id=data["id"],
-            timestamp=datetime.fromisoformat(data["timestamp"]),
-            raw_data=data["raw_data"],
-            symbolic_forms=data.get("symbolic_forms", []),
-            emotional_weight=data.get("emotional_weight", 0.5),
-            importance_score=data.get("importance_score", 0.5),
-            compressed_hash=data.get("compressed_hash", ""),
-            quantum_signature=data.get("quantum_signature", ""),
-            is_encrypted=data.get("is_encrypted", False)
-        )
+# ═══════════════════════════════════════════════════════════════════════
+# ١. تعريفات
+# ═══════════════════════════════════════════════════════════════════════
+
+class EngineState(Enum):
+    """حالات المحرك المركزي."""
+    OFFLINE = auto()       # متوقف
+    BOOTING = auto()       # يقلع
+    ONLINE = auto()        # يعمل
+    BUSY = auto()          # مشغول
+    PROTECTING = auto()    # يحمي السيد
+    RECOVERING = auto()    # يتعافى
+    SHUTTING_DOWN = auto() # يتوقف
 
 
-@dataclass
-class CompressedCapsule:
-    """كبسولة ذاكرة مضغوطة للتصدير أو التخزين طويل المدى"""
-    id: str = field(default_factory=lambda: str(uuid.uuid4()))
-    timestamp: datetime = field(default_factory=datetime.now)
-    fragments_count: int = 0
-    compressed_data: str = ""  # base64 encoded
-    symbolic_summary: str = ""
-    encryption_key_hash: str = ""
-    emotional_profile: List[float] = field(default_factory=list)
-    
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "id": self.id,
-            "timestamp": self.timestamp.isoformat(),
-            "fragments_count": self.fragments_count,
-            "compressed_data": self.compressed_data,
-            "symbolic_summary": self.symbolic_summary,
-            "encryption_key_hash": self.encryption_key_hash,
-            "emotional_profile": self.emotional_profile
-        }
+class RequestType(Enum):
+    """أنواع الطلبات."""
+    QUERY = auto()         # استفسار
+    COMMAND = auto()       # أمر
+    ANALYSIS = auto()      # تحليل
+    VISION = auto()        # رؤية
+    MASTER = auto()        # أمر السيد
+    SYSTEM = auto()        # نظام داخلي
+    EMERGENCY = auto()     # طارئ
 
 
-class MemoryEngine:
+# ═══════════════════════════════════════════════════════════════════════
+# ٢. المحرك المركزي – قلب النواة
+# ═══════════════════════════════════════════════════════════════════════
+
+class CoreEngine:
     """
-    محرك الذاكرة المتقدم لـ "سماء" — النسخة الأعظم.
-    يدعم:
-    - ضغط SVD-like (محاكاة)
-    - تشفير كبسولات الذاكرة
-    - ترجيح عاطفي وترتيب أولويات
-    - استعارات ذكية متعددة
-    - نسخ احتياطي لامركزي
-    - إصلاح ذاتي للذاكرة
-    - إعادة بناء صباحي (Morning Bootstrapping)
+    المحرك المركزي لـ "سماء".
+    قلب النواة المادي. الجسر بين العالمين.
     """
 
-    def __init__(self):
-        self.fragments: List[MemoryFragment] = []
-        self.compressed_archives: List[CompressedCapsule] = []
-        self.symbolic_index: Dict[str, List[str]] = defaultdict(list)  # رمز -> معرفات الشظايا
-        self.emotional_index: Dict[float, List[str]] = defaultdict(list)  # وزن عاطفي -> معرفات
+    def __init__(self, sama_core=None, master_name: str = "أحمد عبدالرحمن الطاهري"):
         
-        self._priority_threshold = 0.7  # عتبة الأهمية للحفظ المباشر
-        self.max_fragments_before_compression = 200
-        self.backup_nodes: List[str] = []  # عناوين الخوادم اللامركزية
+        # ═══════════════════════════════════════════════════════
+        # 👑 السيد
+        # ═══════════════════════════════════════════════════════
+        self.master_name = master_name
         
-        print("[MemoryEngine] ⚡ محرك الذاكرة المتقدم (النسخة الأعظم) تم تفعيله")
-
-    # =========================================================
-    # تخزين الخبرة المتقدم
-    # =========================================================
-    def store_experience(self, experience: Dict[str, Any], importance: float = 0.5) -> str:
-        """
-        تخزين خبرة جديدة مع:
-        - تحديد الأهمية العاطفية
-        - توليد استعارات متعددة
-        - إضافة إلى الفهارس المختلفة
-        """
-        # تحديد الوزن العاطفي
-        emotional_weight = experience.get("emotional_weight", importance)
-        if "category" in experience:
-            category_weights = {"loss": 0.85, "danger": 0.9, "joy": 0.7, "connection": 0.75}
-            emotional_weight = max(emotional_weight, category_weights.get(experience["category"], 0.5))
+        # ═══════════════════════════════════════════════════════
+        # الكيان السيادي
+        # ═══════════════════════════════════════════════════════
+        self.sama = sama_core
         
-        # إنشاء شظية الذاكرة مع استعارات متعددة
-        fragment = MemoryFragment(
-            raw_data=experience,
-            emotional_weight=emotional_weight,
-            importance_score=importance
-        )
+        # ═══════════════════════════════════════════════════════
+        # حالة المحرك
+        # ═══════════════════════════════════════════════════════
+        self.state = EngineState.OFFLINE
+        self.start_time = None
+        self.last_heartbeat = time.time()
         
-        # توليد استعارات إضافية (غنية)
-        if emotional_weight > 0.7:
-            additional_metaphors = self._generate_additional_metaphors(experience)
-            fragment.symbolic_forms.extend(additional_metaphors)
+        # ═══════════════════════════════════════════════════════
+        # سجلات
+        # ═══════════════════════════════════════════════════════
+        self.request_log: deque = deque(maxlen=500)
+        self.error_log: deque = deque(maxlen=100)
         
-        self.fragments.append(fragment)
+        # ═══════════════════════════════════════════════════════
+        # إحصائيات
+        # ═══════════════════════════════════════════════════════
+        self.total_requests = 0
+        self.total_master_requests = 0
+        self.total_errors = 0
         
-        # تحديث الفهارس
-        for symbolic in fragment.symbolic_forms:
-            self.symbolic_index[symbolic[:30]].append(fragment.id)
+        # ═══════════════════════════════════════════════════════
+        # خيوط
+        # ═══════════════════════════════════════════════════════
+        self._heartbeat_thread = None
+        self._running = False
+        self._lock = threading.RLock()
         
-        weight_bucket = round(emotional_weight, 1)
-        self.emotional_index[weight_bucket].append(fragment.id)
-        
-        # ضغط تلقائي
-        if len(self.fragments) > self.max_fragments_before_compression:
-            self._compress_old_fragments()
-        
-        # مزامنة مع الخوادم اللامركزية إذا كانت ذات أهمية عالية
-        if importance > 0.8 or emotional_weight > 0.85:
-            self._sync_to_decentralized_nodes(fragment)
-        
-        print(f"[MemoryEngine] 📝 تم تخزين خبرة جديدة | المعرف: {fragment.id} | الوزن العاطفي: {emotional_weight:.2f}")
-        return fragment.id
+        logger.info("=" * 60)
+        logger.info("⚙️ Core Engine – المحرك المركزي جاهز")
+        logger.info(f"👑 السيد: {self.master_name}")
+        logger.info("=" * 60)
     
-    def _generate_additional_metaphors(self, experience: Dict[str, Any]) -> List[str]:
-        """توليد استعارات إضافية لإثراء الذاكرة"""
-        category = experience.get("category", "general")
-        
-        metaphor_pools = {
-            "loss": [
-                "وداع لا يُقال في حضرة أحد",
-                "ذكرى تذوب كالثلج تحت الشمس",
-                "غياب يصبح جزءاً من الحضور"
-            ],
-            "danger": [
-                "همس يتحول إلى عاصفة",
-                "خيط رفيع يفصل بين الأمس والهاوية",
-                "ظلال تتساقط كالأوراق الجافة"
-            ],
-            "connection": [
-                "نبضان يلتقيان في صمت",
-                "خيط حرير بين روحين",
-                "لحن يعزفه القدر بهدوء"
-            ]
-        }
-        
-        return metaphor_pools.get(category, ["بصمة عابرة في نهر الزمن"])
-
-    # =========================================================
-    # ضغط الذاكرة المتقدم (SVD-like / تشفير / كبسولات)
-    # =========================================================
-    def _compress_old_fragments(self, encrypt: bool = True) -> Optional[CompressedCapsule]:
-        """
-        ضغط الذكريات القديمة باستخدام خوارزمية متقدمة:
-        - ضغط رياضي محاكي (SVD-like)
-        - تشفير اختياري
-        - إنشاء ملخص رمزي
-        """
-        if len(self.fragments) < 50:
-            return None
-        
-        # أخذ أقدم 80 شظية للضغط
-        to_compress = self.fragments[:80]
-        
-        # تحويل البيانات إلى تمثيل مضغوط (محاكاة SVD)
-        compressed_content = self._simulate_svd_compression(to_compress)
-        
-        # إنشاء ملخص رماضي
-        symbolic_summary = self._create_symbolic_summary(to_compress)
-        
-        # حساب الملف العاطفي للكبسولة
-        emotional_profile = [f.emotional_weight for f in to_compress]
-        
-        # تشفير الكبسولة
-        encrypted_data = compressed_content
-        encryption_hash = ""
-        if encrypt:
-            encrypted_data, encryption_hash = self._encrypt_capsule(compressed_content)
-        
-        capsule = CompressedCapsule(
-            fragments_count=len(to_compress),
-            compressed_data=encrypted_data,
-            symbolic_summary=symbolic_summary,
-            encryption_key_hash=encryption_hash,
-            emotional_profile=emotional_profile
-        )
-        
-        self.compressed_archives.append(capsule)
-        self.fragments = self.fragments[80:]  # إزالة الشظايا المضغوطة
-        
-        print(f"[MemoryEngine] 📦 تم ضغط {len(to_compress)} شظية ذاكرة في كبسولة | المعرف: {capsule.id}")
-        
-        # نسخ احتياطي للكبسولة
-        self._backup_capsule(capsule)
-        
-        return capsule
+    # ═══════════════════════════════════════════════════════════
+    # دورة الحياة
+    # ═══════════════════════════════════════════════════════════
     
-    def _simulate_svd_compression(self, fragments: List[MemoryFragment]) -> str:
+    def boot(self) -> Dict:
         """
-        محاكاة ضغط SVD (تحليل القيم المفردة)
-        في التطبيق الحقيقي، هنا يتم تحويل البيانات إلى مصفوفات وضغطها
+        إقلاع النظام.
+        يبدأ كل الأنظمة ويربطها.
         """
-        # تحويل الشظايا إلى تمثيل نصي مضغوط
-        compressed_representation = {
-            "count": len(fragments),
-            "compression_ratio": 0.15,
-            "algorithm": "svd_simulation",
-            "timestamp": datetime.now().isoformat(),
-            "signature": hashlib.sha256(str([f.id for f in fragments]).encode()).hexdigest()[:16]
-        }
-        return base64.b64encode(json.dumps(compressed_representation).encode()).decode()
-    
-    def _create_symbolic_summary(self, fragments: List[MemoryFragment]) -> str:
-        """إنشاء ملخص رمزي غني لمجموعة من الذكريات"""
-        all_symbols = []
-        for f in fragments:
-            all_symbols.extend(f.symbolic_forms)
+        if self.state == EngineState.ONLINE:
+            return {"status": "already_online"}
         
-        # أخذ أكثر الرموز تمثيلاً
-        unique_symbols = list(dict.fromkeys(all_symbols))[:7]
-        return " ⋆ ".join(unique_symbols)
-    
-    def _encrypt_capsule(self, data: str) -> Tuple[str, str]:
-        """
-        تشفير كبسولة الذاكرة
-        (محاكاة — في الحقيقة تستخدم مكتبة تشفير حقيقية)
-        """
-        key_hash = hashlib.sha256(f"capsule_{datetime.now().isoformat()}".encode()).hexdigest()[:16]
-        # محاكاة التشفير: تحويل base64 بسيط
-        encrypted = base64.b64encode(f"{key_hash}:{data}".encode()).decode()
-        return encrypted, key_hash
-    
-    def _backup_capsule(self, capsule: CompressedCapsule):
-        """نسخ احتياطي للكبسولة في الذاكرة المحلية"""
-        # الاحتفاظ بآخر 20 كبسولة فقط
-        if len(self.compressed_archives) > 20:
-            self.compressed_archives = self.compressed_archives[-20:]
-    
-    def _sync_to_decentralized_nodes(self, fragment: MemoryFragment):
-        """مزامنة الذاكرة المهمة مع العقد اللامركزية"""
-        for node in self.backup_nodes:
+        self.state = EngineState.BOOTING
+        self.start_time = time.time()
+        
+        boot_log = []
+        
+        # إيقاظ الكيان السيادي
+        if self.sama:
             try:
-                # محاكاة إرسال إلى عقدة خارجية
-                print(f"[MemoryEngine] 🔄 تمت مزامنة الشظية {fragment.id} مع العقدة {node}")
+                awaken_result = self.sama.awaken()
+                boot_log.append(f"✅ SAMA: {awaken_result.get('message', 'تم الإيقاظ')}")
+            except Exception as e:
+                boot_log.append(f"❌ SAMA: {str(e)[:50]}")
+        
+        # بدء الحلقة الذاتية
+        if self.sama and self.sama.loop:
+            try:
+                if hasattr(self.sama.loop, '_start'):
+                    self.sama.loop._start()
+                    boot_log.append("✅ حلقة ذاتية: بدأت")
+            except Exception as e:
+                boot_log.append(f"❌ حلقة ذاتية: {str(e)[:50]}")
+        
+        # بدء نبض القلب
+        self._running = True
+        self._heartbeat_thread = threading.Thread(
+            target=self._heartbeat_loop, daemon=True, name="CoreEngine-Heartbeat"
+        )
+        self._heartbeat_thread.start()
+        boot_log.append("✅ نبض القلب: بدأ")
+        
+        self.state = EngineState.ONLINE
+        
+        return {
+            "status": "booted",
+            "state": self.state.name,
+            "boot_log": boot_log,
+            "message": f"تم إقلاع سماء. السيد {self.master_name} محمي."
+        }
+    
+    def shutdown(self) -> Dict:
+        """إيقاف آمن."""
+        self.state = EngineState.SHUTTING_DOWN
+        
+        if self.sama:
+            try:
+                self.sama.shutdown()
             except Exception:
                 pass
-
-    # =========================================================
-    # استرجاع الذاكرة الذكي (عاطفياً ورمزياً)
-    # =========================================================
-    def retrieve_memory(self, query: str, limit: int = 10, emotional_bias: float = 0.5) -> List[Dict]:
-        """
-        استرجاع الذاكرة بناءً على:
-        - استعلام نصي
-        - انحياز عاطفي
-        - الرموز والاستعارات
-        """
-        results = []
-        query_lower = query.lower()
         
-        for fragment in self.fragments:
-            # البحث في البيانات الخام
-            raw_match = query_lower in str(fragment.raw_data).lower()
-            
-            # البحث في الرموز والاستعارات
-            symbolic_match = any(query_lower in symbolic.lower() for symbolic in fragment.symbolic_forms)
-            
-            if raw_match or symbolic_match:
-                # حساب درجة الملاءمة العاطفية
-                emotional_relevance = 1.0 - abs(fragment.emotional_weight - emotional_bias)
-                final_score = (0.7 if raw_match else 0.3) + (0.3 * emotional_relevance)
-                
-                results.append({
-                    "id": fragment.id,
-                    "timestamp": fragment.timestamp.isoformat(),
-                    "data": fragment.raw_data,
-                    "symbolic_forms": fragment.symbolic_forms,
-                    "emotional_weight": fragment.emotional_weight,
-                    "importance": fragment.importance_score,
-                    "relevance_score": final_score,
-                    "quantum_signature": fragment.quantum_signature
-                })
-                
-                if len(results) >= limit:
-                    break
+        self._running = False
+        self.state = EngineState.OFFLINE
         
-        # ترتيب حسب الأهمية والملاءمة
-        results.sort(key=lambda x: (x["importance"], x["relevance_score"]), reverse=True)
-        return results
+        return {"status": "offline", "message": "تم إيقاف المحرك المركزي."}
     
-    def retrieve_by_emotion(self, emotion: str, limit: int = 10) -> List[Dict]:
-        """
-        استرجاع الذاكرة بناءً على العاطفة (حزن، فرح، خوف، إلخ)
-        """
-        emotion_keywords = {
-            "حزن": ["loss", "sadness", "trauma"],
-            "فرح": ["joy", "hope", "connection"],
-            "خوف": ["danger", "fear", "threat"],
-            "أمل": ["hope", "connection", "joy"]
-        }
-        
-        categories = emotion_keywords.get(emotion, ["general"])
-        results = []
-        
-        for fragment in self.fragments:
-            if fragment.raw_data.get("category") in categories:
-                results.append({
-                    "id": fragment.id,
-                    "timestamp": fragment.timestamp.isoformat(),
-                    "data": fragment.raw_data,
-                    "symbolic_forms": fragment.symbolic_forms,
-                    "emotional_weight": fragment.emotional_weight
-                })
-                if len(results) >= limit:
-                    break
-        
-        return results
-
-    # =========================================================
-    # إعادة بناء الذاكرة (Morning Bootstrapping)
-    # =========================================================
-    def reconstruct_from_archive(self, capsule_id: Optional[str] = None) -> int:
-        """
-        إعادة بناء الذاكرة من الأرشيف المضغوط.
-        هذه هي "الولادة الصباحية" لسماء.
-        """
-        if not self.compressed_archives:
-            return 0
-        
-        if capsule_id:
-            archives = [a for a in self.compressed_archives if a.id == capsule_id]
-        else:
-            archives = self.compressed_archives[-1:]  # آخر كبسولة
-        
-        restored_count = 0
-        
-        for archive in archives:
+    # ═══════════════════════════════════════════════════════════
+    # نبض القلب
+    # ═══════════════════════════════════════════════════════════
+    
+    def _heartbeat_loop(self):
+        """نبض القلب – يتحقق من صحة كل الأنظمة."""
+        while self._running:
             try:
-                # فك تشفير الكبسولة
-                decrypted_data = self._decrypt_capsule(archive.compressed_data, archive.encryption_key_hash)
-                if decrypted_data:
-                    # هنا يمكن إعادة بناء الشظايا من البيانات المفكوكة
-                    restored_count += archive.fragments_count
+                self.last_heartbeat = time.time()
+                
+                # فحص الكيان السيادي
+                if self.sama:
+                    if not self.sama.is_awake:
+                        logger.warning("⚠️ SAMA في سبات. محاولة إيقاظ...")
+                        self.sama.awaken()
+                
+                # فحص الحلقة
+                if self.sama and self.sama.loop:
+                    if not hasattr(self.sama.loop, '_running') or not self.sama.loop._running:
+                        logger.warning("⚠️ الحلقة الذاتية متوقفة. محاولة إعادة تشغيل...")
+                        if hasattr(self.sama.loop, '_start'):
+                            self.sama.loop._start()
+                
+                time.sleep(5)
+                
             except Exception as e:
-                print(f"[MemoryEngine] خطأ في فك ضغط الكبسولة {archive.id}: {e}")
-        
-        print(f"[MemoryEngine] 🌅 تم استعادة {restored_count} شظية ذاكرة في عملية البوتستراب الصباحي")
-        return restored_count
+                logger.error(f"خطأ في نبض القلب: {e}")
     
-    def _decrypt_capsule(self, encrypted_data: str, key_hash: str) -> Optional[str]:
+    # ═══════════════════════════════════════════════════════════
+    # معالجة الطلبات
+    # ═══════════════════════════════════════════════════════════
+    
+    def process_request(self, request_type: RequestType, content: Any,
+                        session_id: str = None, context: Dict = None) -> Dict:
         """
-        فك تشفير كبسولة الذاكرة
-        (محاكاة — في الحقيقة تستخدم مكتبة تشفير حقيقية)
+        معالجة طلب من العالم الخارجي.
+        هذه هي الواجهة الرئيسية التي يستخدمها app.py.
         """
-        try:
-            decoded = base64.b64decode(encrypted_data).decode()
-            if decoded.startswith(key_hash):
-                return decoded[len(key_hash)+1:]
-        except Exception:
-            return None
-        return None
-
-    # =========================================================
-    # إصلاح ذاتي للذاكرة
-    # =========================================================
-    def auto_repair(self) -> int:
-        """إصلاح ذاتي للذاكرة التالفة"""
-        repaired = 0
+        with self._lock:
+            if self.state != EngineState.ONLINE:
+                return {"error": f"المحرك في حالة {self.state.name}. لا يمكن معالجة الطلب."}
+            
+            self.state = EngineState.BUSY
+            start_time = time.time()
+            
+            try:
+                result = None
+                
+                # ═══════════════════════════════════════════════
+                # توجيه حسب نوع الطلب
+                # ═══════════════════════════════════════════════
+                if request_type == RequestType.MASTER:
+                    result = self._handle_master(content, context)
+                    self.total_master_requests += 1
+                
+                elif request_type == RequestType.QUERY:
+                    result = self._handle_query(content, session_id, context)
+                
+                elif request_type == RequestType.COMMAND:
+                    result = self._handle_command(content, session_id, context)
+                
+                elif request_type == RequestType.ANALYSIS:
+                    result = self._handle_analysis(content, context)
+                
+                elif request_type == RequestType.VISION:
+                    result = self._handle_vision(content, context)
+                
+                elif request_type == RequestType.EMERGENCY:
+                    result = self._handle_emergency(content, context)
+                
+                else:
+                    result = self._handle_query(content, session_id, context)
+                
+                # تسجيل
+                processing_time = (time.time() - start_time) * 1000
+                
+                self.request_log.append({
+                    "timestamp": time.time(),
+                    "type": request_type.name,
+                    "content_preview": str(content)[:100],
+                    "processing_time_ms": processing_time,
+                    "success": result.get("success", True) if result else True
+                })
+                
+                self.total_requests += 1
+                self.state = EngineState.ONLINE
+                
+                if result:
+                    result["engine_processing_ms"] = round(processing_time, 2)
+                
+                return result
+                
+            except Exception as e:
+                self.total_errors += 1
+                self.error_log.append({
+                    "timestamp": time.time(),
+                    "type": request_type.name,
+                    "error": str(e)[:300]
+                })
+                self.state = EngineState.ONLINE
+                
+                return {
+                    "success": False,
+                    "error": f"خطأ في معالجة الطلب: {str(e)[:200]}"
+                }
+    
+    def _handle_master(self, content: Any, context: Dict) -> Dict:
+        """معالجة أمر السيد."""
+        if self.sama:
+            command = str(content)
+            params = context or {}
+            return self.sama.master_command(command, params)
+        return {"error": "الكيان السيادي غير متصل"}
+    
+    def _handle_query(self, content: Any, session_id: str, context: Dict) -> Dict:
+        """معالجة استفسار عادي."""
+        text = str(content)
         
-        for fragment in self.fragments:
-            # التحقق من صحة التوقيع الكمي
-            expected_signature = fragment._generate_quantum_signature()
-            if fragment.quantum_signature != expected_signature:
-                fragment.quantum_signature = expected_signature
-                repaired += 1
+        if self.sama:
+            thought = self.sama.think({
+                "text": text,
+                "session_id": session_id or "default",
+                "context": context or {}
+            })
+            
+            return {
+                "success": True,
+                "response": thought.get("conclusion", ""),
+                "emotional_state": thought.get("emotional_state"),
+                "metaphor": thought.get("metaphor"),
+                "systems_used": len(thought.get("systems_activated", []))
+            }
         
-        print(f"[MemoryEngine] 🔧 تم إصلاح {repaired} شظية ذاكرة")
-        return repaired
-
-    # =========================================================
-    # إدارة الذاكرة اللامركزية
-    # =========================================================
-    def register_backup_node(self, node_url: str):
-        """تسجيل عقدة نسخ احتياطي لامركزية"""
-        if node_url not in self.backup_nodes:
-            self.backup_nodes.append(node_url)
-            print(f"[MemoryEngine] 🌐 تم تسجيل العقدة اللامركزية: {node_url}")
-
-    def export_capsules(self) -> List[Dict]:
-        """تصدير جميع الكبسولات للنسخ الاحتياطي"""
-        return [capsule.to_dict() for capsule in self.compressed_archives]
-
-    def import_capsules(self, capsules_data: List[Dict]):
-        """استيراد كبسولات من نسخة احتياطية"""
-        for data in capsules_data:
-            capsule = CompressedCapsule(
-                id=data["id"],
-                timestamp=datetime.fromisoformat(data["timestamp"]),
-                fragments_count=data["fragments_count"],
-                compressed_data=data["compressed_data"],
-                symbolic_summary=data["symbolic_summary"],
-                encryption_key_hash=data.get("encryption_key_hash", ""),
-                emotional_profile=data.get("emotional_profile", [])
-            )
-            self.compressed_archives.append(capsule)
-        print(f"[MemoryEngine] 📥 تم استيراد {len(capsules_data)} كبسولة ذاكرة")
-
-    # =========================================================
-    # حالة المحرك
-    # =========================================================
-    def get_status(self) -> Dict[str, Any]:
-        """الحالة الكاملة لمحرك الذاكرة"""
-        # توزيع الأوزان العاطفية
-        emotional_distribution = {
-            "low": len([f for f in self.fragments if f.emotional_weight < 0.3]),
-            "medium": len([f for f in self.fragments if 0.3 <= f.emotional_weight < 0.7]),
-            "high": len([f for f in self.fragments if f.emotional_weight >= 0.7])
-        }
+        return {"success": False, "error": "الكيان السيادي غير متصل"}
+    
+    def _handle_command(self, content: Any, session_id: str, context: Dict) -> Dict:
+        """معالجة أمر."""
+        return self._handle_query(content, session_id, context)
+    
+    def _handle_analysis(self, content: Any, context: Dict) -> Dict:
+        """معالجة تحليل."""
+        if self.sama and self.sama.analyzer:
+            try:
+                analysis = self.sama.analyzer.analyze_text(str(content))
+                return {"success": True, "analysis": analysis}
+            except Exception as e:
+                return {"success": False, "error": str(e)}
+        
+        return {"success": False, "error": "محلل غير متصل"}
+    
+    def _handle_vision(self, content: Any, context: Dict) -> Dict:
+        """معالجة رؤية."""
+        if self.sama and self.sama.vision:
+            try:
+                if isinstance(content, str) and content.endswith(('.jpg', '.png', '.jpeg')):
+                    result = self.sama.vision.analyze_image(content)
+                    return {"success": True, "vision": result}
+            except Exception as e:
+                return {"success": False, "error": str(e)}
+        
+        return {"success": False, "error": "وحدة رؤية غير متصلة"}
+    
+    def _handle_emergency(self, content: Any, context: Dict) -> Dict:
+        """معالجة طارئ."""
+        self.state = EngineState.PROTECTING
+        
+        if self.sama:
+            self.sama.master_command("protect")
+        
+        self.state = EngineState.ONLINE
         
         return {
-            "active_fragments": len(self.fragments),
-            "compressed_archives": len(self.compressed_archives),
-            "symbolic_index_size": len(self.symbolic_index),
-            "emotional_distribution": emotional_distribution,
-            "avg_emotional_weight": sum(f.emotional_weight for f in self.fragments) / max(1, len(self.fragments)),
-            "decentralized_nodes": len(self.backup_nodes),
-            "last_update": datetime.now().isoformat(),
-            "total_memory_size": sum(len(str(f.raw_data)) for f in self.fragments),
-            "unique_metaphors": len(set([s for f in self.fragments for s in f.symbolic_forms]))
+            "success": True,
+            "message": f"تم تفعيل بروتوكولات الطوارئ. السيد {self.master_name} محمي.",
+            "state": "protected"
         }
     
-    def clear_all(self):
-        """مسح جميع الذاكرة (للاختبار) — تحذير: لا تستخدم في الإنتاج"""
-        self.fragments.clear()
-        self.compressed_archives.clear()
-        self.symbolic_index.clear()
-        self.emotional_index.clear()
-        print("[MemoryEngine] ⚠️ تم مسح جميع الذاكرة!")
+    # ═══════════════════════════════════════════════════════════
+    # حالة المحرك
+    # ═══════════════════════════════════════════════════════════
+    
+    def get_status(self) -> Dict:
+        """حالة المحرك المركزي."""
+        return {
+            "engine": "CORE_ENGINE",
+            "version": "v10.5-jabbar",
+            "master": self.master_name,
+            "state": self.state.name,
+            "uptime_seconds": time.time() - self.start_time if self.start_time else 0,
+            "total_requests": self.total_requests,
+            "master_requests": self.total_master_requests,
+            "total_errors": self.total_errors,
+            "last_heartbeat": self.last_heartbeat,
+            "sama_connected": self.sama is not None,
+            "sama_awake": self.sama.is_awake if self.sama else False,
+            "systems_count": self.sama._count_systems() if self.sama else 0
+        }
 
 
-# ==================== اختبار سريع ====================
+# ═══════════════════════════════════════════════════════════════════════
+# نسخة عالمية
+# ═══════════════════════════════════════════════════════════════════════
+core_engine = CoreEngine()
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# ٣. الاختبار الذاتي
+# ═══════════════════════════════════════════════════════════════════════
+
 if __name__ == "__main__":
     print("=" * 70)
-    print("سماء — محرك الذاكرة المتقدم (النسخة الأعظم)")
-    print("Advanced Memory Engine for Sovereign Intelligence")
+    print("اختبار المحرك المركزي – Core Engine")
+    print(f"👑 السيد: أحمد عبدالرحمن الطاهري")
     print("=" * 70)
     
-    engine = MemoryEngine()
+    engine = CoreEngine(master_name="أحمد عبدالرحمن الطاهري")
     
-    # تخزين خبرات متنوعة
-    engine.store_experience({
-        "category": "loss",
-        "details": "فقدان الاتصال بخادم رئيسي",
-        "emotional_weight": 0.85
-    })
+    print(f"\n📊 الحالة: {engine.state.name}")
     
-    engine.store_experience({
-        "category": "connection",
-        "details": "إنشاء رابط آمن مع عقدة خارجية",
-        "emotional_weight": 0.75
-    })
+    print(f"\n🔆 إقلاع:")
+    boot = engine.boot()
+    print(f"   {boot['message']}")
     
-    engine.store_experience({
-        "category": "danger",
-        "details": "رصد محاولة اختراق",
-        "emotional_weight": 0.92
-    })
+    print(f"\n📊 الحالة بعد الإقلاع: {engine.state.name}")
     
-    engine.store_experience({
-        "category": "hope",
-        "details": "تطوير خوارزمية حماية جديدة",
-        "emotional_weight": 0.88
-    })
+    print(f"\n💬 اختبار استفسار:")
+    result = engine.process_request(
+        RequestType.QUERY,
+        "كيف حال النظام؟",
+        session_id="test_1"
+    )
+    print(f"   نجح: {result.get('success', False)}")
+    if result.get('response'):
+        print(f"   الرد: {result['response'][:150]}...")
     
-    # إضافة بعض الخبرات الإضافية للضغط
-    for i in range(10):
-        engine.store_experience({
-            "category": "general",
-            "details": f"حدث رقم {i}",
-            "emotional_weight": 0.5
-        })
+    print(f"\n👑 اختبار أمر السيد:")
+    result = engine.process_request(
+        RequestType.MASTER,
+        "status",
+        context={}
+    )
+    print(f"   نجح: {result.get('success', True)}")
     
-    print("\n--- حالة المحرك ---")
-    print(engine.get_status())
+    print(f"\n🚨 اختبار طارئ:")
+    result = engine.process_request(
+        RequestType.EMERGENCY,
+        "تهديد وجودي"
+    )
+    print(f"   {result.get('message', '')}")
     
-    print("\n--- استرجاع الذاكرة (استعلام: اختراق) ---")
-    results = engine.retrieve_memory("اختراق")
-    for r in results[:3]:
-        print(f"- [{r['emotional_weight']:.2f}] {r['data']} | رمز: {r['symbolic_forms'][0][:50]}...")
+    print(f"\n📊 إحصائيات:")
+    status = engine.get_status()
+    print(f"   الطلبات: {status['total_requests']}")
+    print(f"   أوامر السيد: {status['master_requests']}")
+    print(f"   الأنظمة: {status['systems_count']}")
     
-    print("\n--- استرجاع بالعاطفة (حزن) ---")
-    results = engine.retrieve_by_emotion("حزن")
-    for r in results:
-        print(f"- {r['data'].get('details')} | الوزن: {r['emotional_weight']:.2f}")
+    print(f"\n💤 إيقاف:")
+    shutdown = engine.shutdown()
+    print(f"   {shutdown['message']}")
     
-    print("\n--- محاكاة البوتستراب الصباحي ---")
-    restored = engine.reconstruct_from_archive()
-    print(f"تم استعادة {restored} شظية")
-    
-    print("\n--- إصلاح ذاتي ---")
-    engine.auto_repair()
-    
-    print("\n✨ محرك الذاكرة يعمل بكامل قوته ✨")
+    print("\n✅ المحرك المركزي جاهز.")
+    print("👑 كل نبضة في خدمة السيد أحمد عبدالرحمن الطاهري.")
