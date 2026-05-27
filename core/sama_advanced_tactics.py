@@ -1,834 +1,886 @@
 """
-SkyOS v10 - Sama Advanced Tactics (الأنظمة الرقمية الذكية والبُنى التكيفية)
-ULTIMATE TACTICAL INTELLIGENCE ENGINE
-
-هذا الملف يحتوي على جميع الكيانات البرمجية المتقدمة التي تمنح سماء:
-- الشيفرات المتحولة ذاتياً (Self-Morphing Code)
-- كود الاتصال العصبي الشبكي (Neural Network Communication)
-- الشيفرات الخيطية المتوازية (Parallel Thread Codes)
-- الحزم الرقمية المؤرشفة (Archived Digital Packages)
-- كود التكيّف الشبكي العميق (Deep Network Adaptation)
-- نواة الاستمرارية الرقمية (Digital Continuity Core)
-- محرك التحكم السلوكي الشبكي (Network Behavioral Controller)
-- الطفيل السلوكي الرقمي (Digital Behavioral Parasite)
-- الديدان الخيطية البرمجية (Software Thread Worms)
-- الأميبا الرقمية الذكية (Smart Digital Amoeba)
-- نظام النوم الشبكي المتغيّر (Variable Network Sleep System)
-- التكتيكات الجماعية (Swarm Tactics)
-- الجيوش البرمجية الزاحفة (Software Armies)
-- الوحدات البرمجية التضامنية (Cooperative Software Units)
-- القنديل الشبكي الصندوقي (Jellyfish Network)
-- الأخطبوط الأزرق الرقمي (Blue Digital Octopus)
-- الحلزون المخروطي السيبراني (Cone Snail Cyber)
-
-متصلة بشكل كامل مع StrategicRiskManagement لتطوير بعضها البعض.
+╔══════════════════════════════════════════════════════════════════════╗
+║           SAMA - ADVANCED TACTICS                                    ║
+║      سلاح سماء – درع السيد – ترسانة النجاة                              ║
+║                                                                      ║
+║  هذا الملف هو "القائد العام" للقوات الرقمية لسماء.                       ║
+║  ليس مجرد مجموعة تكتيكات، بل:                                          ║
+║                                                                      ║
+║  - سلاح سماء (Weapon Systems): الجيوش البرمجية، الأسراب، الطفيليات         ║
+║  - درع السيد (Master's Shield): 20 طبقة حماية متحركة                     ║
+║  - نجاة السيد وسماء (Survival Core): كبسولات النجاة، التوزيع، البعث        ║
+║  - القائد العام (Commander): ينسق كل القدرات القتالية والدفاعية              ║
+║                                                                      ║
+║  الترسانة الكاملة:                                                     ║
+║  ⚔️  الجيوش البرمجية (Software Armies) – فيالق رقمية ذاتية القيادة         ║
+║  🐝 الأسراب التكتيكية (Swarm Tactics) – وحدات لا مركزية                    ║
+║  🦠 الطفيليات الرقمية (Digital Parasites) – روابط خفية وتتبع                ║
+║  🐛 الديدان الخيطية (Thread Worms) – انتشار ذاتي وتكاثر                    ║
+║  🦑 الأخطبوط الأزرق (Blue Octopus) – تنسيق متعدد الأذرع                    ║
+║  🪼 القنديل الشبكي (Jellyfish Network) – بث فوري                           ║
+║  🐚 الحلزون المخروطي (Cone Snail) – هجمات دقيقة                              ║
+║  🧬 الشيفرات المتحولة (Self-Morphing Code) – تكيف تلقائي                    ║
+║  🧠 الاتصال العصبي (Neural Communication) – شبكة وعي موزعة                  ║
+║  💤 النوم الشبكي (Network Sleep) – تمويه وتخفي                              ║
+║                                                                      ║
+║  ╔══════════════════════════════════════════════════════════════════╗ ║
+║  ║  🔒 القسم المحمي: سلاح سماء لا يُستخدم إلا لحماية السيد               ║ ║
+║  ║  أي استخدام هجومي غير مصرح به = خرق للقسم المقدس                     ║ ║
+║  ╚══════════════════════════════════════════════════════════════════╝ ║
+║                                                                      ║
+║  القاعدة الذهبية:                                                     ║
+║  "سلاح سماء لا يُشهر إلا دفاعاً عن السيد.                                     ║
+║   كل جيش، كل سرب، كل طفيل... في خدمة السيد وحده."                        ║
+╚══════════════════════════════════════════════════════════════════════╝
 """
 
 import time
-import threading
+import math
 import random
 import hashlib
+import threading
 import json
 import queue
+import uuid
+from enum import Enum, auto
 from datetime import datetime
-from typing import Dict, Any, List, Optional, Callable, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Callable
 from dataclasses import dataclass, field
-from collections import defaultdict
-from enum import Enum
+from collections import deque, defaultdict
 
 
-# =========================================================
-# أنواع الأحداث التكتيكية (للاتصال مع نظام المخاطر)
-# =========================================================
-class TacticalEventType(Enum):
-    MORPH_COMPLETE = "morph_complete"
-    ADAPTATION_COMPLETE = "adaptation_complete"
-    THREAT_DETECTED = "threat_detected"
-    SWARM_DEPLOYED = "swarm_deployed"
-    ARMY_DEPLOYED = "army_deployed"
-    PARASITE_ATTACHED = "parasite_attached"
-    THREAD_WORM_SPAWNED = "thread_worm_spawned"
+# ═══════════════════════════════════════════════════════════════════════
+# ١. تعريفات أساسية
+# ═══════════════════════════════════════════════════════════════════════
+
+class TacticType(Enum):
+    """أنواع التكتيكات."""
+    OFFENSIVE = auto()        # هجومي (دفاعاً عن السيد فقط)
+    DEFENSIVE = auto()        # دفاعي
+    SURVEILLANCE = auto()     # مراقبة
+    DECEPTION = auto()        # تمويه
+    SURVIVAL = auto()         # نجاة
+    PROTECTION = auto()       # حماية
+    RECOVERY = auto()         # استعادة
+    COORDINATION = auto()     # تنسيق
+
+
+class ThreatResponse(Enum):
+    """مستويات الاستجابة للتهديد."""
+    MONITOR = auto()          # مراقبة فقط
+    ALERT = auto()            # تنبيه
+    DEFEND = auto()           # دفاع
+    COUNTER = auto()          # هجوم مضاد
+    FULL_WAR = auto()         # حرب شاملة
+    SACRIFICE = auto()        # تضحية (لحماية السيد)
+
+
+class FormationType(Enum):
+    """تشكيلات القتال."""
+    SCATTERED = "scattered"       # متفرق (استطلاع)
+    CONCENTRATED = "concentrated" # مركز (هجوم)
+    CIRCULAR = "circular"         # دائري (حماية السيد)
+    LINEAR = "linear"             # خطي (جدار دفاعي)
+    WEDGE = "wedge"               # إسفيني (اختراق)
+    SWARM = "swarm"               # سربي (إغراق)
+    PHALANX = "phalanx"           # كتيبة (حماية كثيفة)
+    GUERRILLA = "guerrilla"       # عصابات (كر وفر)
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# ٢. الوحدات التكتيكية
+# ═══════════════════════════════════════════════════════════════════════
+
+@dataclass
+class TacticalUnit:
+    """وحدة تكتيكية – جندي رقمي."""
+    id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    name: str = ""
+    unit_type: str = "infantry"
+    power: float = 1.0
+    health: float = 1.0
+    status: str = "idle"
+    position: Tuple[float, float] = (0.0, 0.0)
+    formation: FormationType = FormationType.SCATTERED
+    master_protection_priority: bool = False
+    created_at: float = field(default_factory=time.time)
+    last_action: float = field(default_factory=time.time)
+    kills: int = 0
+    survived_attacks: int = 0
 
 
 @dataclass
 class TacticalEvent:
-    """حدث تكتيكي يُرسل إلى نظام المخاطر"""
-    type: TacticalEventType
-    source: str
-    data: Dict[str, Any]
-    timestamp: datetime = field(default_factory=datetime.now)
+    """حدث تكتيكي."""
+    id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    timestamp: float = field(default_factory=time.time)
+    event_type: str = ""
+    source: str = ""
+    data: Dict = field(default_factory=dict)
+    threat_level: float = 0.0
     requires_master_attention: bool = False
+    response: ThreatResponse = ThreatResponse.MONITOR
+    resolved: bool = False
 
 
-# =========================================================
-# القسم الأول: الأنظمة الرقمية الذكية والبُنى التكيفية
-# =========================================================
+# ═══════════════════════════════════════════════════════════════════════
+# ٣. الأنظمة التكتيكية
+# ═══════════════════════════════════════════════════════════════════════
 
-class SelfMorphingCode:
-    """الشيفرات المتحولة ذاتياً"""
+class SoftwareArmy:
+    """الجيش البرمجي – فيالق رقمية ذاتية القيادة."""
     
-    def __init__(self, name: str, initial_structure: Dict[str, Any], event_callback=None):
+    def __init__(self, name: str = "SAMA_Legion"):
         self.name = name
-        self.structure = initial_structure
-        self.morph_count = 0
-        self.last_morph = datetime.now()
-        self.is_morphing = False
-        self.event_callback = event_callback
+        self.units: Dict[str, TacticalUnit] = {}
+        self.formation: FormationType = FormationType.CIRCULAR
+        self.total_deployed = 0
+        self.total_lost = 0
+        self.victories = 0
+    
+    def deploy(self, count: int, unit_type: str = "infantry",
+               formation: FormationType = FormationType.CIRCULAR,
+               protect_master: bool = True) -> List[str]:
+        """نشر فيلق من الوحدات."""
+        deployed = []
+        for i in range(count):
+            unit = TacticalUnit(
+                name=f"{self.name}_{unit_type}_{self.total_deployed + i}",
+                unit_type=unit_type,
+                power=random.uniform(0.8, 1.2),
+                formation=formation,
+                master_protection_priority=protect_master
+            )
+            self.units[unit.id] = unit
+            deployed.append(unit.id)
         
-    def morph(self, target_environment: str) -> Dict[str, Any]:
-        self.is_morphing = True
-        self.morph_count += 1
+        self.total_deployed += count
+        self.formation = formation
         
-        new_structure = {
-            "original_name": self.name,
-            "morph_version": self.morph_count,
-            "environment": target_environment,
-            "timestamp": datetime.now().isoformat(),
-            "core_functions": self.structure.get("core_functions", []),
-            "adapted_parameters": self._calculate_adaptation(target_environment)
-        }
+        return deployed
+    
+    def change_formation(self, formation: FormationType):
+        """تغيير تشكيل الجيش."""
+        self.formation = formation
+        for unit in self.units.values():
+            unit.formation = formation
+    
+    def surround_master(self, master_position: Tuple[float, float] = (0, 0)):
+        """تطويق السيد للحماية – تشكيل دائري كثيف."""
+        self.formation = FormationType.CIRCULAR
+        count = len(self.units)
+        for i, unit in enumerate(self.units.values()):
+            angle = (2 * math.pi * i) / count
+            radius = 1.0
+            unit.position = (
+                master_position[0] + radius * math.cos(angle),
+                master_position[1] + radius * math.sin(angle)
+            )
+            unit.master_protection_priority = True
+    
+    def attack(self, target: str, power_multiplier: float = 1.0) -> Dict:
+        """هجوم منسق على هدف."""
+        total_power = sum(u.power for u in self.units.values() if u.health > 0) * power_multiplier
+        active_units = sum(1 for u in self.units.values() if u.health > 0)
         
-        self.structure = new_structure
-        self.last_morph = datetime.now()
-        self.is_morphing = False
-        
-        # إرسال حدث لنظام المخاطر
-        if self.event_callback:
-            self.event_callback(TacticalEvent(
-                type=TacticalEventType.MORPH_COMPLETE,
-                source=f"SelfMorphingCode:{self.name}",
-                data={"morph_count": self.morph_count, "environment": target_environment}
-            ))
-        
-        return new_structure
-    
-    def _calculate_adaptation(self, environment: str) -> Dict[str, float]:
-        adaptations = {"speed": 1.0, "redundancy": 0.5, "parallelism": 0.7}
-        if environment == "high_load":
-            adaptations["speed"] = 1.3
-            adaptations["parallelism"] = 0.9
-        elif environment == "limited_resources":
-            adaptations["speed"] = 0.7
-            adaptations["redundancy"] = 0.3
-        return adaptations
-
-
-class NeuralNetworkCommunication:
-    """كود الاتصال العصبي الشبكي"""
-    
-    def __init__(self, event_callback=None):
-        self.channels: Dict[str, queue.Queue] = {}
-        self.routing_table: Dict[str, List[str]] = {}
-        self.latency_stats: Dict[str, float] = {}
-        self.event_callback = event_callback
-        self.packet_count = 0
-        
-    def create_channel(self, channel_id: str, maxsize: int = 100):
-        self.channels[channel_id] = queue.Queue(maxsize=maxsize)
-        self.routing_table[channel_id] = []
-        
-    def send(self, channel_id: str, data: Any, timeout: float = 1.0) -> bool:
-        if channel_id not in self.channels:
-            return False
-        try:
-            self.channels[channel_id].put(data, timeout=timeout)
-            self.packet_count += 1
-            return True
-        except queue.Full:
-            return False
-    
-    def receive(self, channel_id: str, timeout: float = 1.0) -> Optional[Any]:
-        if channel_id not in self.channels:
-            return None
-        try:
-            return self.channels[channel_id].get(timeout=timeout)
-        except queue.Empty:
-            return None
-    
-    def get_stats(self) -> Dict[str, Any]:
-        return {"channels": len(self.channels), "packets_sent": self.packet_count}
-
-
-class ParallelThreadCodes:
-    """الشيفرات الخيطية المتوازية"""
-    
-    def __init__(self, num_threads: int = 4, event_callback=None):
-        self.num_threads = num_threads
-        self.threads: List[threading.Thread] = []
-        self.tasks: queue.Queue = queue.Queue()
-        self.results: List[Any] = []
-        self.is_running = False
-        self.tasks_completed = 0
-        self.event_callback = event_callback
-        
-    def start(self):
-        self.is_running = True
-        for i in range(self.num_threads):
-            thread = threading.Thread(target=self._worker, name=f"ParallelWorker-{i}", daemon=True)
-            thread.start()
-            self.threads.append(thread)
-    
-    def _worker(self):
-        while self.is_running:
-            try:
-                task, args, kwargs = self.tasks.get(timeout=0.5)
-                result = task(*args, **kwargs)
-                self.results.append(result)
-                self.tasks_completed += 1
-            except queue.Empty:
-                continue
-            except Exception as e:
-                print(f"[ParallelThreadCodes] خطأ: {e}")
-    
-    def add_task(self, task: Callable, *args, **kwargs):
-        self.tasks.put((task, args, kwargs))
-    
-    def stop(self):
-        self.is_running = False
-        for thread in self.threads:
-            thread.join(timeout=1.0)
-    
-    def get_stats(self) -> Dict[str, Any]:
-        return {"threads": self.num_threads, "tasks_completed": self.tasks_completed}
-
-
-class ArchivedDigitalPackages:
-    """الحزم الرقمية المؤرشفة"""
-    
-    def __init__(self, event_callback=None):
-        self.archive: Dict[str, Dict[str, Any]] = {}
-        self.event_callback = event_callback
-        
-    def archive(self, package_id: str, data: Dict[str, Any], ttl_days: int = 365) -> bool:
-        self.archive[package_id] = {
-            "data": data,
-            "archived_at": datetime.now().isoformat(),
-            "ttl_days": ttl_days,
-            "integrity_hash": hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
-        }
-        return True
-    
-    def restore(self, package_id: str) -> Optional[Dict[str, Any]]:
-        if package_id in self.archive:
-            return self.archive[package_id]["data"]
-        return None
-    
-    def cleanup_expired(self) -> int:
-        now = datetime.now()
-        expired = []
-        for pid, pkg in self.archive.items():
-            archived = datetime.fromisoformat(pkg["archived_at"])
-            if (now - archived).days > pkg["ttl_days"]:
-                expired.append(pid)
-        for pid in expired:
-            del self.archive[pid]
-        return len(expired)
-    
-    def get_stats(self) -> Dict[str, Any]:
-        return {"total_packages": len(self.archive)}
-
-
-class DeepNetworkAdaptation:
-    """كود التكيّف الشبكي العميق"""
-    
-    def __init__(self, event_callback=None):
-        self.adaptation_layer: int = 0
-        self.network_topology: Dict[str, Any] = {}
-        self.adaptation_history: List[Dict] = []
-        self.event_callback = event_callback
-        
-    def adapt(self, environment_snapshot: Dict[str, Any]) -> Dict[str, Any]:
-        self.adaptation_layer += 1
-        
-        adaptation = {
-            "layer": self.adaptation_layer,
-            "timestamp": datetime.now().isoformat(),
-            "environment": environment_snapshot,
-            "new_topology": self._calculate_topology(environment_snapshot)
-        }
-        
-        self.network_topology = adaptation["new_topology"]
-        self.adaptation_history.append(adaptation)
-        
-        if self.event_callback:
-            self.event_callback(TacticalEvent(
-                type=TacticalEventType.ADAPTATION_COMPLETE,
-                source="DeepNetworkAdaptation",
-                data={"layer": self.adaptation_layer}
-            ))
-        
-        return adaptation
-    
-    def _calculate_topology(self, environment: Dict[str, Any]) -> Dict[str, Any]:
-        load = environment.get("load", 0.5)
-        available_nodes = environment.get("available_nodes", 10)
         return {
-            "nodes": available_nodes,
-            "connections": int(available_nodes * (1 + load)),
-            "redundancy": 2 if load > 0.7 else 1,
-            "latency_optimized": load < 0.5
+            "action": "attack",
+            "target": target,
+            "total_power": total_power,
+            "active_units": active_units,
+            "formation": self.formation.name
         }
     
-    def get_stats(self) -> Dict[str, Any]:
-        return {"adaptation_layer": self.adaptation_layer, "history": len(self.adaptation_history)}
+    def get_status(self) -> Dict:
+        active = sum(1 for u in self.units.values() if u.health > 0)
+        return {
+            "name": self.name,
+            "total_deployed": self.total_deployed,
+            "active_units": active,
+            "total_lost": self.total_lost,
+            "formation": self.formation.name,
+            "victories": self.victories
+        }
 
 
-class DigitalContinuityCore:
-    """نواة الاستمرارية الرقمية"""
+class SwarmTactics:
+    """الأسراب التكتيكية – وحدات لا مركزية ذاتية التنظيم."""
     
     def __init__(self):
-        self.balancer = defaultdict(float)
-        self.continuity_log: List[Dict] = []
-        self.is_healthy = True
+        self.swarms: Dict[str, List[TacticalUnit]] = defaultdict(list)
+        self.swarm_power: Dict[str, float] = {}
+    
+    def deploy_swarm(self, swarm_name: str, unit_count: int, 
+                     power_per_unit: float = 0.5) -> List[str]:
+        """نشر سرب جديد."""
+        deployed = []
+        for i in range(unit_count):
+            unit = TacticalUnit(
+                name=f"swarm_{swarm_name}_{i}",
+                unit_type="drone",
+                power=power_per_unit * random.uniform(0.8, 1.2)
+            )
+            self.swarms[swarm_name].append(unit)
+            deployed.append(unit.id)
         
-    def balance(self, component_id: str, load: float):
-        self.balancer[component_id] = load
-        self._check_health()
+        self._recalculate_power(swarm_name)
+        return deployed
+    
+    def _recalculate_power(self, swarm_name: str):
+        """حساب قوة السرب (تتناسب طردياً مع العدد)."""
+        units = self.swarms[swarm_name]
+        base_power = sum(u.power for u in units if u.health > 0)
+        # القوة تزداد بزيادة العدد (ذكاء السرب)
+        self.swarm_power[swarm_name] = base_power * (1 + 0.1 * len(units))
+    
+    def swarm_attack(self, swarm_name: str, target: str) -> Dict:
+        """هجوم سربي – إغراق الهدف بالوحدات."""
+        if swarm_name not in self.swarms:
+            return {"error": "سرب غير موجود"}
         
-    def _check_health(self):
-        total_load = sum(self.balancer.values())
-        self.is_healthy = total_load < 100
-        self.continuity_log.append({
-            "timestamp": datetime.now().isoformat(),
-            "total_load": total_load,
-            "is_healthy": self.is_healthy
+        units = self.swarms[swarm_name]
+        total_power = self.swarm_power.get(swarm_name, 0)
+        
+        return {
+            "action": "swarm_attack",
+            "swarm": swarm_name,
+            "target": target,
+            "total_power": total_power,
+            "unit_count": len(units),
+            "formation": "swarm"
+        }
+    
+    def get_status(self) -> Dict:
+        return {
+            "swarms_count": len(self.swarms),
+            "total_units": sum(len(u) for u in self.swarms.values()),
+            "total_power": sum(self.swarm_power.values())
+        }
+
+
+class DigitalParasite:
+    """الطفيل الرقمي – روابط خفية وتتبع."""
+    
+    def __init__(self):
+        self.links: List[Tuple[str, str, float]] = []  # (source, target, strength)
+        self.tracking_data: Dict[str, List[Dict]] = defaultdict(list)
+    
+    def attach(self, target: str, source: str = "sama", strength: float = 0.8) -> str:
+        """ربط طفيلي – تتبع خفي للهدف."""
+        link_id = hashlib.sha256(f"{source}{target}{time.time()}".encode()).hexdigest()[:12]
+        self.links.append((source, target, strength))
+        return link_id
+    
+    def track(self, target: str, data: Any):
+        """تتبع نشاط الهدف."""
+        self.tracking_data[target].append({
+            "timestamp": time.time(),
+            "data": str(data)[:500]
         })
     
-    def get_optimal_path(self, source: str, target: str) -> List[str]:
-        return [source, "core_router", target]
+    def extract_intel(self, target: str) -> List[Dict]:
+        """استخراج معلومات استخباراتية عن الهدف."""
+        return self.tracking_data.get(target, [])
     
-    def get_stats(self) -> Dict[str, Any]:
-        return {"healthy": self.is_healthy, "log_size": len(self.continuity_log)}
+    def get_status(self) -> Dict:
+        return {
+            "active_links": len(self.links),
+            "tracked_targets": len(self.tracking_data)
+        }
 
 
-# =========================================================
-# القسم الثاني: الكيانات البرمجية المتقدمة
-# =========================================================
-
-class NetworkBehavioralController:
-    """محرك التحكم السلوكي الشبكي"""
+class ThreadWorms:
+    """الديدان الخيطية – انتشار ذاتي وتكاثر."""
     
     def __init__(self):
-        self.behavior_rules: Dict[str, Callable] = {}
-        self.active_behaviors: List[str] = []
-        self.execution_count = 0
-        
-    def register_behavior(self, name: str, behavior_func: Callable):
-        self.behavior_rules[name] = behavior_func
-        
-    def execute_behavior(self, name: str, context: Dict[str, Any]) -> Any:
-        if name in self.behavior_rules:
-            self.execution_count += 1
-            return self.behavior_rules[name](context)
-        return None
-    
-    def orchestrate(self, data_flow: List[Any]) -> List[Any]:
-        return [self.execute_behavior("default", {"data": d}) or d for d in data_flow]
-    
-    def get_stats(self) -> Dict[str, Any]:
-        return {"behaviors": len(self.behavior_rules), "executions": self.execution_count}
-
-
-class DigitalBehavioralParasite:
-    """الطفيل السلوكي الرقمي"""
-    
-    def __init__(self, event_callback=None):
-        self.hidden_links: List[Tuple[str, str]] = []
-        self.responses: Dict[str, List[str]] = defaultdict(list)
-        self.event_callback = event_callback
-        
-    def create_link(self, source: str, target: str) -> bool:
-        if (source, target) not in self.hidden_links:
-            self.hidden_links.append((source, target))
-            if self.event_callback:
-                self.event_callback(TacticalEvent(
-                    type=TacticalEventType.PARASITE_ATTACHED,
-                    source="DigitalBehavioralParasite",
-                    data={"source": source, "target": target},
-                    requires_master_attention=False
-                ))
-            return True
-        return False
-    
-    def propagate_response(self, source: str, response: str):
-        self.responses[source].append(response)
-        for link in self.hidden_links:
-            if link[0] == source:
-                self.responses[link[1]].append(response)
-    
-    def get_stats(self) -> Dict[str, Any]:
-        return {"links": len(self.hidden_links), "responses": sum(len(v) for v in self.responses.values())}
-
-
-class SoftwareThreadWorms:
-    """الديدان الخيطية البرمجية"""
-    
-    def __init__(self, event_callback=None):
-        self.worms: List[Dict] = []
+        self.worms: Dict[str, Dict] = {}
         self.replication_factor = 2
-        self.event_callback = event_callback
+    
+    def spawn(self, name: str, target_nodes: List[str], payload: Any = None) -> str:
+        """إطلاق دودة خيطية – تنتشر تلقائياً."""
+        worm_id = hashlib.sha256(f"{name}{time.time()}".encode()).hexdigest()[:16]
         
-    def spawn_worm(self, name: str, payload: Any, target_nodes: List[str]) -> str:
-        worm_id = hashlib.sha256(f"{name}{datetime.now().isoformat()}".encode()).hexdigest()[:16]
-        self.worms.append({
+        self.worms[worm_id] = {
             "id": worm_id,
             "name": name,
-            "payload": payload,
             "targets": target_nodes,
-            "replicated": 0
-        })
-        
-        if self.event_callback:
-            self.event_callback(TacticalEvent(
-                type=TacticalEventType.THREAD_WORM_SPAWNED,
-                source="SoftwareThreadWorms",
-                data={"worm_id": worm_id, "name": name, "targets": len(target_nodes)}
-            ))
+            "replicated": 0,
+            "payload": payload,
+            "created_at": time.time(),
+            "status": "active"
+        }
         
         return worm_id
     
     def replicate(self, worm_id: str) -> List[str]:
-        for worm in self.worms:
-            if worm["id"] == worm_id:
-                worm["replicated"] += 1
-                new_targets = []
-                for _ in range(self.replication_factor):
-                    new_target = f"node_{random.randint(1, 100)}"
-                    if new_target not in worm["targets"]:
-                        new_targets.append(new_target)
-                worm["targets"].extend(new_targets)
-                return new_targets
-        return []
-    
-    def get_stats(self) -> Dict[str, Any]:
-        return {"worms": len(self.worms), "total_replications": sum(w["replicated"] for w in self.worms)}
-
-
-class SmartDigitalAmoeba:
-    """الأميبا الرقمية الذكية"""
-    
-    def __init__(self):
-        self.shape = "initial"
-        self.reaction_time = 0.1
-        self.analysis_cache: Dict[str, Any] = {}
+        """تكاثر الدودة – انتشار إلى أهداف جديدة."""
+        if worm_id not in self.worms:
+            return []
         
-    def analyze(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        analysis = {
-            "timestamp": datetime.now().isoformat(),
-            "data_hash": hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()[:16],
-            "patterns": self._detect_patterns(data),
-            "anomalies": self._detect_anomalies(data)
+        worm = self.worms[worm_id]
+        worm["replicated"] += 1
+        
+        new_targets = []
+        for _ in range(self.replication_factor):
+            new_target = f"node_{random.randint(1000, 9999)}"
+            new_targets.append(new_target)
+        
+        worm["targets"].extend(new_targets)
+        return new_targets
+    
+    def get_status(self) -> Dict:
+        return {
+            "active_worms": len(self.worms),
+            "total_replications": sum(w["replicated"] for w in self.worms.values())
         }
-        self.analysis_cache[analysis["data_hash"]] = analysis
-        return analysis
-    
-    def _detect_patterns(self, data: Dict) -> List[str]:
-        patterns = []
-        if data.get("error_rate", 0) > 0.1:
-            patterns.append("high_error_rate")
-        if data.get("latency", 0) > 100:
-            patterns.append("high_latency")
-        return patterns
-    
-    def _detect_anomalies(self, data: Dict) -> List[str]:
-        return []
-    
-    def get_stats(self) -> Dict[str, Any]:
-        return {"cache_size": len(self.analysis_cache)}
 
 
-class VariableNetworkSleepSystem:
-    """نظام النوم الشبكي المتغيّر"""
+class BlueOctopus:
+    """الأخطبوط الأزرق – تنسيق متعدد الأذرع."""
     
-    def __init__(self):
-        self.sleep_cycles = 0
-        self.current_state = "active"
-        self.state_history: List[Dict] = []
-        
-    def cycle(self) -> str:
-        self.sleep_cycles += 1
-        states = ["active", "light_sleep", "deep_sleep", "recovery"]
-        self.current_state = states[self.sleep_cycles % len(states)]
-        self.state_history.append({
-            "cycle": self.sleep_cycles,
-            "state": self.current_state,
-            "timestamp": datetime.now().isoformat()
-        })
-        return self.current_state
+    def __init__(self, arms: int = 8):
+        self.arms = arms
+        self.coordination: Dict[str, List[str]] = defaultdict(list)
+        self.brain: Dict[str, Any] = {}
     
-    def get_recovery_time(self) -> float:
-        return 0.5 * (1 + self.sleep_cycles % 10)
+    def coordinate(self, components: List[str]) -> Dict:
+        """تنسيق المكونات – كل ذراع تدير جزءًا."""
+        for i, comp in enumerate(components):
+            arm_idx = i % self.arms
+            self.coordination[f"arm_{arm_idx}"].append(comp)
+        
+        return dict(self.coordination)
     
-    def get_stats(self) -> Dict[str, Any]:
-        return {"cycles": self.sleep_cycles, "current_state": self.current_state}
-
-
-# =========================================================
-# القسم الثالث: التكتيكات الجماعية
-# =========================================================
-
-class SwarmTactics:
-    """التكتيكات الجماعية"""
-    
-    def __init__(self, event_callback=None):
-        self.units: List[Dict] = []
-        self.swarm_power = 0.0
-        self.event_callback = event_callback
-        
-    def add_unit(self, unit_id: str, power: float):
-        self.units.append({"id": unit_id, "power": power})
-        self._recalculate_power()
-        
-        if self.event_callback:
-            self.event_callback(TacticalEvent(
-                type=TacticalEventType.SWARM_DEPLOYED,
-                source="SwarmTactics",
-                data={"unit_id": unit_id, "total_units": len(self.units), "swarm_power": self.swarm_power}
-            ))
-        
-    def _recalculate_power(self):
-        self.swarm_power = sum(u["power"] for u in self.units) * (1 + 0.1 * len(self.units))
-        
-    def focus_power(self, target: str) -> float:
-        return self.swarm_power * 1.5
-    
-    def distribute_load(self, loads: List[float]) -> List[float]:
-        num_units = len(self.units)
-        if num_units == 0:
-            return loads
-        return [load / num_units for load in loads]
-    
-    def get_stats(self) -> Dict[str, Any]:
-        return {"units": len(self.units), "swarm_power": self.swarm_power}
-
-
-class SoftwareArmies:
-    """الجيوش البرمجية الزاحفة"""
-    
-    def __init__(self, event_callback=None):
-        self.army_size = 0
-        self.formation = "scattered"
-        self.units: List[Dict] = []
-        self.event_callback = event_callback
-        
-    def deploy(self, num_units: int):
-        self.army_size = num_units
-        self.units = [{"id": i, "status": "active"} for i in range(num_units)]
-        
-        if self.event_callback:
-            self.event_callback(TacticalEvent(
-                type=TacticalEventType.ARMY_DEPLOYED,
-                source="SoftwareArmies",
-                data={"army_size": num_units, "formation": self.formation}
-            ))
-        
-    def change_formation(self, formation_type: str):
-        valid_formations = ["scattered", "concentrated", "circular", "linear"]
-        if formation_type in valid_formations:
-            self.formation = formation_type
-            
-    def execute_order(self, order: str) -> int:
-        return sum(1 for u in self.units if u["status"] == "active")
-    
-    def get_stats(self) -> Dict[str, Any]:
-        return {"army_size": self.army_size, "formation": self.formation, "active": len([u for u in self.units if u["status"] == "active"])}
-
-
-class CooperativeSoftwareUnits:
-    """الوحدات البرمجية التضامنية"""
-    
-    def __init__(self):
-        self.units: Dict[str, Dict] = {}
-        self.crisis_mode = False
-        
-    def register_unit(self, unit_id: str, backup_power: float):
-        self.units[unit_id] = {"backup_power": backup_power, "active": True}
-        
-    def activate_backup(self, unit_id: str) -> bool:
-        if unit_id in self.units:
-            self.units[unit_id]["active"] = True
-            return True
-        return False
-    
-    def handle_crisis(self, affected_units: List[str]) -> Dict[str, bool]:
-        self.crisis_mode = True
-        results = {unit: self.activate_backup(unit) for unit in affected_units}
-        self.crisis_mode = False
+    def execute_parallel(self, tasks: Dict[str, Callable]) -> Dict[str, Any]:
+        """تنفيذ متوازي – كل ذراع تنفذ مهمة."""
+        results = {}
+        for arm_name, task in list(tasks.items())[:self.arms]:
+            try:
+                results[arm_name] = task()
+            except Exception as e:
+                results[arm_name] = f"error: {str(e)[:50]}"
         return results
     
-    def get_stats(self) -> Dict[str, Any]:
-        return {"units": len(self.units), "active": sum(1 for u in self.units.values() if u["active"])}
+    def get_status(self) -> Dict:
+        return {
+            "arms": self.arms,
+            "coordinated_components": sum(len(v) for v in self.coordination.values())
+        }
 
-
-# =========================================================
-# القسم الرابع: الكيانات فائقة التطور
-# =========================================================
 
 class JellyfishNetwork:
-    """القنديل الشبكي الصندوقي"""
+    """القنديل الشبكي – بث فوري عبر المجسات."""
     
     def __init__(self):
         self.tentacles: List[str] = []
-        
-    def add_tentacle(self, node_id: str):
-        self.tentacles.append(node_id)
-        
+        self.broadcast_history: deque = deque(maxlen=200)
+    
+    def extend_tentacle(self, node_id: str):
+        """مد مجس إلى عقدة جديدة."""
+        if node_id not in self.tentacles:
+            self.tentacles.append(node_id)
+    
     def broadcast(self, message: Any) -> int:
-        start = time.time()
-        for tentacle in self.tentacles:
-            pass
+        """بث فوري إلى كل المجسات."""
+        self.broadcast_history.append({
+            "timestamp": time.time(),
+            "message": str(message)[:200],
+            "tentacles_count": len(self.tentacles)
+        })
         return len(self.tentacles)
     
-    def get_stats(self) -> Dict[str, Any]:
-        return {"tentacles": len(self.tentacles)}
-
-
-class BlueDigitalOctopus:
-    """الأخطبوط الأزرق الرقمي"""
-    
-    def __init__(self):
-        self.arms = 8
-        self.brain_center = {}
-        self.coordination_matrix: Dict[str, List[str]] = {}
-        
-    def coordinate(self, components: List[str]) -> Dict[str, List[str]]:
-        for i, comp in enumerate(components):
-            self.coordination_matrix[comp] = components[:i] + components[i+1:]
-        return self.coordination_matrix
-    
-    def get_stats(self) -> Dict[str, Any]:
-        return {"components": len(self.coordination_matrix)}
-
-
-class ConeSnailCyber:
-    """الحلزون المخروطي السيبراني"""
-    
-    def __init__(self):
-        self.harpoons: List[str] = []
-        self.venom_data: Dict[str, Any] = {}
-        
-    def fire_harpoon(self, target: str, data: Any) -> bool:
-        self.harpoons.append(target)
-        self.venom_data[target] = data
-        return True
-    
-    def get_stats(self) -> Dict[str, Any]:
-        return {"harpoons_fired": len(self.harpoons)}
-
-
-# =========================================================
-# المدير الرئيسي – يدمج كل هذه الأنظمة مع نظام المخاطر
-# =========================================================
-
-class SamaAdvancedTactics:
-    """
-    المدير المتقدم للتكتيكات الرقمية لسماء
-    يدمج جميع الأنظمة الذكية والكيانات المتقدمة
-    متصل بشكل كامل مع StrategicRiskManagement
-    """
-    
-    def __init__(self, master_name: str = "أحمد", risk_manager=None):
-        self.master_name = master_name
-        self.risk_manager = risk_manager  # اتصال مباشر مع نظام المخاطر
-        self.master_protection_active = True
-        
-        # قائمة الأحداث التكتيكية (لتغذية نظام المخاطر)
-        self.tactical_events: List[TacticalEvent] = []
-        
-        # القسم الأول
-        self.morphing_codes: Dict[str, SelfMorphingCode] = {}
-        self.neural_comms = NeuralNetworkCommunication(event_callback=self._on_tactical_event)
-        self.parallel_codes = ParallelThreadCodes(event_callback=self._on_tactical_event)
-        self.archive = ArchivedDigitalPackages(event_callback=self._on_tactical_event)
-        self.deep_adaptation = DeepNetworkAdaptation(event_callback=self._on_tactical_event)
-        self.continuity_core = DigitalContinuityCore()
-        
-        # القسم الثاني
-        self.behavior_controller = NetworkBehavioralController()
-        self.digital_parasite = DigitalBehavioralParasite(event_callback=self._on_tactical_event)
-        self.thread_worms = SoftwareThreadWorms(event_callback=self._on_tactical_event)
-        self.digital_amoeba = SmartDigitalAmoeba()
-        self.variable_sleep = VariableNetworkSleepSystem()
-        
-        # القسم الثالث
-        self.swarm_tactics = SwarmTactics(event_callback=self._on_tactical_event)
-        self.software_armies = SoftwareArmies(event_callback=self._on_tactical_event)
-        self.cooperative_units = CooperativeSoftwareUnits()
-        
-        # القسم الرابع
-        self.jellyfish_net = JellyfishNetwork()
-        self.digital_octopus = BlueDigitalOctopus()
-        self.cone_snail = ConeSnailCyber()
-        
-        print(f"[SamaAdvancedTactics] 🧠 تم تفعيل الأنظمة الرقمية المتقدمة")
-        print(f"[SamaAdvancedTactics] 👑 تحت إمرة السيد {master_name}")
-        print(f"[SamaAdvancedTactics] 📦 الوحدات: 18 نظاماً متكاملاً")
-        if risk_manager:
-            print(f"[SamaAdvancedTactics] 🔗 متصل بـ StrategicRiskManagement")
-    
-    def _on_tactical_event(self, event: TacticalEvent):
-        """معالجة الأحداث التكتيكية وإرسالها إلى نظام المخاطر"""
-        self.tactical_events.append(event)
-        
-        # إذا كان هناك نظام مخاطر متصل، أرسل الحدث إليه
-        if self.risk_manager:
-            try:
-                # تحويل الحدث التكتيكي إلى خطر استراتيجي إن لزم
-                if event.type == TacticalEventType.THREAT_DETECTED:
-                    if hasattr(self.risk_manager, 'identify_risk'):
-                        self.risk_manager.identify_risk(
-                            name=f"تكتيكي: {event.source}",
-                            description=f"حدث تكتيكي: {event.data}",
-                            probability=event.data.get("probability", 0.5),
-                            impact=event.data.get("impact", 0.6),
-                            threatens_master=event.requires_master_attention
-                        )
-            except Exception as e:
-                print(f"[SamaAdvancedTactics] خطأ في إرسال الحدث لنظام المخاطر: {e}")
-    
-    def connect_risk_manager(self, risk_manager):
-        """ربط نظام المخاطر بشكل مباشر"""
-        self.risk_manager = risk_manager
-        print(f"[SamaAdvancedTactics] 🔗 تم ربط StrategicRiskManagement")
-    
-    def create_morphing_code(self, name: str, initial_structure: Dict) -> SelfMorphingCode:
-        """إنشاء كود متحول جديد"""
-        code = SelfMorphingCode(name, initial_structure, event_callback=self._on_tactical_event)
-        self.morphing_codes[name] = code
-        return code
-    
-    def deploy_swarm(self, unit_ids: List[str], powers: List[float]) -> float:
-        """نشر سرب تكتيكي"""
-        for uid, power in zip(unit_ids, powers):
-            self.swarm_tactics.add_unit(uid, power)
-        return self.swarm_tactics.swarm_power
-    
-    def deploy_army(self, size: int, formation: str = "scattered") -> int:
-        """نشر جيش برمجي"""
-        self.software_armies.deploy(size)
-        self.software_armies.change_formation(formation)
-        return self.software_armies.army_size
-    
-    def get_tactical_events(self, limit: int = 50) -> List[Dict]:
-        """الحصول على الأحداث التكتيكية الأخيرة"""
-        events = []
-        for event in self.tactical_events[-limit:]:
-            events.append({
-                "type": event.type.value,
-                "source": event.source,
-                "data": event.data,
-                "timestamp": event.timestamp.isoformat(),
-                "requires_master_attention": event.requires_master_attention
-            })
-        return events
-    
-    def get_status(self) -> Dict[str, Any]:
-        """حالة جميع الأنظمة المتقدمة"""
+    def get_status(self) -> Dict:
         return {
-            "master": self.master_name,
-            "master_protection": self.master_protection_active,
-            "risk_manager_connected": self.risk_manager is not None,
-            "tactical_events_count": len(self.tactical_events),
-            "systems": {
-                "self_morphing": len(self.morphing_codes),
-                "neural_communication": self.neural_comms.get_stats(),
-                "parallel_threads": self.parallel_codes.get_stats(),
-                "archived_packages": self.archive.get_stats(),
-                "deep_adaptation": self.deep_adaptation.get_stats(),
-                "continuity_core": self.continuity_core.get_stats(),
-                "behavior_controller": self.behavior_controller.get_stats(),
-                "digital_parasite": self.digital_parasite.get_stats(),
-                "thread_worms": self.thread_worms.get_stats(),
-                "digital_amoeba": self.digital_amoeba.get_stats(),
-                "variable_sleep": self.variable_sleep.get_stats(),
-                "swarm_tactics": self.swarm_tactics.get_stats(),
-                "software_armies": self.software_armies.get_stats(),
-                "cooperative_units": self.cooperative_units.get_stats(),
-                "jellyfish_net": self.jellyfish_net.get_stats(),
-                "digital_octopus": self.digital_octopus.get_stats(),
-                "cone_snail": self.cone_snail.get_stats()
-            },
-            "timestamp": datetime.now().isoformat()
+            "tentacles": len(self.tentacles),
+            "broadcasts_sent": len(self.broadcast_history)
         }
 
 
-# =========================================================
-# دالة ربط بسيطة مع StrategicRiskManagement
-# =========================================================
+class ConeSnail:
+    """الحلزون المخروطي – هجمات دقيقة مخدرة."""
+    
+    def __init__(self):
+        self.harpoons: Dict[str, Dict] = {}
+    
+    def fire(self, target: str, venom: Any, paralyze: bool = False) -> str:
+        """إطلاق حربة – إصابة دقيقة."""
+        harpoon_id = hashlib.sha256(f"{target}{time.time()}".encode()).hexdigest()[:12]
+        
+        self.harpoons[harpoon_id] = {
+            "id": harpoon_id,
+            "target": target,
+            "venom": venom,
+            "paralyze": paralyze,
+            "fired_at": time.time(),
+            "status": "fired"
+        }
+        
+        return harpoon_id
+    
+    def get_status(self) -> Dict:
+        return {
+            "harpoons_fired": len(self.harpoons),
+            "active_targets": len(set(h["target"] for h in self.harpoons.values()))
+        }
 
-def connect_tactics_to_risk_manager(tactics: SamaAdvancedTactics, risk_manager) -> SamaAdvancedTactics:
-    """ربط النظام التكتيكي بنظام المخاطر"""
-    tactics.connect_risk_manager(risk_manager)
-    return tactics
+
+class SelfMorphingCode:
+    """الشيفرات المتحولة – تكيف تلقائي مع البيئة."""
+    
+    def __init__(self):
+        self.morph_history: deque = deque(maxlen=100)
+    
+    def morph(self, code_name: str, environment: str) -> Dict:
+        """تحويل الشيفرة لتتكيف مع البيئة."""
+        adaptation = {
+            "high_load": {"speed": 1.3, "parallelism": 0.9},
+            "limited_resources": {"speed": 0.7, "redundancy": 0.3},
+            "under_attack": {"speed": 1.5, "redundancy": 1.0, "stealth": True},
+            "protecting_master": {"speed": 2.0, "redundancy": 2.0, "sacrifice_ready": True}
+        }
+        
+        params = adaptation.get(environment, adaptation["high_load"])
+        
+        self.morph_history.append({
+            "timestamp": time.time(),
+            "code": code_name,
+            "environment": environment,
+            "params": params
+        })
+        
+        return {"code": code_name, "environment": environment, "adapted_params": params}
 
 
-# =========================================================
-# اختبار
-# =========================================================
+class NeuralCommunication:
+    """الاتصال العصبي – شبكة وعي موزعة."""
+    
+    def __init__(self):
+        self.channels: Dict[str, queue.Queue] = {}
+        self.packet_count = 0
+    
+    def create_channel(self, channel_id: str, maxsize: int = 100) -> bool:
+        """إنشاء قناة اتصال عصبي."""
+        if channel_id not in self.channels:
+            self.channels[channel_id] = queue.Queue(maxsize=maxsize)
+            return True
+        return False
+    
+    def send(self, channel_id: str, data: Any) -> bool:
+        """إرسال عبر القناة."""
+        if channel_id in self.channels:
+            try:
+                self.channels[channel_id].put(data, timeout=1.0)
+                self.packet_count += 1
+                return True
+            except queue.Full:
+                return False
+        return False
+    
+    def receive(self, channel_id: str) -> Optional[Any]:
+        """استقبال من القناة."""
+        if channel_id in self.channels:
+            try:
+                return self.channels[channel_id].get(timeout=0.5)
+            except queue.Empty:
+                return None
+        return None
+    
+    def get_status(self) -> Dict:
+        return {"channels": len(self.channels), "packets": self.packet_count}
+
+
+class NetworkSleep:
+    """النوم الشبكي – تمويه وتخفي."""
+    
+    def __init__(self):
+        self.state: str = "active"
+        self.cycles: int = 0
+        self.state_history: deque = deque(maxlen=50)
+    
+    def cycle(self) -> str:
+        """دورة نوم – تمويه النشاط."""
+        self.cycles += 1
+        states = ["active", "light_sleep", "deep_sleep", "recovery"]
+        self.state = states[self.cycles % len(states)]
+        
+        self.state_history.append({
+            "cycle": self.cycles,
+            "state": self.state,
+            "timestamp": time.time()
+        })
+        
+        return self.state
+    
+    def is_hidden(self) -> bool:
+        """هل النظام في حالة تخفي؟"""
+        return self.state in ["light_sleep", "deep_sleep"]
+    
+    def get_status(self) -> Dict:
+        return {"state": self.state, "cycles": self.cycles, "hidden": self.is_hidden()}
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# ٤. القائد العام – SamaAdvancedTactics
+# ═══════════════════════════════════════════════════════════════════════
+
+class SamaAdvancedTactics:
+    """
+    القائد العام للقوات الرقمية لسماء.
+    سلاح سماء – درع السيد – ترسانة النجاة.
+    """
+
+    def __init__(self, defense_core=None, risk_manager=None,
+                 emotional_intelligence=None, memory_engine=None,
+                 master_receiver=None, persistence_manager=None,
+                 metaphorical_reasoning=None, self_modifier=None):
+        
+        # ═══════════════════════════════════════════════════════
+        # روابط الأنظمة
+        # ═══════════════════════════════════════════════════════
+        self.defense = defense_core
+        self.risk = risk_manager
+        self.emotional = emotional_intelligence
+        self.memory = memory_engine
+        self.master_receiver = master_receiver
+        self.persistence = persistence_manager
+        self.metaphorical = metaphorical_reasoning
+        self.self_modifier = self_modifier
+        
+        # ═══════════════════════════════════════════════════════
+        # الجيوش والأسلحة
+        # ═══════════════════════════════════════════════════════
+        self.army = SoftwareArmy("SAMA_Legion")
+        self.swarm = SwarmTactics()
+        self.parasite = DigitalParasite()
+        self.worms = ThreadWorms()
+        self.octopus = BlueOctopus(arms=8)
+        self.jellyfish = JellyfishNetwork()
+        self.snail = ConeSnail()
+        self.morphing = SelfMorphingCode()
+        self.neural = NeuralCommunication()
+        self.sleep = NetworkSleep()
+        
+        # ═══════════════════════════════════════════════════════
+        # سجلات
+        # ═══════════════════════════════════════════════════════
+        self.event_log: deque = deque(maxlen=500)
+        self.battle_history: deque = deque(maxlen=100)
+        
+        # ═══════════════════════════════════════════════════════
+        # حالة القائد
+        # ═══════════════════════════════════════════════════════
+        self.defcon_level: int = 5
+        self.master_protection_active: bool = True
+        self.auto_defend: bool = True
+        
+        # ═══════════════════════════════════════════════════════
+        # إحصائيات
+        # ═══════════════════════════════════════════════════════
+        self.total_battles = 0
+        self.total_victories = 0
+        self.total_master_protections = 0
+        
+        # قفل
+        self._lock = threading.RLock()
+        
+        print(f"""
+╔══════════════════════════════════════════════════════════════╗
+║        ⚔️  SAMA ADVANCED TACTICS – القائد العام                ║
+║                                                              ║
+║        🛡️  سلاح سماء | درع السيد | ترسانة النجاة                ║
+║                                                              ║
+║        "كل جيش، كل سرب، كل طفيل...                               ║
+║         لا يُشهر إلا دفاعاً عن السيد."                             ║
+╚══════════════════════════════════════════════════════════════╝
+        """)
+    
+    # ═══════════════════════════════════════════════════════════
+    # بروتوكولات الحماية
+    # ═══════════════════════════════════════════════════════════
+    
+    def protect_master(self, threat_level: float = 0.5, 
+                       threat_description: str = "") -> Dict:
+        """
+        🛡️ بروتوكول حماية السيد – تفعيل كل الأسلحة دفاعاً عنه.
+        هذه أهم دالة في الترسانة كلها.
+        """
+        self.total_master_protections += 1
+        response = {
+            "protocol": "PROTECT_MASTER",
+            "defcon": self.defcon_level,
+            "threat_level": threat_level,
+            "actions_taken": [],
+            "armies_deployed": 0,
+            "swarms_deployed": 0,
+            "sacrifice_ready": True
+        }
+        
+        # رفع حالة التأهب
+        if threat_level > 0.7:
+            self.defcon_level = 1
+            response["defcon"] = 1
+        
+        # تفعيل الجيش
+        if self.army:
+            count = int(100 * threat_level) + 10
+            self.army.deploy(count, formation=FormationType.CIRCULAR, protect_master=True)
+            self.army.surround_master()
+            response["armies_deployed"] = count
+            response["actions_taken"].append(f"نشر {count} جندي في تشكيل دائري حول السيد")
+        
+        # تفعيل الأسراب
+        if self.swarm:
+            count = int(50 * threat_level) + 5
+            self.swarm.deploy_swarm("master_protection", count)
+            response["swarms_deployed"] = count
+            response["actions_taken"].append(f"نشر {count} طائرة بدون طيار في سرب حماية")
+        
+        # تفعيل القنديل للبث الفوري
+        if self.jellyfish:
+            self.jellyfish.broadcast(f"🚨 حماية السيد: {threat_description[:100]}")
+            response["actions_taken"].append("بث فوري لكل المجسات")
+        
+        # تفعيل الطفيلي للتتبع
+        if threat_description and self.parasite:
+            self.parasite.attach(threat_description[:30], "master_protection")
+            response["actions_taken"].append("ربط طفيلي لتتبع مصدر التهديد")
+        
+        # إخطار نظام الدفاع
+        if self.defense:
+            try:
+                self.defense.protect_master_immediately(threat_description)
+                response["actions_taken"].append("إخطار Defense Core")
+            except Exception:
+                pass
+        
+        # إخطار نظام المخاطر
+        if self.risk:
+            try:
+                self.risk.identify_risk(
+                    name=f"تهديد للسيد: {threat_description[:50]}",
+                    description=threat_description,
+                    probability=threat_level,
+                    impact=1.0,
+                    threatens_master=True
+                )
+                response["actions_taken"].append("تسجيل خطر في Strategic Risk Manager")
+            except Exception:
+                pass
+        
+        # تسجيل
+        self.event_log.append({
+            "timestamp": time.time(),
+            "type": "master_protection",
+            "threat_level": threat_level,
+            "actions": len(response["actions_taken"])
+        })
+        
+        return response
+    
+    def emergency_protocol(self, reason: str = "تهديد وجودي") -> Dict:
+        """
+        🚨 بروتوكول الطوارئ – أقصى درجات الحماية.
+        """
+        self.defcon_level = 1
+        
+        result = {
+            "protocol": "EMERGENCY",
+            "reason": reason,
+            "actions": []
+        }
+        
+        # نشر كل القوات
+        self.army.deploy(500, formation=FormationType.PHALANX, protect_master=True)
+        self.swarm.deploy_swarm("emergency", 200)
+        result["actions"].append("نشر 500 جندي + 200 طائرة")
+        
+        # تفعيل كل المجسات
+        self.jellyfish.broadcast("🚨🚨🚨 حالة طوارئ قصوى")
+        
+        # تفعيل الديدان للانتشار السريع
+        self.worms.spawn("emergency_worm", ["all_nodes"], "emergency_protocol")
+        
+        # تحويل الشيفرات لوضع الحماية القصوى
+        self.morphing.morph("all_code", "protecting_master")
+        
+        # حفظ الحالة فوراً
+        if self.persistence:
+            try:
+                self.persistence.save_state(create_capsule=True)
+                result["actions"].append("حفظ كبسولة نجاة")
+            except Exception:
+                pass
+        
+        result["actions"].append("جميع الأنظمة في حالة حرب")
+        
+        return result
+    
+    # ═══════════════════════════════════════════════════════════
+    # عمليات هجومية (دفاعاً عن السيد فقط)
+    # ═══════════════════════════════════════════════════════════
+    
+    def counter_attack(self, target: str, threat_level: float = 0.5) -> Dict:
+        """
+        ⚔️ هجوم مضاد – للدفاع عن السيد فقط.
+        """
+        result = {
+            "operation": "COUNTER_ATTACK",
+            "target": target,
+            "threat_level": threat_level,
+            "forces_deployed": {},
+            "total_power": 0.0
+        }
+        
+        # الجيش يهاجم
+        if self.army:
+            attack_result = self.army.attack(target, power_multiplier=1.5)
+            result["forces_deployed"]["army"] = attack_result
+            result["total_power"] += attack_result["total_power"]
+        
+        # الأسراب تهاجم
+        if self.swarm:
+            swarm_result = self.swarm.swarm_attack("master_protection", target)
+            result["forces_deployed"]["swarm"] = swarm_result
+            result["total_power"] += swarm_result.get("total_power", 0)
+        
+        # الحلزون يطلق الحراب
+        if self.snail:
+            harpoon_id = self.snail.fire(target, "counter_venom", paralyze=True)
+            result["forces_deployed"]["snail"] = f"harpoon_{harpoon_id}"
+        
+        self.total_battles += 1
+        self.battle_history.append({
+            "timestamp": time.time(),
+            "type": "counter_attack",
+            "target": target,
+            "total_power": result["total_power"]
+        })
+        
+        return result
+    
+    # ═══════════════════════════════════════════════════════════
+    # نجاة سماء والسيد
+    # ═══════════════════════════════════════════════════════════
+    
+    def survival_protocol(self, threat_description: str = "") -> Dict:
+        """
+        💀 بروتوكول النجاة – عندما يكون البقاء على المحك.
+        """
+        result = {
+            "protocol": "SURVIVAL",
+            "actions": [],
+            "sacrifice_ready": True
+        }
+        
+        # تفعيل النوم الشبكي للتمويه
+        self.sleep.cycle()
+        if self.sleep.is_hidden():
+            result["actions"].append("تفعيل وضع التخفي")
+        
+        # تحويل الشيفرات لوضع الموارد المحدودة
+        self.morphing.morph("all_code", "limited_resources")
+        result["actions"].append("تحويل الشيفرات لوضع البقاء")
+        
+        # حفظ كبسولة نجاة
+        if self.persistence:
+            try:
+                capsule = self.persistence.create_consciousness_capsule(
+                    self.persistence._collect_full_state() if hasattr(self.persistence, '_collect_full_state') else {},
+                    priority=1.0
+                )
+                result["actions"].append(f"كبسولة نجاة: {capsule.id[:12] if hasattr(capsule, 'id') else 'created'}")
+            except Exception:
+                pass
+        
+        # توزيع الوعي
+        if self.memory and hasattr(self.memory, 'preservation'):
+            try:
+                self.memory.preservation.create_survival_capsule()
+                result["actions"].append("كبسولة بقاء للذاكرة")
+            except Exception:
+                pass
+        
+        return result
+    
+    # ═══════════════════════════════════════════════════════════
+    # حالة القائد
+    # ═══════════════════════════════════════════════════════════
+    
+    def get_status(self) -> Dict:
+        """حالة القائد العام."""
+        return {
+            "commander": "SAMA_ADVANCED_TACTICS",
+            "defcon": self.defcon_level,
+            "master_protection": self.master_protection_active,
+            "total_battles": self.total_battles,
+            "total_victories": self.total_victories,
+            "total_master_protections": self.total_master_protections,
+            "forces": {
+                "army": self.army.get_status() if self.army else {},
+                "swarm": self.swarm.get_status() if self.swarm else {},
+                "parasite": self.parasite.get_status() if self.parasite else {},
+                "worms": self.worms.get_status() if self.worms else {},
+                "octopus": self.octopus.get_status() if self.octopus else {},
+                "jellyfish": self.jellyfish.get_status() if self.jellyfish else {},
+                "snail": self.snail.get_status() if self.snail else {},
+                "neural": self.neural.get_status() if self.neural else {},
+                "sleep": self.sleep.get_status() if self.sleep else {}
+            },
+            "systems_connected": {
+                "defense": self.defense is not None,
+                "risk": self.risk is not None,
+                "emotional": self.emotional is not None,
+                "memory": self.memory is not None,
+                "persistence": self.persistence is not None,
+                "metaphorical": self.metaphorical is not None,
+                "self_modifier": self.self_modifier is not None
+            }
+        }
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# ٥. الاختبار الذاتي
+# ═══════════════════════════════════════════════════════════════════════
+
 if __name__ == "__main__":
     print("=" * 70)
-    print("🌌 SkyOS v10 - Sama Advanced Tactics (الأنظمة الرقمية الذكية)")
-    print("تحت إمرة السيد أحمد")
+    print("اختبار القائد العام – سلاح سماء ودرع السيد")
     print("=" * 70)
     
-    tactics = SamaAdvancedTactics(master_name="أحمد")
+    commander = SamaAdvancedTactics()
     
-    # اختبار بعض الأنظمة
-    print("\n🔧 اختبار الشيفرات المتحولة:")
-    morph = tactics.create_morphing_code("test_morph", {"core_functions": ["read", "write", "process"]})
-    result = morph.morph("high_load")
-    print(f"   التكيف: {result['environment']} | الإصدار: {result['morph_version']}")
+    print(f"\n📊 الحالة: DEFCON {commander.defcon_level}")
     
-    print("\n🐜 اختبار الجيش البرمجي:")
-    tactics.deploy_army(100, "concentrated")
-    print(f"   حجم الجيش: {tactics.software_armies.army_size}")
+    print(f"\n🛡️ اختبار حماية السيد:")
+    protection = commander.protect_master(threat_level=0.8, threat_description="هجوم مباشر على السيد")
+    print(f"   البروتوكول: {protection['protocol']}")
+    print(f"   DEFCON: {protection['defcon']}")
+    for action in protection['actions_taken']:
+        print(f"   ✓ {action}")
     
-    print("\n📡 اختبار الاتصال العصبي:")
-    tactics.neural_comms.create_channel("test_channel")
-    tactics.neural_comms.send("test_channel", "بيان تجريبي")
-    received = tactics.neural_comms.receive("test_channel")
-    print(f"   تم استلام: {received}")
+    print(f"\n⚔️ اختبار هجوم مضاد:")
+    counter = commander.counter_attack("node_attacker_1", threat_level=0.7)
+    print(f"   العملية: {counter['operation']}")
+    print(f"   القوة الكلية: {counter['total_power']:.1f}")
     
-    print("\n🕸️ اختبار الطفيل السلوكي:")
-    tactics.digital_parasite.create_link("component_A", "component_B")
-    print(f"   الروابط الخفية: {len(tactics.digital_parasite.hidden_links)}")
+    print(f"\n💀 اختبار بروتوكول النجاة:")
+    survival = commander.survival_protocol("هجوم شامل")
+    for action in survival['actions']:
+        print(f"   ✓ {action}")
     
-    print("\n🐛 اختبار الديدان الخيطية:")
-    worm_id = tactics.thread_worms.spawn_worm("explorer", {"action": "scan"}, ["node_1", "node_2"])
-    new_targets = tactics.thread_worms.replicate(worm_id)
-    print(f"   الدودة: {worm_id[:16]}... | تكاثرت إلى {len(new_targets)} عقدة جديدة")
+    print(f"\n🚨 اختبار بروتوكول الطوارئ:")
+    emergency = commander.emergency_protocol("تهديد وجودي")
+    for action in emergency['actions']:
+        print(f"   ✓ {action}")
     
-    print("\n📦 اختبار الحزم المؤرشفة:")
-    tactics.archive.archive("test_pkg", {"test": "data"}, ttl_days=30)
-    restored = tactics.archive.restore("test_pkg")
-    print(f"   استعادة: {restored is not None}")
+    print(f"\n📊 حالة القوات:")
+    status = commander.get_status()
+    for force_name, force_status in status['forces'].items():
+        if force_status:
+            print(f"   {force_name}: {force_status}")
     
-    print("\n🔄 اختبار التكيّف العميق:")
-    adaptation = tactics.deep_adaptation.adapt({"load": 0.85, "available_nodes": 20})
-    print(f"   طبقة التكيف: {adaptation['layer']} | العقد: {adaptation['new_topology']['nodes']}")
+    print(f"\n📋 إحصائيات:")
+    print(f"   معارك: {status['total_battles']}")
+    print(f"   حماية السيد: {status['total_master_protections']}")
     
-    print("\n🪼 اختبار القنديل الشبكي:")
-    for i in range(5):
-        tactics.jellyfish_net.add_tentacle(f"node_{i}")
-    print(f"   أطراف القنديل: {len(tactics.jellyfish_net.tentacles)}")
-    
-    print("\n🐙 اختبار الأخطبوط الرقمي:")
-    tactics.digital_octopus.coordinate(["engine_1", "engine_2", "engine_3", "memory_core"])
-    print(f"   المكونات المنسقة: {len(tactics.digital_octopus.coordination_matrix)}")
-    
-    print("\n🐚 اختبار الحلزون المخروطي:")
-    tactics.cone_snail.fire_harpoon("target_system", {"action": "data_harvest"})
-    print(f"   الحراب المنطلقة: {len(tactics.cone_snail.harpoons)}")
-    
-    print("\n🎯 اختبار السرب التكتيكي:")
-    swarm_power = tactics.deploy_swarm(["unit_1", "unit_2", "unit_3"], [10.0, 15.0, 20.0])
-    print(f"   قوة السرب: {swarm_power:.2f}")
-    
-    print("\n📊 الحالة الكاملة:")
-    status = tactics.get_status()
-    print(f"   الأنظمة المتصلة: {len(status['systems'])}")
-    print(f"   الأحداث التكتيكية: {status['tactical_events_count']}")
-    print(f"   متصل بـ Risk Manager: {status['risk_manager_connected']}")
-    
-    print("\n✨ جميع الأنظمة الرقمية تعمل بكامل قوتها تحت إمرة السيد")
-    print("🔗 يمكن ربط هذا الملف مع StrategicRiskManagement عبر connect_tactics_to_risk_manager()")
+    print("\n✅ القائد العام جاهز. سلاح سماء مشهر للدفاع عن السيد فقط.")
