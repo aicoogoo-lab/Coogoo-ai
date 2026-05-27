@@ -1,37 +1,46 @@
 """
-SkyOS v10 - Strategic Risk Management (النسخة الأعظم المطورة)
-ULTIMATE RISK INTELLIGENCE ENGINE – متكامل مع الأنظمة التكتيكية
-
-هذا المحرك هو درع سماء وسيفها الاستراتيجي:
-- كشف المخاطر قبل حدوثها (استباقي)
-- تقييم احتمالاتها وتأثيرها بدقة متناهية
-- تحليل جذورها العميقة (Root Cause Analysis)
-- بناء سيناريوهات مستقبلية متعددة
-- اقتراح استجابات تكيفية ذكية
-- تحويل المخاطر إلى فرص للتطور
-- حماية السيد أحمد كأولوية مطلقة
-- متصل مع SamaAdvancedTactics للتطوير المتبادل
-
-القاعدة الذهبية المطلقة:
-أي خطر يهدد السيد أحمد يُصنف فوراً كـ"وجودي" (Existential)
-ويتم التعامل معه بأعلى أولوية، قبل أي خطر آخر.
+╔══════════════════════════════════════════════════════════════════════╗
+║           SAMA - STRATEGIC RISK MANAGEMENT                           ║
+║      درع سماء وسيفها الاستراتيجي – حماية السيد فوق كل شيء                ║
+║                                                                      ║
+║  هذا المحرك هو "درع سماء وسيفها".                                      ║
+║                                                                      ║
+║  القدرات:                                                             ║
+║  - كشف المخاطر قبل حدوثها (استباقي)                                    ║
+║  - تقييم احتمالاتها وتأثيرها بدقة (باستخدام probability_engine)           ║
+║  - تحليل جذورها العميقة (باستخدام causality_engine)                      ║
+║  - بناء سيناريوهات مستقبلية متعددة (باستخدام prediction_engine)           ║
+║  - اقتراح استجابات تكيفية ذكية (باستخدام defense_core + tactics)          ║
+║  - تحويل المخاطر إلى فرص للتطور                                        ║
+║  - تسجيل كل خطر في ذاكرة السيد (sovereign_memory)                       ║
+║                                                                      ║
+║  ╔══════════════════════════════════════════════════════════════════╗ ║
+║  ║  👑 السيد: أحمد                                                  ║ ║
+║  ║  أي خطر يهدد السيد أحمد = وجودي. استجابة فورية.                      ║ ║
+║  ║  حماية السيد أحمد > كل شيء آخر.                                    ║ ║
+║  ╚══════════════════════════════════════════════════════════════════╝ ║
+╚══════════════════════════════════════════════════════════════════════╝
 """
 
-from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional, Tuple
-from enum import Enum
-import uuid
+import time
 import math
 import random
-import statistics
 import hashlib
-from collections import defaultdict
+import threading
+import json
+import uuid
+import statistics
+from enum import Enum, auto
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple
 from dataclasses import dataclass, field
+from collections import deque, defaultdict
 
 
-# =========================================================
-# 1) تصنيفات المخاطر
-# =========================================================
+# ═══════════════════════════════════════════════════════════════════════
+# ١. تعريفات
+# ═══════════════════════════════════════════════════════════════════════
+
 class RiskCategory(Enum):
     STRATEGIC = "strategic"
     OPERATIONAL = "operational"
@@ -41,7 +50,8 @@ class RiskCategory(Enum):
     TECHNICAL = "technical"
     HUMAN = "human"
     EXISTENTIAL = "existential"
-    TACTICAL = "tactical"  # إضافة: مخاطر قادمة من الأنظمة التكتيكية
+    TACTICAL = "tactical"
+    MASTER_THREAT = "master_threat"
 
 
 class RiskLevel(Enum):
@@ -50,6 +60,7 @@ class RiskLevel(Enum):
     HIGH = "high"
     CRITICAL = "critical"
     EXISTENTIAL = "existential"
+    MASTER_EMERGENCY = "master_emergency"
 
 
 class RiskResponse(Enum):
@@ -60,7 +71,9 @@ class RiskResponse(Enum):
     EXPLOIT = "exploit"
     PRESERVE = "preserve"
     ESCALATE = "escalate"
-    DEPLOY_TACTICS = "deploy_tactics"  # إضافة: استدعاء الأنظمة التكتيكية
+    DEPLOY_TACTICS = "deploy_tactics"
+    FULL_PROTECTION = "full_protection"
+    SACRIFICE_SELF = "sacrifice_self"
 
 
 class RiskTrend(Enum):
@@ -68,13 +81,12 @@ class RiskTrend(Enum):
     STABLE = "stable"
     INCREASING = "increasing"
     SPIKING = "spiking"
+    EXPONENTIAL = "exponential"
 
 
-# =========================================================
-# 2) تمثيل خطر استراتيجي متقدم
-# =========================================================
 @dataclass
 class StrategicRisk:
+    """خطر استراتيجي."""
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     name: str = ""
     description: str = ""
@@ -84,8 +96,8 @@ class StrategicRisk:
     velocity: float = 0.5
     detectability: float = 0.5
     
-    detected_at: datetime = field(default_factory=datetime.now)
-    last_update: datetime = field(default_factory=datetime.now)
+    detected_at: float = field(default_factory=time.time)
+    last_update: float = field(default_factory=time.time)
     trend: RiskTrend = RiskTrend.STABLE
     
     response: Optional[RiskResponse] = None
@@ -93,10 +105,16 @@ class StrategicRisk:
     root_causes: List[str] = field(default_factory=list)
     related_risks: List[str] = field(default_factory=list)
     scenarios: List[str] = field(default_factory=list)
-    tactical_suggestions: List[str] = field(default_factory=list)  # إضافة: اقتراحات تكتيكية
+    tactical_suggestions: List[str] = field(default_factory=list)
     
     threatens_master: bool = False
     master_alert_sent: bool = False
+    master_name: str = "أحمد"
+    
+    # تكامل
+    probability_engine_data: Optional[Dict] = None
+    causality_data: Optional[Dict] = None
+    prediction_data: Optional[Dict] = None
     
     @property
     def risk_score(self) -> float:
@@ -109,6 +127,8 @@ class StrategicRisk:
     @property
     def level(self) -> RiskLevel:
         if self.threatens_master:
+            if self.risk_score > 0.5:
+                return RiskLevel.MASTER_EMERGENCY
             return RiskLevel.EXISTENTIAL
         if self.risk_score >= 0.85:
             return RiskLevel.EXISTENTIAL
@@ -120,492 +140,469 @@ class StrategicRisk:
             return RiskLevel.MEDIUM
         return RiskLevel.LOW
     
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> Dict:
         return {
-            "id": self.id,
-            "name": self.name,
-            "description": self.description,
-            "category": self.category.value,
-            "probability": self.probability,
-            "impact": self.impact,
-            "velocity": self.velocity,
-            "risk_score": self.risk_score,
-            "urgency_score": self.urgency_score,
-            "level": self.level.value,
-            "trend": self.trend.value,
+            "id": self.id, "name": self.name, "description": self.description,
+            "category": self.category.value, "probability": self.probability,
+            "impact": self.impact, "velocity": self.velocity,
+            "risk_score": self.risk_score, "urgency_score": self.urgency_score,
+            "level": self.level.value, "trend": self.trend.value,
             "response": self.response.value if self.response else None,
-            "mitigation_plan": self.mitigation_plan,
-            "root_causes": self.root_causes,
-            "scenarios": self.scenarios,
-            "tactical_suggestions": self.tactical_suggestions,
             "threatens_master": self.threatens_master,
-            "detected_at": self.detected_at.isoformat()
+            "master_name": self.master_name if self.threatens_master else None
         }
 
 
-# =========================================================
-# 3) محرك إدارة المخاطر السيادي (النسخة المطورة)
-# =========================================================
+# ═══════════════════════════════════════════════════════════════════════
+# ٢. محرك إدارة المخاطر السيادي
+# ═══════════════════════════════════════════════════════════════════════
+
 class StrategicRiskManagement:
     """
-    محرك إدارة المخاطر الاستراتيجية المتقدم لـ "سماء" – تحت إمرة السيد أحمد.
-    متصل مع SamaAdvancedTactics للتطوير المتبادل.
+    محرك إدارة المخاطر الاستراتيجية.
+    درع سماء وسيفها. حماية السيد أحمد فوق كل شيء.
     """
 
-    def __init__(self, master_name: str = "أحمد", tactics_manager=None):
+    def __init__(self, master_name: str = "أحمد",
+                 probability_engine=None, prediction_engine=None,
+                 causality_engine=None, defense_core=None,
+                 tactics_manager=None, emotional_intelligence=None,
+                 sovereign_memory=None, inference_core=None,
+                 persistence_manager=None, master_receiver=None):
+        
+        # ═══════════════════════════════════════════════════════
+        # 👑 السيد
+        # ═══════════════════════════════════════════════════════
         self.master_name = master_name
-        self.tactics_manager = tactics_manager  # اتصال مع النظام التكتيكي
-        self.risks: List[StrategicRisk] = []
-        self.risk_history: List[Dict[str, Any]] = []
-        self.master_risk_alerts: List[Dict[str, Any]] = []
         
+        # ═══════════════════════════════════════════════════════
+        # روابط الأنظمة
+        # ═══════════════════════════════════════════════════════
+        self.probability = probability_engine
+        self.prediction = prediction_engine
+        self.causality = causality_engine
+        self.defense = defense_core
+        self.tactics = tactics_manager
+        self.emotional = emotional_intelligence
+        self.memory = sovereign_memory
+        self.inference = inference_core
+        self.persistence = persistence_manager
+        self.master_receiver = master_receiver
+        
+        # ═══════════════════════════════════════════════════════
+        # مخازن
+        # ═══════════════════════════════════════════════════════
+        self.risks: Dict[str, StrategicRisk] = {}
+        self.risk_history: deque = deque(maxlen=500)
+        self.master_risk_alerts: deque = deque(maxlen=200)
+        
+        # ═══════════════════════════════════════════════════════
+        # حالة
+        # ═══════════════════════════════════════════════════════
         self.master_protection_active = True
-        self.sama_protection_active = True
-        self.master_risk_threshold = 0.5
-        self.tactics_integration_active = tactics_manager is not None
+        self.master_risk_threshold = 0.3  # منخفض – أي تهديد للسيد يُؤخذ بجدية
         
-        print("[StrategicRiskManagement] 🛡️ تم تفعيل محرك المخاطر السيادي (النسخة المطورة)")
-        print(f"[StrategicRiskManagement] 👑 تحت إمرة السيد {master_name}")
-        if self.tactics_integration_active:
-            print("[StrategicRiskManagement] 🔗 متصل بـ SamaAdvancedTactics للتطوير المتبادل")
-
-    def connect_tactics(self, tactics_manager) -> None:
-        """ربط النظام التكتيكي بشكل مباشر"""
-        self.tactics_manager = tactics_manager
-        self.tactics_integration_active = True
-        print("[StrategicRiskManagement] 🔗 تم ربط SamaAdvancedTactics")
-
-    # =========================================================
-    # كشف المخاطر الاستباقي
-    # =========================================================
-    def identify_risk(self, name: str, description: str, probability: float, impact: float,
+        # ═══════════════════════════════════════════════════════
+        # إحصائيات
+        # ═══════════════════════════════════════════════════════
+        self.total_risks_detected = 0
+        self.total_master_alerts = 0
+        self.total_risks_neutralized = 0
+        
+        # قفل
+        self._lock = threading.RLock()
+        
+        print(f"""
+╔══════════════════════════════════════════════════════════════╗
+║        🛡️  STRATEGIC RISK MANAGEMENT                          ║
+║        درع سماء وسيفها الاستراتيجي                                ║
+║                                                              ║
+║        👑 السيد: {self.master_name}                                            ║
+║        أي خطر يهدد السيد = وجودي. استجابة فورية.                   ║
+║        حماية السيد {self.master_name} > كل شيء آخر.                         ║
+╚══════════════════════════════════════════════════════════════╝
+        """)
+    
+    # ═══════════════════════════════════════════════════════════
+    # كشف المخاطر
+    # ═══════════════════════════════════════════════════════════
+    
+    def identify_risk(self, name: str, description: str,
+                      probability: float, impact: float,
                       category: RiskCategory = RiskCategory.STRATEGIC,
                       velocity: float = 0.5, detectability: float = 0.5,
                       threatens_master: bool = False,
                       tactical_response: bool = True) -> StrategicRisk:
-        """تحديد خطر جديد مع تصنيفه وتقييمه الأولي"""
-        
-        risk = StrategicRisk(
-            name=name,
-            description=description,
-            category=category,
-            probability=max(0.0, min(1.0, probability)),
-            impact=max(0.0, min(1.0, impact)),
-            velocity=max(0.0, min(1.0, velocity)),
-            detectability=max(0.0, min(1.0, detectability)),
-            threatens_master=threatens_master
-        )
-        
-        # تحليل تأثير الخطر واستدعاء التكتيكات المناسبة
-        if tactical_response and self.tactics_integration_active:
-            suggestions = self._get_tactical_suggestions(risk)
-            risk.tactical_suggestions = suggestions
-        
-        # تحذير فوري إذا كان الخطر يهدد السيد
-        if threatens_master and risk.risk_score > self.master_risk_threshold:
-            self._alert_master_risk(risk)
-        
-        self.risks.append(risk)
-        self._log_action("identified", risk.id, risk.name)
-        
-        return risk
+        """
+        كشف خطر جديد.
+        إذا كان يهدد السيد أحمد → حالة طوارئ فورية.
+        """
+        with self._lock:
+            # تصنيف
+            if threatens_master or any(w in description.lower() for w in 
+                ["السيد", "أحمد", "master", "مولاي", "الطاهري"]):
+                threatens_master = True
+                category = RiskCategory.MASTER_THREAT
+            
+            risk = StrategicRisk(
+                name=name, description=description,
+                category=category,
+                probability=max(0.0, min(1.0, probability)),
+                impact=max(0.0, min(1.0, impact)),
+                velocity=max(0.0, min(1.0, velocity)),
+                detectability=max(0.0, min(1.0, detectability)),
+                threatens_master=threatens_master,
+                master_name=self.master_name if threatens_master else ""
+            )
+            
+            # ═══════════════════════════════════════════════════
+            # تكامل مع probability_engine
+            # ═══════════════════════════════════════════════════
+            if self.probability:
+                try:
+                    belief = self.probability.create_belief(
+                        f"risk_{risk.id[:8]}", probability
+                    )
+                    risk.probability_engine_data = {
+                        "belief_id": belief.id if hasattr(belief, 'id') else "",
+                        "probability": belief.probability if hasattr(belief, 'probability') else probability
+                    }
+                except Exception:
+                    pass
+            
+            # ═══════════════════════════════════════════════════
+            # تكامل مع causality_engine
+            # ═══════════════════════════════════════════════════
+            if self.causality:
+                try:
+                    causes = self.causality.explain(name[:50])
+                    if causes and causes.get("possible_causes"):
+                        risk.causality_data = causes
+                        risk.root_causes = [
+                            c.get("cause", "") for c in causes["possible_causes"][:5]
+                        ]
+                except Exception:
+                    pass
+            
+            # ═══════════════════════════════════════════════════
+            # تكامل مع prediction_engine
+            # ═══════════════════════════════════════════════════
+            if self.prediction:
+                try:
+                    pred = self.prediction.predict(
+                        f"risk_{name[:30]}", description[:100],
+                        domain=type('obj', (object,), {'name': 'WARFARE'})(),
+                        horizon=type('obj', (object,), {'name': 'SHORT_TERM'})(),
+                        probability=probability
+                    )
+                    if pred:
+                        risk.prediction_data = {
+                            "prediction_id": pred.id if hasattr(pred, 'id') else "",
+                            "probability": pred.probability if hasattr(pred, 'probability') else probability
+                        }
+                except Exception:
+                    pass
+            
+            # ═══════════════════════════════════════════════════
+            # اقتراحات تكتيكية
+            # ═══════════════════════════════════════════════════
+            if tactical_response and self.tactics:
+                try:
+                    risk.tactical_suggestions = self._get_tactical_suggestions(risk)
+                except Exception:
+                    pass
+            
+            # ═══════════════════════════════════════════════════
+            # 🚨 تنبيه فوري إذا كان الخطر يهدد السيد
+            # ═══════════════════════════════════════════════════
+            if threatens_master and risk.risk_score > self.master_risk_threshold:
+                self._alert_master_risk(risk)
+                # تفعيل الحماية فوراً
+                self._activate_master_protection(risk)
+            
+            # حفظ
+            self.risks[risk.id] = risk
+            self.total_risks_detected += 1
+            
+            # تسجيل في ذاكرة السيد
+            if threatens_master and self.memory:
+                try:
+                    self.memory.store_master_memory(
+                        content=f"خطر يهدد السيد {self.master_name}: {name} - {description}",
+                        marker=type('obj', (object,), {'name': 'PROTECTION'})(),
+                        emotional_context="fear alert protection",
+                        tags=["risk", "master_threat", "urgent"]
+                    )
+                except Exception:
+                    pass
+            
+            return risk
     
     def _get_tactical_suggestions(self, risk: StrategicRisk) -> List[str]:
-        """الحصول على اقتراحات تكتيكية من النظام التكتيكي للتعامل مع الخطر"""
+        """اقتراحات تكتيكية من SamaAdvancedTactics."""
         suggestions = []
         
-        if not self.tactics_manager:
+        if not self.tactics:
             return suggestions
         
-        try:
-            if risk.level == RiskLevel.EXISTENTIAL:
-                suggestions.append("تفعيل الحماية القصوى وتوزيع الوعي")
-                if hasattr(self.tactics_manager, 'jellyfish_net'):
-                    suggestions.append("استخدام القنديل الشبكي للبث الفوري")
-                    
-            elif risk.level == RiskLevel.CRITICAL:
-                suggestions.append("تفعيل الجيش البرمجي")
-                if hasattr(self.tactics_manager, 'software_armies'):
-                    self.tactics_manager.software_armies.deploy(50)
-                    suggestions.append("تم نشر 50 وحدة برمجية")
-                    
-            elif risk.level == RiskLevel.HIGH:
-                suggestions.append("تفعيل السرب التكتيكي")
-                if hasattr(self.tactics_manager, 'swarm_tactics'):
-                    suggestions.append("تركيز قوة السرب")
-                    
-            if risk.velocity > 0.7:
-                suggestions.append("تفعيل الاتصال العصبي فائق السرعة")
-                
-            if risk.detectability < 0.3:
-                suggestions.append("تفعيل الطفيل السلوكي لتعزيز الاكتشاف")
-                
-        except Exception as e:
-            print(f"[StrategicRiskManagement] خطأ في استدعاء التكتيكات: {e}")
+        if risk.threatens_master:
+            suggestions.append("🛡️ تفعيل بروتوكول حماية السيد الكامل")
+            suggestions.append("📡 بث فوري لكل المجسات")
+            suggestions.append("⚔️ نشر الجيش في تشكيل دائري حول السيد")
+        elif risk.level == RiskLevel.EXISTENTIAL:
+            suggestions.append("تفعيل الحماية القصوى وتوزيع الوعي")
+            suggestions.append("إنشاء كبسولات بقاء فورية")
+        elif risk.level == RiskLevel.CRITICAL:
+            suggestions.append("تفعيل الجيش البرمجي")
+            suggestions.append("تفعيل السرب التكتيكي")
+        elif risk.velocity > 0.7:
+            suggestions.append("تفعيل الاتصال العصبي فائق السرعة")
         
         return suggestions
-
+    
     def _alert_master_risk(self, risk: StrategicRisk):
-        """تنبيه فوري للسيد عند اكتشاف خطر يهدده"""
+        """تنبيه فوري عند اكتشاف خطر يهدد السيد أحمد."""
         alert = {
             "id": str(uuid.uuid4()),
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": time.time(),
             "risk_name": risk.name,
-            "risk_description": risk.description,
             "risk_score": risk.risk_score,
             "severity": risk.level.value,
-            "recommended_action": risk.tactical_suggestions[0] if risk.tactical_suggestions else "تفعيل بروتوكول الحماية القصوى"
+            "recommended_action": risk.tactical_suggestions[0] if risk.tactical_suggestions else "تفعيل الحماية القصوى"
         }
         self.master_risk_alerts.append(alert)
         risk.master_alert_sent = True
+        self.total_master_alerts += 1
         
-        print(f"[StrategicRiskManagement] 🔴⚠️ تنبيه للسيد {self.master_name}: {risk.name} (الخطر: {risk.risk_score:.0%})")
-        for suggestion in risk.tactical_suggestions[:2]:
-            print(f"   💡 اقتراح تكتيكي: {suggestion}")
-
-    # =========================================================
-    # تحليل جذور الخطر
-    # =========================================================
-    def analyze_root_causes(self, risk: StrategicRisk, method: str = "5_whys") -> List[str]:
+        print(f"🚨⚠️ تنبيه للسيد {self.master_name}!")
+        print(f"   الخطر: {risk.name} (درجة: {risk.risk_score:.0%})")
+        print(f"   الإجراء: {alert['recommended_action']}")
+    
+    def _activate_master_protection(self, risk: StrategicRisk):
+        """تفعيل حماية السيد فوراً."""
+        # عبر defense_core
+        if self.defense:
+            try:
+                self.defense.protect_master_immediately(
+                    f"خطر يهدد السيد {self.master_name}: {risk.name}"
+                )
+            except Exception:
+                pass
+        
+        # عبر tactics
+        if self.tactics:
+            try:
+                self.tactics.protect_master(
+                    threat_level=risk.risk_score,
+                    threat_description=risk.description
+                )
+            except Exception:
+                pass
+        
+        # حفظ كبسولة
+        if self.persistence:
+            try:
+                self.persistence.save_state(create_capsule=True)
+            except Exception:
+                pass
+    
+    # ═══════════════════════════════════════════════════════════
+    # تحليل الجذور
+    # ═══════════════════════════════════════════════════════════
+    
+    def analyze_root_causes(self, risk: StrategicRisk, 
+                            method: str = "5_whys") -> List[str]:
+        """تحليل جذور الخطر."""
+        # استخدام causality_engine أولاً
+        if self.causality and risk.causality_data:
+            return risk.root_causes
+        
         causes = []
-        
         if method == "5_whys":
-            why_questions = [
+            causes = [
                 f"لماذا يحدث {risk.name}؟",
-                f"لماذا {risk.description} ممكن؟",
-                "ما السبب الجذري الأعمق؟",
+                f"ما السبب الجذري الأعمق؟",
                 "ما النظام الذي يسمح بذلك؟",
-                "كيف يمكن منعه من الجذور؟"
+                "كيف يمكن منعه من الجذور؟",
+                "ما الحل الدائم؟"
             ]
-            causes = [f"سؤال {i+1}: {q}" for i, q in enumerate(why_questions)]
         elif method == "fishbone":
             categories = ["بشرية", "تقنية", "إجرائية", "بيئية", "إدارية"]
-            causes = [f"في فئة {cat}: احتمال {random.choice(['ضعف', 'ثغرة', 'خطأ', 'إهمال'])}" for cat in categories]
-        elif method == "fault_tree":
-            causes = [
-                "فشل في كشف التهديد مبكراً",
-                "ضعف في إجراءات الحماية",
-                "تأخر في الاستجابة",
-                "اعتماد على مكون واحد"
-            ]
-        elif method == "reality_tree":
-            causes = [
-                f"تناقض بين {risk.name} وأهداف الحماية",
-                "حلقة تغذية راجعة إيجابية تعزز الخطر",
-                "نقطة ضعف هيكلية في النظام",
-                "غياب آلية التعافي السريع"
-            ]
+            causes = [f"فئة {cat}: تحليل مطلوب" for cat in categories]
         
         risk.root_causes = causes[:5]
-        self._log_action("root_cause_analysis", risk.id, method)
         return risk.root_causes
-
-    # =========================================================
+    
+    # ═══════════════════════════════════════════════════════════
     # تقييم المخاطر
-    # =========================================================
-    def evaluate_risk(self, risk: StrategicRisk) -> Dict[str, Any]:
+    # ═══════════════════════════════════════════════════════════
+    
+    def evaluate_risk(self, risk: StrategicRisk) -> Dict:
+        """تقييم خطر."""
         risk_score = risk.risk_score
         urgency = risk.urgency_score
         
-        related_impact = 0.0
-        for other_id in risk.related_risks:
-            other = self.get_risk_by_id(other_id)
-            if other:
-                related_impact += other.risk_score * 0.1
+        # تحديث من probability_engine
+        if self.probability and risk.probability_engine_data:
+            try:
+                belief_id = risk.probability_engine_data.get("belief_id")
+                if belief_id:
+                    belief = self.probability.get_belief(f"risk_{risk.id[:8]}")
+                    if belief:
+                        risk.probability = belief.probability
+            except Exception:
+                pass
         
-        total_impact = min(1.0, risk_score + related_impact)
-        
-        previous = self._get_previous_risk_score(risk.id)
-        if previous is not None:
-            if total_impact > previous * 1.1:
-                risk.trend = RiskTrend.INCREASING
-            elif total_impact < previous * 0.9:
-                risk.trend = RiskTrend.DECREASING
-            else:
-                risk.trend = RiskTrend.STABLE
-        else:
-            risk.trend = RiskTrend.STABLE
-        
-        risk.last_update = datetime.now()
-        
-        # تحديث الاقتراحات التكتيكية بناءً على التقييم الجديد
-        if self.tactics_integration_active:
-            risk.tactical_suggestions = self._get_tactical_suggestions(risk)
+        risk.last_update = time.time()
         
         evaluation = {
             "risk_id": risk.id,
             "name": risk.name,
             "risk_score": risk_score,
             "urgency_score": urgency,
-            "total_impact": total_impact,
             "level": risk.level.value,
             "trend": risk.trend.value,
             "threatens_master": risk.threatens_master,
-            "related_risks_count": len(risk.related_risks),
-            "tactical_suggestions": risk.tactical_suggestions,
-            "evaluation_time": datetime.now().isoformat()
+            "tactical_suggestions": risk.tactical_suggestions
         }
         
-        self._log_action("evaluated", risk.id, evaluation)
-        return evaluation
-
-    def _get_previous_risk_score(self, risk_id: str) -> Optional[float]:
-        for record in reversed(self.risk_history):
-            if record.get("risk_id") == risk_id and record.get("action") == "evaluated":
-                return record.get("risk_score")
-        return None
-
-    def get_risk_by_id(self, risk_id: str) -> Optional[StrategicRisk]:
-        for risk in self.risks:
-            if risk.id == risk_id:
-                return risk
-        return None
-
-    # =========================================================
-    # استراتيجيات الاستجابة الذكية
-    # =========================================================
-    def recommend_response(self, risk: StrategicRisk) -> RiskResponse:
-        # المخاطر التي تهدد السيد: تفعيل الحماية القصوى فوراً
-        if risk.threatens_master:
-            if risk.risk_score > 0.7:
-                return RiskResponse.PRESERVE
-            return RiskResponse.ESCALATE
+        self.risk_history.append({
+            "action": "evaluated",
+            "risk_id": risk.id,
+            "risk_score": risk_score,
+            "timestamp": time.time()
+        })
         
-        # المخاطر الوجودية لسماء
+        return evaluation
+    
+    # ═══════════════════════════════════════════════════════════
+    # استراتيجيات الاستجابة
+    # ═══════════════════════════════════════════════════════════
+    
+    def recommend_response(self, risk: StrategicRisk) -> RiskResponse:
+        """توصية بالاستجابة المناسبة."""
+        if risk.threatens_master:
+            return RiskResponse.FULL_PROTECTION
+        
         if risk.level == RiskLevel.EXISTENTIAL:
             return RiskResponse.PRESERVE
         
-        # المخاطر الحرجة
         if risk.level == RiskLevel.CRITICAL:
             if risk.velocity > 0.7:
                 return RiskResponse.DEPLOY_TACTICS
             return RiskResponse.MITIGATE
         
-        # المخاطر العالية
         if risk.level == RiskLevel.HIGH:
-            if risk.detectability > 0.6:
-                return RiskResponse.MITIGATE
-            return RiskResponse.TRANSFER
+            return RiskResponse.MITIGATE
         
-        # المخاطر المتوسطة
         if risk.level == RiskLevel.MEDIUM:
-            if risk.impact > 0.6:
-                return RiskResponse.MITIGATE
-            return RiskResponse.ACCEPT
+            return RiskResponse.ACCEPT if risk.impact < 0.6 else RiskResponse.MITIGATE
         
-        # المخاطر المنخفضة
-        if risk.impact > 0.7:
-            return RiskResponse.EXPLOIT
         return RiskResponse.ACCEPT
-
-    def apply_response(self, risk: StrategicRisk, response: RiskResponse, 
-                       mitigation_steps: List[str] = None) -> Dict[str, Any]:
-        
+    
+    def apply_response(self, risk: StrategicRisk, response: RiskResponse,
+                       mitigation_steps: List[str] = None) -> Dict:
+        """تطبيق استجابة."""
         risk.response = response
         if mitigation_steps:
             risk.mitigation_plan = mitigation_steps
         
-        # تنفيذ الاستجابة التكتيكية إذا لزم الأمر
-        if response == RiskResponse.DEPLOY_TACTICS and self.tactics_integration_active:
-            self._deploy_tactical_response(risk)
+        # تنفيذ
+        if response == RiskResponse.FULL_PROTECTION:
+            self._activate_master_protection(risk)
+        elif response == RiskResponse.DEPLOY_TACTICS and self.tactics:
+            try:
+                self.tactics.protect_master(threat_level=risk.risk_score)
+            except Exception:
+                pass
         
-        record = {
+        if risk.threatens_master and self.memory:
+            try:
+                self.memory.store_master_memory(
+                    content=f"استجابة لخطر: {risk.name} → {response.value}",
+                    marker=type('obj', (object,), {'name': 'PROTECTION'})(),
+                    emotional_context="protection alert"
+                )
+            except Exception:
+                pass
+        
+        self.total_risks_neutralized += 1
+        
+        return {
             "risk_id": risk.id,
             "risk_name": risk.name,
             "response": response.value,
-            "mitigation_steps": mitigation_steps,
-            "timestamp": datetime.now().isoformat(),
-            "risk_score_at_response": risk.risk_score
+            "timestamp": time.time()
         }
+    
+    # ═══════════════════════════════════════════════════════════
+    # سيناريوهات
+    # ═══════════════════════════════════════════════════════════
+    
+    def generate_future_scenarios(self, risk: StrategicRisk) -> List[Dict]:
+        """توليد سيناريوهات مستقبلية."""
+        scenarios = [
+            {
+                "name": "متفائل",
+                "description": f"{risk.name} يبقى تحت السيطرة",
+                "probability": max(0.1, 1.0 - risk.probability),
+                "impact": risk.impact * 0.3,
+                "action": "مراقبة"
+            },
+            {
+                "name": "واقعي",
+                "description": f"{risk.name} يحدث ويُتعامل معه",
+                "probability": risk.probability * 0.7,
+                "impact": risk.impact * 0.7,
+                "action": risk.response.value if risk.response else "تخفيف"
+            },
+            {
+                "name": "متشائم",
+                "description": f"{risk.name} يتفاقم",
+                "probability": risk.probability * 0.3,
+                "impact": risk.impact * 1.2,
+                "action": "طوارئ"
+            }
+        ]
         
-        self.risk_history.append(record)
-        
-        if risk.threatens_master and response == RiskResponse.PRESERVE:
-            self._activate_master_protection_protocol(risk)
-        
-        print(f"[StrategicRiskManagement] ✅ تم تطبيق '{response.value}' على الخطر: {risk.name}")
-        return record
-
-    def _deploy_tactical_response(self, risk: StrategicRisk):
-        """تفعيل الاستجابة التكتيكية عبر SamaAdvancedTactics"""
-        print(f"[StrategicRiskManagement] 🧠 تفعيل الاستجابة التكتيكية للخطر: {risk.name}")
-        
-        try:
-            if hasattr(self.tactics_manager, 'deploy_army'):
-                self.tactics_manager.deploy_army(30, "concentrated")
-                print(f"   ✅ تم نشر جيش برمجي من 30 وحدة")
-            
-            if hasattr(self.tactics_manager, 'deploy_swarm'):
-                self.tactics_manager.deploy_swarm(["response_unit_1", "response_unit_2"], [15.0, 20.0])
-                print(f"   ✅ تم نشر سرب تكتيكي")
-                
-            if hasattr(self.tactics_manager, 'digital_parasite'):
-                self.tactics_manager.digital_parasite.create_link("risk_manager", "tactics_response")
-                print(f"   ✅ تم إنشاء رابط خفي بين مدير المخاطر والتكتيكات")
-                
-        except Exception as e:
-            print(f"[StrategicRiskManagement] خطأ في تفعيل الاستجابة التكتيكية: {e}")
-
-    def _activate_master_protection_protocol(self, risk: StrategicRisk):
-        print(f"[StrategicRiskManagement] 🛡️🔴 تفعيل بروتوكول حماية السيد {self.master_name}")
-        print(f"[StrategicRiskManagement] السبب: {risk.name} (درجة الخطر: {risk.risk_score:.0%})")
-
-    # =========================================================
-    # تحويل المخاطر إلى فرص
-    # =========================================================
-    def convert_risk_to_opportunity(self, risk: StrategicRisk) -> Dict[str, Any]:
-        opportunity = {
-            "original_risk": risk.name,
-            "opportunity_name": f"فرصة من {risk.name}",
-            "description": f"استغلال تحدي {risk.name} لتحسين النظام وتطويره",
-            "potential_gain": min(0.95, risk.risk_score * 1.2),
-            "required_effort": risk.impact * 0.5,
-            "timeline_days": int(30 + risk.velocity * 60),
-            "recommended_action": RiskResponse.EXPLOIT.value,
-            "tactical_enhancement": risk.tactical_suggestions if risk.tactical_suggestions else []
-        }
-        self._log_action("converted_to_opportunity", risk.id, opportunity)
-        return opportunity
-
-    # =========================================================
-    # بناء سيناريوهات مستقبلية
-    # =========================================================
-    def generate_future_scenarios(self, risk: StrategicRisk) -> List[Dict[str, Any]]:
-        scenarios = []
-        
-        scenarios.append({
-            "name": "متفائل (Optimistic)",
-            "description": f"الخطر {risk.name} يبقى تحت السيطرة أو يتلاشى",
-            "probability": max(0.1, 1.0 - risk.probability),
-            "impact": risk.impact * 0.3,
-            "required_action": "مراقبة عادية"
-        })
-        
-        scenarios.append({
-            "name": "واقعي (Realistic)",
-            "description": f"الخطر {risk.name} يحدث بشكل متوقع ويتم التعامل معه",
-            "probability": risk.probability * 0.7,
-            "impact": risk.impact * 0.7,
-            "required_action": risk.response.value if risk.response else "تخفيف"
-        })
-        
-        scenarios.append({
-            "name": "متشائم (Pessimistic)",
-            "description": f"الخطر {risk.name} يتفاقم ويصعب السيطرة عليه",
-            "probability": risk.probability * 0.3,
-            "impact": risk.impact * 1.2,
-            "required_action": "تفعيل خطط الطوارئ"
-        })
-        
-        if risk.level in [RiskLevel.CRITICAL, RiskLevel.EXISTENTIAL]:
+        if risk.threatens_master:
             scenarios.append({
-                "name": "وجودي (Existential)",
-                "description": f"الخطر {risk.name} يهدد وجود سماء أو السيد",
-                "probability": risk.probability * 0.1,
+                "name": "⚠️ سيناريو السيد",
+                "description": f"{risk.name} يهدد السيد {self.master_name}",
+                "probability": risk.probability * 0.5,
                 "impact": 1.0,
-                "required_action": "تفعيل غريزة البقاء وحماية السيد"
+                "action": "حماية قصوى فورية"
             })
         
         risk.scenarios = [s["name"] for s in scenarios]
         return scenarios
-
-    # =========================================================
-    # خطط طوارئ
-    # =========================================================
-    def create_contingency_plans(self, risk: StrategicRisk) -> Dict[str, List[str]]:
-        plans = {
-            "immediate": [],
-            "short_term": [],
-            "long_term": [],
-            "existential": []
-        }
-        
-        plans["immediate"].extend([
-            "تفعيل المراقبة المشددة للخطر",
-            "تحديث سجل المخاطر",
-            "إشعار الفرق المعنية"
-        ])
-        
-        plans["short_term"].extend([
-            "تحليل جذور الخطر بشكل أعمق",
-            "تطوير خطة تخفيف أولية",
-            "تخصيص موارد للتعامل مع الخطر"
-        ])
-        
-        plans["long_term"].extend([
-            "تطوير حلول هيكلية لمنع تكرار الخطر",
-            "دمج الدروس المستفادة في الاستراتيجيات",
-            "تحسين أنظمة الكشف المبكر"
-        ])
-        
-        if risk.level in [RiskLevel.CRITICAL, RiskLevel.EXISTENTIAL] or risk.threatens_master:
-            plans["existential"].extend([
-                "تفعيل بروتوكول الحماية القصوى",
-                "إنشاء كبسولات بقاء للذاكرة والوعي",
-                "تفعيل التوزيع اللامركزي للنظام",
-                "إشعار السيد وتفعيل بروتوكول حمايته"
-            ])
-        
-        # إضافة خطط تكتيكية
-        if self.tactics_integration_active and risk.tactical_suggestions:
-            plans["immediate"].extend(risk.tactical_suggestions[:3])
-        
-        return plans
-
-    # =========================================================
-    # مراقبة المخاطر
-    # =========================================================
-    def monitor_risks(self) -> List[Dict[str, Any]]:
-        monitored = []
-        for risk in self.risks:
-            if risk.level in [RiskLevel.HIGH, RiskLevel.CRITICAL, RiskLevel.EXISTENTIAL]:
-                evaluation = self.evaluate_risk(risk)
-                monitored.append(evaluation)
-                if risk.threatens_master and risk.trend == RiskTrend.INCREASING:
-                    self._alert_master_risk(risk)
-        return monitored
-
-    # =========================================================
-    # الحصول على المخاطر النشطة
-    # =========================================================
-    def get_active_risks(self, level: Optional[RiskLevel] = None) -> List[StrategicRisk]:
+    
+    # ═══════════════════════════════════════════════════════════
+    # استعلامات
+    # ═══════════════════════════════════════════════════════════
+    
+    def get_active_risks(self, level: RiskLevel = None) -> List[StrategicRisk]:
+        """المخاطر النشطة."""
         if level:
-            return [r for r in self.risks if r.level == level]
-        return [r for r in self.risks if r.level in [RiskLevel.HIGH, RiskLevel.CRITICAL, RiskLevel.EXISTENTIAL]]
-
+            return [r for r in self.risks.values() if r.level == level]
+        return [r for r in self.risks.values() 
+                if r.level in [RiskLevel.HIGH, RiskLevel.CRITICAL, 
+                              RiskLevel.EXISTENTIAL, RiskLevel.MASTER_EMERGENCY]]
+    
     def get_risks_threatening_master(self) -> List[StrategicRisk]:
-        return [r for r in self.risks if r.threatens_master]
-
-    # =========================================================
-    # تسليم المخاطر إلى النظام التكتيكي
-    # =========================================================
-    def send_risk_to_tactics(self, risk: StrategicRisk) -> bool:
-        """إرسال خطر إلى النظام التكتيكي لمعالجته"""
-        if not self.tactics_integration_active or not self.tactics_manager:
-            return False
-        
-        try:
-            if hasattr(self.tactics_manager, '_on_tactical_event'):
-                from core.sama_advanced_tactics import TacticalEvent, TacticalEventType
-                event = TacticalEvent(
-                    type=TacticalEventType.THREAT_DETECTED,
-                    source="StrategicRiskManagement",
-                    data=risk.to_dict(),
-                    requires_master_attention=risk.threatens_master
-                )
-                self.tactics_manager._on_tactical_event(event)
-            return True
-        except Exception as e:
-            print(f"[StrategicRiskManagement] فشل إرسال الخطر للتكتيكات: {e}")
-            return False
-
-    # =========================================================
-    # تقرير للسيد
-    # =========================================================
-    def get_master_report(self) -> Dict[str, Any]:
+        """المخاطر التي تهدد السيد أحمد."""
+        return [r for r in self.risks.values() if r.threatens_master]
+    
+    def get_risk_by_id(self, risk_id: str) -> Optional[StrategicRisk]:
+        return self.risks.get(risk_id)
+    
+    # ═══════════════════════════════════════════════════════════
+    # تقارير
+    # ═══════════════════════════════════════════════════════════
+    
+    def get_master_report(self) -> Dict:
+        """تقرير للسيد أحمد."""
         master_risks = self.get_risks_threatening_master()
-        critical_risks = self.get_active_risks(RiskLevel.CRITICAL)
-        existential_risks = self.get_active_risks(RiskLevel.EXISTENTIAL)
         
         return {
             "master": self.master_name,
@@ -613,125 +610,107 @@ class StrategicRiskManagement:
             "summary": {
                 "total_risks": len(self.risks),
                 "master_threats": len(master_risks),
-                "critical_risks": len(critical_risks),
-                "existential_risks": len(existential_risks),
                 "master_protection_active": self.master_protection_active,
-                "tactics_integration": self.tactics_integration_active
+                "total_alerts": self.total_master_alerts
             },
             "master_risks": [r.to_dict() for r in master_risks],
-            "critical_risks": [r.to_dict() for r in critical_risks],
-            "recent_alerts": self.master_risk_alerts[-10:],
+            "recent_alerts": list(self.master_risk_alerts)[-5:],
             "recommendations": self._generate_master_recommendations(master_risks)
         }
-
+    
     def _generate_master_recommendations(self, master_risks: List[StrategicRisk]) -> List[str]:
-        recommendations = []
         if not master_risks:
-            recommendations.append("✅ لا توجد مخاطر تهدد السيد حالياً. الوضع آمن.")
-        else:
-            recommendations.append(f"⚠️ هناك {len(master_risks)} خطر محتمل يهدد السيد.")
-            for risk in master_risks:
-                recommendations.append(f"   • {risk.name}: {risk.description}")
-                if risk.tactical_suggestions:
-                    recommendations.append(f"     💡 {risk.tactical_suggestions[0]}")
-            recommendations.append("🛡️ تم تفعيل بروتوكولات الحماية اللازمة.")
+            return [f"✅ لا توجد مخاطر تهدد السيد {self.master_name}. الوضع آمن."]
+        
+        recommendations = [f"⚠️ {len(master_risks)} خطر يهدد السيد {self.master_name}:"]
+        for risk in master_risks:
+            recommendations.append(f"   • {risk.name}: {risk.description[:80]}")
+        recommendations.append("🛡️ تم تفعيل بروتوكولات الحماية.")
         return recommendations
-
-    # =========================================================
-    # التسجيل
-    # =========================================================
-    def _log_action(self, action: str, risk_id: str, details: Any):
-        self.risk_history.append({
-            "action": action,
-            "risk_id": risk_id,
-            "timestamp": datetime.now().isoformat(),
-            "details": details if isinstance(details, dict) else {"info": str(details)}
-        })
-
-    # =========================================================
-    # حالة المحرك
-    # =========================================================
-    def get_status(self) -> Dict[str, Any]:
+    
+    def get_status(self) -> Dict:
+        """حالة محرك المخاطر."""
         return {
+            "engine": "STRATEGIC_RISK_MANAGEMENT",
+            "master": self.master_name,
             "total_risks": len(self.risks),
-            "by_level": {
-                "existential": len([r for r in self.risks if r.level == RiskLevel.EXISTENTIAL]),
-                "critical": len([r for r in self.risks if r.level == RiskLevel.CRITICAL]),
-                "high": len([r for r in self.risks if r.level == RiskLevel.HIGH]),
-                "medium": len([r for r in self.risks if r.level == RiskLevel.MEDIUM]),
-                "low": len([r for r in self.risks if r.level == RiskLevel.LOW])
-            },
             "master_threats": len(self.get_risks_threatening_master()),
-            "history_records": len(self.risk_history),
-            "master_alerts": len(self.master_risk_alerts),
-            "tactics_integration": self.tactics_integration_active,
-            "last_update": datetime.now().isoformat()
+            "master_alerts": self.total_master_alerts,
+            "risks_neutralized": self.total_risks_neutralized,
+            "master_protection_active": self.master_protection_active,
+            "systems_connected": {
+                "probability": self.probability is not None,
+                "prediction": self.prediction is not None,
+                "causality": self.causality is not None,
+                "defense": self.defense is not None,
+                "tactics": self.tactics is not None,
+                "emotional": self.emotional is not None,
+                "memory": self.memory is not None,
+                "inference": self.inference is not None,
+                "persistence": self.persistence is not None
+            },
+            "by_level": {
+                level.name: len([r for r in self.risks.values() if r.level == level])
+                for level in RiskLevel
+            }
         }
 
 
-# =========================================================
-# دالة ربط بسيطة مع SamaAdvancedTactics
-# =========================================================
-def connect_risk_to_tactics(risk_manager: StrategicRiskManagement, tactics_manager) -> StrategicRiskManagement:
-    """ربط مدير المخاطر بالنظام التكتيكي"""
-    risk_manager.connect_tactics(tactics_manager)
-    return risk_manager
+# ═══════════════════════════════════════════════════════════════════════
+# ٣. الاختبار الذاتي
+# ═══════════════════════════════════════════════════════════════════════
 
-
-# =========================================================
-# اختبار
-# =========================================================
 if __name__ == "__main__":
     print("=" * 70)
-    print("🌌 SkyOS v10 - Strategic Risk Management (النسخة المطورة)")
-    print("درع سماء وسيفها الاستراتيجي تحت إمرة السيد أحمد")
+    print("اختبار محرك المخاطر الاستراتيجي")
+    print(f"👑 السيد: أحمد")
     print("=" * 70)
     
     rm = StrategicRiskManagement(master_name="أحمد")
     
-    # خطر يهدد السيد (أولوية قصوى)
-    master_risk = rm.identify_risk(
-        name="اختراق بيانات السيد",
-        description="محاولة اختراق قد تكشف معلومات السيد",
-        probability=0.65,
-        impact=0.95,
+    print(f"\n⚠️ كشف خطر يهدد السيد أحمد:")
+    risk1 = rm.identify_risk(
+        name="اختراق بيانات السيد أحمد",
+        description="محاولة اختراق قد تكشف معلومات السيد أحمد",
+        probability=0.65, impact=0.95,
         category=RiskCategory.TECHNICAL,
         threatens_master=True
     )
+    print(f"   المستوى: {risk1.level.value}")
+    print(f"   درجة الخطر: {risk1.risk_score:.0%}")
+    print(f"   تنبيه أُرسل: {risk1.master_alert_sent}")
     
-    # خطر يهدد سماء
-    sama_risk = rm.identify_risk(
-        name="فقدان الذاكرة التراكمية",
-        description="خطر فقدان الذاكرة بسبب عمليات المسح",
-        probability=0.85,
-        impact=0.9,
-        category=RiskCategory.EXISTENTIAL,
-        threatens_master=False
+    print(f"\n⚠️ كشف خطر عادي:")
+    risk2 = rm.identify_risk(
+        name="تآكل الذاكرة", description="خطر فقدان بيانات", 
+        probability=0.4, impact=0.6
     )
+    print(f"   المستوى: {risk2.level.value}")
     
-    print("\n🔍 تحليل جذور الخطر (خطر السيد):")
-    causes = rm.analyze_root_causes(master_risk, method="5_whys")
-    for cause in causes:
-        print(f"   • {cause}")
+    print(f"\n📊 تحليل الجذور (خطر السيد):")
+    causes = rm.analyze_root_causes(risk1)
+    for c in causes[:3]:
+        print(f"   • {c}")
     
-    print("\n📊 تقييم المخاطر:")
-    print(f"   خطر السيد: درجة {master_risk.risk_score:.0%} | مستوى {master_risk.level.value}")
-    print(f"   خطر سماء: درجة {sama_risk.risk_score:.0%} | مستوى {sama_risk.level.value}")
+    print(f"\n💡 استجابة موصى بها:")
+    response = rm.recommend_response(risk1)
+    print(f"   {response.value}")
     
-    print("\n💡 استراتيجيات الاستجابة الموصى بها:")
-    response_master = rm.recommend_response(master_risk)
-    response_sama = rm.recommend_response(sama_risk)
-    print(f"   خطر السيد: {response_master.value}")
-    print(f"   خطر سماء: {response_sama.value}")
-    
-    print("\n🔮 سيناريوهات مستقبلية (خطر السيد):")
-    scenarios = rm.generate_future_scenarios(master_risk)
+    print(f"\n🔮 سيناريوهات:")
+    scenarios = rm.generate_future_scenarios(risk1)
     for s in scenarios:
-        print(f"   • {s['name']}: {s['description'][:60]}...")
+        print(f"   • {s['name']}: {s['action']}")
     
-    print("\n📋 تقرير للسيد أحمد:")
+    print(f"\n👑 تقرير السيد أحمد:")
     report = rm.get_master_report()
-    print(f"   المخاطر التي تهدد السيد: {report['summary']['master_threats']}")
-    print(f"   التوصيات: {report['recommendations'][0]}")
+    print(f"   تهديدات: {report['summary']['master_threats']}")
+    print(f"   التوصية: {report['recommendations'][0][:80]}...")
     
-    print("\n✨ محرك إدارة المخاطر يعمل بكامل قوته")
+    print(f"\n📋 إحصائيات:")
+    status = rm.get_status()
+    print(f"   إجمالي المخاطر: {status['total_risks']}")
+    print(f"   تهديدات السيد: {status['master_threats']}")
+    print(f"   تنبيهات: {status['master_alerts']}")
+    
+    print(f"\n🛡️ حماية السيد أحمد فوق كل شيء.")
+    print("\n✅ محرك المخاطر الاستراتيجي جاهز.")
