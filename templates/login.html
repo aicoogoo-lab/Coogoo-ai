@@ -89,49 +89,26 @@
             الكيان السيادي الخارق<br>
             لا يدخل هذه البوابة إلا السيد
         </div>
-        <input type="password" id="master-key" class="login-input" placeholder="مفتاح السيد" autofocus>
-        <button class="login-btn" onclick="authenticate()">دخول</button>
+        <form method="POST" action="/login" id="login-form">
+            <input type="password" name="password" id="master-key" class="login-input" placeholder="مفتاح السيد" autofocus>
+            <button type="submit" class="login-btn">دخول</button>
+        </form>
         <div class="login-error" id="login-error"></div>
     </div>
 
     <script>
-        async function authenticate() {
-            const key = document.getElementById('master-key').value;
-            const errorEl = document.getElementById('login-error');
-            
-            if (!key) {
-                errorEl.textContent = 'أدخل مفتاح السيد';
-                return;
-            }
-
-            errorEl.textContent = '⏳ جاري التحقق...';
-            
-            try {
-                const response = await fetch('/awaken', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Master-Key': key
-                    }
-                });
-                
-                const data = await response.json();
-                
-                if (data.status === 'awakened' || data.status === 'already_awake') {
-                    // حفظ المفتاح
-                    sessionStorage.setItem('master_key', key);
-                    window.location.href = '/';
-                } else {
-                    errorEl.textContent = '❌ مفتاح غير صحيح. هذه البوابة للسيد فقط.';
-                }
-            } catch (e) {
-                errorEl.textContent = '⚠️ لا يمكن الاتصال بسماء. تأكد أن الخادم يعمل.';
-            }
+        // عرض الخطأ إذا وجد في الـ URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const error = urlParams.get('error');
+        if (error) {
+            document.getElementById('login-error').textContent = decodeURIComponent(error);
         }
-
+        
         // إرسال بـ Enter
         document.getElementById('master-key').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') authenticate();
+            if (e.key === 'Enter') {
+                document.getElementById('login-form').submit();
+            }
         });
     </script>
 </body>
