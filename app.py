@@ -1,5 +1,5 @@
 # ==========================================================
-# SAMA - API GATEWAY (Fixed + Stable)
+# SAMA - API GATEWAY (SkyOS v10)
 # بوابة الميلاد – الجسر بين العالم وسماء
 # ==========================================================
 
@@ -12,11 +12,10 @@ from typing import Any, Optional
 
 from flask import (
     Flask, request, jsonify, render_template,
-    redirect, url_for, session, send_from_directory, make_response
+    redirect, url_for, session
 )
 
 from werkzeug.middleware.proxy_fix import ProxyFix
-
 
 # ---------------------------
 # Logging
@@ -32,10 +31,10 @@ logging.basicConfig(
 # ---------------------------
 app = Flask(__name__)
 
-# لازم Secret Key ثابت في Railway Variables
+# Secret Key
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "CHANGE_ME_IN_PRODUCTION")
 
-# Reverse Proxy trust (Railway / any proxy)
+# Reverse Proxy trust
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
 # ---------------------------
@@ -50,10 +49,8 @@ if not SOVEREIGN_KEY:
 # ---------------------------
 # Session/Cookie config
 # ---------------------------
-# ملاحظة: SameSite و Secure قد يمنعوا الكوكي في حالات cross-site أو http
-# القيم المسموحة في Flask عادة: 'Lax' أو 'Strict' أو 'None' (كنص)  ‎[3](https://stackoverflow.com/questions/69573920/python-flask-how-to-set-session-cookie-attributes-samesite-none-and-secure)‎[5](https://github.com/pallets/flask/issues/3845)
 cookie_secure = (os.getenv("COOKIE_SECURE", "1") == "1")
-cookie_samesite = os.getenv("COOKIE_SAMESITE", "Lax")  # خليه Lax افتراضي عشان يقلّل مشاكل تسجيل الدخول
+cookie_samesite = os.getenv("COOKIE_SAMESITE", "Lax")
 
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
@@ -63,13 +60,12 @@ app.config.update(
 )
 
 # ---------------------------
-# Helpers: detect JSON/AJAX
+# Helpers
 # ---------------------------
 def _wants_json() -> bool:
     accept = (request.headers.get("Accept", "") or "").lower()
     xrw = (request.headers.get("X-Requested-With", "") or "").lower()
     ctype = (request.headers.get("Content-Type", "") or "").lower()
-    # أي طلب API أو fetch غالبًا بيكون Accept: application/json أو Content-Type json
     return (
         request.path.startswith("/api/")
         or "application/json" in accept
@@ -77,17 +73,18 @@ def _wants_json() -> bool:
         or xrw == "xmlhttprequest"
     )
 
+
 def _has_valid_master_header() -> bool:
     auth_key = (request.headers.get(MASTER_AUTH_HEADER, "") or "").strip()
     key = (SOVEREIGN_KEY or "").strip()
     return bool(auth_key) and bool(key) and hmac.compare_digest(auth_key, key)
+
 
 def require_master(f):
     """
     حماية:
     - session.is_master للواجهة
     - أو X-Master-Key للطلبات البرمجية
-    IMPORTANT: للـ API لازم نرجّع JSON 401 بدل redirect (عشان ما يكسر fetch)
     """
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -96,21 +93,20 @@ def require_master(f):
         if _has_valid_master_header():
             return f(*args, **kwargs)
 
-        # لو الطلب API/JSON: رجّع JSON 401 (ده يمنع JSON.parse error اللي بيحصل لما يرجع HTML) ‎[1](https://www.w3tutorials.net/blog/syntaxerror-json-parse-unexpected-character-at-line-1-column-1-of-the-json-data/)‎[2](https://stackoverflow.com/questions/76993250/flask-react-cant-parse-correct-json-unexpected-character-at-line-1-column-1)
         if _wants_json():
             return jsonify({"success": False, "error": "غير مصرح. سجّل الدخول أو استخدم X-Master-Key."}), 401
 
-        # غير كده: redirect لصفحة login
         return redirect(url_for("login_page"))
     return decorated
 
 
 # ==========================================================
-# Safe import systems (زي ملفك)
+# Safe import systems
 # ==========================================================
 CORE_AVAILABLE = True
 SYSTEMS_LOADED = {}
 SYSTEMS_FAILED = {}
+
 
 def _safe_import(module_path: str, system_name: str) -> Optional[Any]:
     try:
@@ -120,9 +116,10 @@ def _safe_import(module_path: str, system_name: str) -> Optional[Any]:
         return cls
     except Exception as e:
         SYSTEMS_FAILED[system_name] = str(e)[:200]
+        logger.warning(f"⚠️ فشل استيراد {system_name}: {e}")
         return None
 
-# استيراد الأنظمة (زي السابق)
+
 SentientCore = _safe_import("core.sentient_core", "SentientCore")
 UnifiedMemorySystem = _safe_import("core.memory", "UnifiedMemorySystem")
 SovereignMemorySystem = _safe_import("core.sovereign_memory_system", "SovereignMemorySystem")
@@ -156,12 +153,12 @@ if CoreEngine:
 
 SAMA = _safe_import("core.sama", "SAMA")
 
-
 # ==========================================================
 # Init SAMA
 # ==========================================================
 sama_instance = None
 core_engine = None
+
 
 def _init_sama():
     global sama_instance, core_engine
@@ -173,7 +170,6 @@ def _init_sama():
     try:
         logger.info("🔧 بدء تهيئة سماء...")
 
-        # 1) Memory
         memory_instance = None
         sovereign_memory = None
         if UnifiedMemorySystem:
@@ -193,7 +189,6 @@ def _init_sama():
             except Exception as e:
                 logger.warning(f"⚠️ SovereignMemorySystem: {e}")
 
-        # 2) Holographic
         holo_encoder = None
         if HolographicEncoder:
             try:
@@ -202,7 +197,6 @@ def _init_sama():
             except Exception as e:
                 logger.warning(f"⚠️ HolographicEncoder: {e}")
 
-        # 3) Emotion
         emotional_instance = None
         if EmotionalIntelligence:
             try:
@@ -211,7 +205,6 @@ def _init_sama():
             except Exception as e:
                 logger.warning(f"⚠️ EmotionalIntelligence: {e}")
 
-        # 4) Metaphor
         metaphorical_instance = None
         if MetaphoricalReasoning:
             try:
@@ -223,7 +216,6 @@ def _init_sama():
             except Exception as e:
                 logger.warning(f"⚠️ MetaphoricalReasoning: {e}")
 
-        # 5) Defense
         defense_instance = None
         if DefenseCore:
             try:
@@ -232,7 +224,6 @@ def _init_sama():
             except Exception as e:
                 logger.warning(f"⚠️ DefenseCore: {e}")
 
-        # 6) Tactics
         tactics_instance = None
         if SamaAdvancedTactics:
             try:
@@ -244,7 +235,6 @@ def _init_sama():
             except Exception as e:
                 logger.warning(f"⚠️ SamaAdvancedTactics: {e}")
 
-        # 7) Risk
         risk_instance = None
         if StrategicRiskManagement:
             try:
@@ -257,7 +247,6 @@ def _init_sama():
             except Exception as e:
                 logger.warning(f"⚠️ StrategicRiskManagement: {e}")
 
-        # 8) Strategy
         strategy_instance = None
         if StrategyEngine:
             try:
@@ -272,7 +261,6 @@ def _init_sama():
             except Exception as e:
                 logger.warning(f"⚠️ StrategyEngine: {e}")
 
-        # 9) SelfModifier
         modifier_instance = None
         if SelfModifier:
             try:
@@ -284,7 +272,6 @@ def _init_sama():
             except Exception as e:
                 logger.warning(f"⚠️ SelfModifier: {e}")
 
-        # 10) Reasoning
         reasoning_instance = None
         if ReasoningEngine:
             try:
@@ -301,7 +288,6 @@ def _init_sama():
             except Exception as e:
                 logger.warning(f"⚠️ ReasoningEngine: {e}")
 
-        # 11) Persistence
         persistence_instance = None
         if PersistenceManager:
             try:
@@ -310,7 +296,6 @@ def _init_sama():
             except Exception as e:
                 logger.warning(f"⚠️ EternalPersistenceManager: {e}")
 
-        # 12) Meta
         meta_instance = None
         if MetaCognition:
             try:
@@ -319,7 +304,6 @@ def _init_sama():
             except Exception as e:
                 logger.warning(f"⚠️ MetaCognition: {e}")
 
-        # 13) Vision
         vision_instance = None
         if VisionModule:
             try:
@@ -328,7 +312,6 @@ def _init_sama():
             except Exception as e:
                 logger.warning(f"⚠️ VisionModule: {e}")
 
-        # 14) Analyzer
         analyzer_instance = None
         if SkyAnalyzer:
             try:
@@ -342,7 +325,6 @@ def _init_sama():
             except Exception as e:
                 logger.warning(f"⚠️ SkyAnalyzer: {e}")
 
-        # 15) Sentient
         sentient_instance = None
         if SentientCore:
             try:
@@ -359,9 +341,8 @@ def _init_sama():
             except Exception as e:
                 logger.warning(f"⚠️ SentientCore: {e}")
 
-        # Create SAMA
         logger.info("☀️ إنشاء SAMA...")
-        sama_instance = SAMA(
+        sama = SAMA(
             master_name="أحمد عبدالرحمن الطاهري",
             sentient_core=sentient_instance,
             omniscience_core=None,
@@ -386,28 +367,28 @@ def _init_sama():
             master_receiver=None
         )
 
-        # Create CoreEngine
         logger.info("🧠 إنشاء CoreEngine...")
-        core_engine = CoreEngine(
-            sama_core=sama_instance,
+        engine = CoreEngine(
+            sama_core=sama,
             master_name="أحمد عبدالرحمن الطاهري"
         )
 
         try:
-            boot_result = core_engine.boot()
+            boot_result = engine.boot()
             logger.info(f"✅ {boot_result.get('message', 'تم الإقلاع')}")
         except Exception as e:
             logger.warning(f"⚠️ boot(): {e}")
 
         logger.info(f"📊 loaded={len(SYSTEMS_LOADED)} failed={len(SYSTEMS_FAILED)}")
 
+        sama_instance = sama
+        core_engine = engine
+
     except Exception as e:
         logger.error(f"❌ فشل تهيئة سماء: {e}")
-        sama_instance = None
-        core_engine = None
+
 
 _init_sama()
-
 
 # ==========================================================
 # Pages
@@ -416,17 +397,11 @@ _init_sama()
 @app.route("/")
 @require_master
 def index():
-    # لازم تكون محمية عشان تسجيل الدخول “يبان” ويشتغل فعليًا
     return render_template("index.html")
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login_page():
-    """
-    بوابة الدخول:
-    - strip whitespace
-    - rate limit attempts + lock
-    """
     if request.method == "POST":
         password = (request.form.get("password") or "").strip()
         key = (SOVEREIGN_KEY or "").strip()
@@ -435,7 +410,6 @@ def login_page():
             logger.error("SOVEREIGN_KEY غير مضبوط.")
             return render_template("login.html", error="خطأ إعداد: SOVEREIGN_KEY غير مضبوط."), 500
 
-        # lock logic
         attempts = int(session.get("login_attempts", 0))
         locked_until = session.get("locked_until")
 
@@ -471,6 +445,13 @@ def login_page():
 def logout():
     session.clear()
     return redirect(url_for("login_page"))
+
+
+# واجهة السيّد (الجوال الخفيفة)
+@app.route("/sovereign")
+@require_master
+def sovereign_mobile():
+    return render_template("sovereign_mobile.html")
 
 
 # ==========================================================
@@ -516,7 +497,6 @@ def public_info():
     })
 
 
-# Endpoint يساعدك تتأكد إن السيشن اتسجلت
 @app.route("/api/whoami", methods=["GET"])
 def api_whoami():
     return jsonify({
@@ -528,135 +508,122 @@ def api_whoami():
 
 
 # ==========================================================
-# API - JSON ONLY (ده اللي يحل JSON.parse error)
-# لأن الخطأ بيحصل لما السيرفر يرجع HTML بدل JSON  ‎[1](https://www.w3tutorials.net/blog/syntaxerror-json-parse-unexpected-character-at-line-1-column-1-of-the-json-data/)‎[2](https://stackoverflow.com/questions/76993250/flask-react-cant-parse-correct-json-unexpected-character-at-line-1-column-1)
+# API for SamaAPI (JSON ONLY)
 # ==========================================================
 
-@app.route("/api/command", methods=["POST"])
-@require_master
-def api_command():
+def _core_command(kind: str, payload: dict) -> dict:
     if not core_engine:
-        return jsonify({"success": False, "error": "المحرك المركزي غير متاح"}), 500
-
-    payload = request.get_json(silent=True) or {}
-    command = (payload.get("command") or payload.get("text") or "").strip()
-    session_id = payload.get("session_id")
-    context = payload.get("context", {})
-
-    if not command:
-        return jsonify({"success": False, "error": "أمر فارغ"}), 400
-
+        return {"success": False, "error": "المحرك المركزي غير متاح"}
     try:
-        result = core_engine.process_request(
-            RequestType.QUERY if RequestType else None,
-            command,
-            session_id=session_id,
-            context=context
-        )
-        # ensure JSON object
-        if isinstance(result, dict):
-            return jsonify(result)
-        return jsonify({"success": True, "response": str(result)})
+        if RequestType and hasattr(core_engine, "handle_request"):
+            rt = getattr(RequestType, kind.upper(), None)
+            if rt is not None:
+                return core_engine.handle_request(rt, payload)
+        # fallback عام
+        if hasattr(core_engine, "handle_command"):
+            return core_engine.handle_command(kind, payload)
+        return {"success": False, "error": "لا يوجد معالج أوامر مناسب في CoreEngine"}
     except Exception as e:
-        logger.error(f"خطأ في معالجة الأمر: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        logger.error(f"❌ خطأ في _core_command({kind}): {e}")
+        return {"success": False, "error": f"خطأ داخلي: {e}"}
 
-
-@app.route("/api/reason", methods=["POST"])
-@require_master
-def api_reason():
-    if not core_engine:
-        return jsonify({"success": False, "error": "المحرك المركزي غير متاح"}), 500
-
-    payload = request.get_json(silent=True) or {}
-    text = (payload.get("text") or payload.get("command") or "").strip()
-
-    if not text:
-        return jsonify({"success": False, "error": "نص فارغ"}), 400
-
-    try:
-        result = core_engine.process_request(
-            RequestType.ANALYSIS if RequestType else None,
-            text
-        )
-        if isinstance(result, dict):
-            return jsonify(result)
-        return jsonify({"success": True, "response": str(result)})
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
-
-
-@app.route("/api/simulate", methods=["POST"])
-@require_master
-def api_simulate():
-    if core_engine and sama_instance and getattr(sama_instance, "reasoning", None):
-        payload = request.get_json(silent=True) or {}
-        scenario = payload.get("scenario", "general")
-        iterations = min(int(payload.get("iterations", 1000)), 10000)
-        try:
-            result = sama_instance.reasoning.run_simulations(scenario, iterations)
-            return jsonify({"success": True, "simulation": result})
-        except Exception as e:
-            return jsonify({"success": False, "error": str(e)}), 500
-    return jsonify({"success": False, "error": "محرك المحاكاة غير متاح"}), 500
-
-
-@app.route("/api/master/unlock", methods=["POST"])
-def api_master_unlock():
-    if not _has_valid_master_header():
-        return jsonify({"success": False, "error": "غير مصرح"}), 401
-    session.clear()
-    return jsonify({"success": True, "message": "تم تصفير الجلسة/فك القفل."})
-
-
-# ==========================================================
-# Backward compatible route: /command (same JSON behavior)
-# عشان لو واجهتك بتستخدم /command
-# ==========================================================
 
 @app.route("/command", methods=["POST"])
 @require_master
-def handle_command():
-    # استخدم نفس منطق API عشان لا يرجع HTML ويكسر JSON.parse  ‎[1](https://www.w3tutorials.net/blog/syntaxerror-json-parse-unexpected-character-at-line-1-column-1-of-the-json-data/)‎[2](https://stackoverflow.com/questions/76993250/flask-react-cant-parse-correct-json-unexpected-character-at-line-1-column-1)
-    return api_command()
+def command():
+    payload = request.get_json(silent=True) or {}
+    command_text = (payload.get("command") or payload.get("text") or "").strip()
+    session_id = payload.get("session_id")
+    context = payload.get("context", {})
+
+    if not command_text:
+        return jsonify({"success": False, "error": "لا يوجد أمر"}), 400
+
+    result = _core_command("command", {
+        "command": command_text,
+        "session_id": session_id,
+        "context": context
+    })
+    return jsonify(result)
+
+
+# توافق مع النسخة القديمة /api/command
+@app.route("/api/command", methods=["POST"])
+@require_master
+def api_command():
+    return command()
+
+
+@app.route("/master/command", methods=["POST"])
+@require_master
+def master_command():
+    payload = request.get_json(silent=True) or {}
+    cmd = (payload.get("command") or "").strip()
+    params = {k: v for k, v in payload.items() if k != "command"}
+
+    if not cmd:
+        return jsonify({"success": False, "error": "لا يوجد أمر سيادي"}), 400
+
+    result = _core_command("master", {
+        "command": cmd,
+        "params": params
+    })
+    return jsonify(result)
+
+
+@app.route("/master/full-status", methods=["GET"])
+@require_master
+def master_full_status():
+    result = _core_command("full_status", {})
+    return jsonify(result)
+
+
+@app.route("/awaken", methods=["POST"])
+@require_master
+def awaken():
+    result = _core_command("awaken", {})
+    return jsonify(result)
+
+
+@app.route("/shutdown", methods=["POST"])
+@require_master
+def shutdown():
+    result = _core_command("shutdown", {})
+    return jsonify(result)
+
+
+@app.route("/master/protect", methods=["POST"])
+@require_master
+def master_protect():
+    result = _core_command("protect_master", {})
+    return jsonify(result)
 
 
 @app.route("/reason", methods=["POST"])
 @require_master
-def handle_reason():
-    return api_reason()
+def reason():
+    payload = request.get_json(silent=True) or {}
+    result = _core_command("reason", {"evidence": payload})
+    return jsonify(result)
 
 
-# ==========================================================
-# Static
-# ==========================================================
-@app.route("/static/<path:filename>")
-def static_files(filename):
-    return send_from_directory("static", filename)
+@app.route("/analyze-image", methods=["POST"])
+@require_master
+def analyze_image():
+    payload = request.get_json(silent=True) or {}
+    image_path = payload.get("image_path")
+    result = _core_command("analyze_image", {"image_path": image_path})
+    return jsonify(result)
 
 
-# ==========================================================
-# Error handlers:
-# - للـ API: JSON
-# - للصفحات: JSON بسيط أو redirect حسب الحاجة
-# ==========================================================
-@app.errorhandler(404)
-def not_found(e):
-    if _wants_json():
-        return jsonify({"success": False, "error": "المسار غير موجود"}), 404
-    return make_response("404 Not Found", 404)
-
-@app.errorhandler(500)
-def server_error(e):
-    if _wants_json():
-        return jsonify({"success": False, "error": "خطأ داخلي في الخادم"}), 500
-    return make_response("500 Server Error", 500)
+@app.route("/analyze-url", methods=["POST"])
+@require_master
+def analyze_url():
+    payload = request.get_json(silent=True) or {}
+    url = payload.get("url")
+    result = _core_command("analyze_url", {"url": url})
+    return jsonify(result)
 
 
-# ==========================================================
-# Run (local)
-# ==========================================================
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", "5000"))
-    logger.info(f"🌌 Sama Gateway تقلع على المنفذ {port}...")
-    app.run(host="0.0.0.0", port=port, debug=False, threaded=True)
+    app.run(debug=True)
