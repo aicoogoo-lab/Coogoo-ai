@@ -175,6 +175,7 @@ class SenseOrigin(Enum):
     BIOLOGICAL_BACTERIA = auto()
     BIOLOGICAL_VIRUS = auto()
     BIOLOGICAL_FUNGUS = auto()
+    BIOLOGICAL_FISH = auto()       # ← أضف هذا السطر
     TECHNOLOGICAL = auto()
     PHYSICAL = auto()
     COSMIC = auto()
