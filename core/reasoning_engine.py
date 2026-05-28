@@ -191,7 +191,6 @@ class ReasoningEngine:
         # ═══════════════════════════════════════════════════════
         if self.causality:
             try:
-                # محاولة تفسير السؤال
                 explanation = self.causality.explain(question[:50])
                 if explanation and explanation.get("possible_causes"):
                     result.supporting_evidence.append(
@@ -252,7 +251,6 @@ class ReasoningEngine:
         # ═══════════════════════════════════════════════════════
         if self.defense:
             try:
-                # فحص إذا كان السؤال يتعلق بتهديد
                 if any(w in question.lower() for w in ["تهديد", "خطر", "هجوم", "threat", "attack"]):
                     inspection = self.defense.inspect_before_consciousness(
                         {"sense": "reasoning_query", "value": question}
@@ -286,11 +284,9 @@ class ReasoningEngine:
         result.systems_used = systems_used
         result.processing_time_ms = (time.time() - start_time) * 1000
         
-        # تحديد ما إذا كان يحتاج السيد
         if result.probability > self.confidence_threshold or result.confidence < 0.5:
             result.requires_master = True
         
-        # حفظ
         self.history.append(result)
         self.total_reasoning_sessions += 1
         
@@ -298,7 +294,6 @@ class ReasoningEngine:
     
     def _synthesize_conclusion(self, result: ReasoningResult, question: str, 
                                context: Dict) -> str:
-        """توليف استنتاج من كل الأدلة."""
         if not result.supporting_evidence:
             return f"بناءً على المعطيات المتاحة، لا يمكن تقديم استنتاج قاطع بخصوص: {question[:100]}"
         
@@ -321,7 +316,6 @@ class ReasoningEngine:
         )
     
     def _calculate_confidence(self, result: ReasoningResult) -> float:
-        """حساب الثقة في الاستنتاج."""
         evidence_count = len(result.supporting_evidence)
         systems_count = len(result.systems_used)
         
@@ -332,14 +326,10 @@ class ReasoningEngine:
         return min(0.99, confidence)
     
     # ═══════════════════════════════════════════════════════════
-    # المحاكاة المتوازية (مُحدَّثة)
+    # المحاكاة المتوازية
     # ═══════════════════════════════════════════════════════════
     
     def run_simulations(self, scenario: str, iterations: int = 1000) -> Dict:
-        """
-        محاكاة متوازية – تستخدم probability_engine إن وجد.
-        """
-        # استخدام probability_engine
         if self.probability and hasattr(self.probability, 'monte_carlo_sims'):
             mc_name = f"sim_{hashlib.sha256(scenario.encode()).hexdigest()[:8]}"
             mc = self.probability.create_monte_carlo(mc_name)
@@ -356,7 +346,6 @@ class ReasoningEngine:
                 "method": "monte_carlo_via_probability_engine"
             }
         
-        # Fallback: محاكاة بسيطة
         results = []
         for _ in range(min(iterations, self.max_simulations)):
             prob = random.uniform(0, 1)
@@ -377,9 +366,6 @@ class ReasoningEngine:
     # ═══════════════════════════════════════════════════════════
     
     def generate_report(self, report_type: ReportType = ReportType.STANDARD) -> Dict:
-        """
-        توليد تقرير تحليلي.
-        """
         report = {
             "timestamp": datetime.now().isoformat(),
             "type": report_type.name,
@@ -389,7 +375,6 @@ class ReasoningEngine:
             "master_attention_required": False
         }
         
-        # حالة الأنظمة
         systems = {
             "probability": self.probability,
             "prediction": self.prediction,
@@ -412,7 +397,6 @@ class ReasoningEngine:
             else:
                 report["systems_status"][name] = "not_connected"
         
-        # نتائج رئيسية
         if self.inference:
             report["key_findings"].append("نظام الاستدلال الموحد نشط")
         if self.probability:
@@ -420,7 +404,6 @@ class ReasoningEngine:
         if self.defense:
             report["key_findings"].append("نظام الدفاع يحمي السيد")
         
-        # توصيات
         if report["type"] == ReportType.MASTER.name:
             report["recommendations"].append("مراجعة حالة السيد")
             report["recommendations"].append("فحص التهديدات النشطة")
@@ -432,7 +415,6 @@ class ReasoningEngine:
         return report
     
     def generate_master_report(self) -> Dict:
-        """تقرير خاص للسيد."""
         return self.generate_report(ReportType.MASTER)
     
     # ═══════════════════════════════════════════════════════════
@@ -440,9 +422,7 @@ class ReasoningEngine:
     # ═══════════════════════════════════════════════════════════
     
     def dynamic_bayesian_inference(self, evidence: Dict) -> Dict:
-        """واجهة متوافقة – تستخدم probability_engine."""
         if self.probability:
-            # محاولة استخدام probability_engine
             for key, value in evidence.items():
                 if isinstance(value, (int, float)):
                     belief = self.probability.get_belief(key)
@@ -451,7 +431,6 @@ class ReasoningEngine:
                     else:
                         self.probability.update_belief_bayesian(key, value)
             
-            # استرجاع النتائج
             result = {"risk_score": 0.5, "confidence": 0.7}
             threat_belief = self.probability.get_belief("threat")
             if threat_belief:
@@ -460,7 +439,6 @@ class ReasoningEngine:
             
             return result
         
-        # Fallback
         return {"risk_score": 0.5, "confidence": 0.5, "method": "fallback"}
     
     def predict_macro_behavior(self, data: Dict) -> Dict:
@@ -470,9 +448,7 @@ class ReasoningEngine:
                 pred = self.prediction.predict_social(
                     "macro_behavior",
                     str(data)[:100],
-                    from .prediction_engine import PredictionHorizon
-                    PredictionHorizon.MEDIUM_TERM,
-                    0.5
+                    0.5  # probability (تم إصلاحه)
                 )
                 return {
                     "risk_score": pred.probability,
@@ -486,18 +462,10 @@ class ReasoningEngine:
         return {"risk_score": 0.5, "confidence": 0.5, "method": "fallback"}
     
     def make_decision(self, options: List[Dict], requires_master_for_critical: bool = True) -> Dict:
-        """اتخاذ قرار – يستخدم inference_core."""
         if not options:
             return {"decision": None, "reason": "لا خيارات"}
         
-        # استخدام inference_core إذا كان متاحاً
-        if self.inference:
-            # تبسيط: استخدام probability_engine
-            pass
-        
-        # تقييم بسيط
         best = max(options, key=lambda o: o.get("success_probability", 0.5))
-        
         is_critical = best.get("success_probability", 0) > self.confidence_threshold
         
         if requires_master_for_critical and is_critical:
@@ -519,7 +487,6 @@ class ReasoningEngine:
     # ═══════════════════════════════════════════════════════════
     
     def get_status(self) -> Dict:
-        """حالة محرك الاستدلال."""
         return {
             "engine": "REASONING_ENGINE",
             "version": "orchestrator",
