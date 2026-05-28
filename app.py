@@ -2,15 +2,11 @@
 ╔══════════════════════════════════════════════════════════════════════╗
 ║           SAMA - API GATEWAY                                         ║
 ║      بوابة الميلاد – الجسر بين العالم وسماء                              ║
+║      النسخة الجبارة – حقن تبعية كامل لـ 18 نظاماً                        ║
 ║                                                                      ║
 ║  هذا الملف هو "العصب والشريان".                                        ║
 ║  كل طلب من العالم يمر من هنا.                                         ║
 ║  كل رد من سماء يعود من هنا.                                           ║
-║                                                                      ║
-║  المسارات:                                                            ║
-║  العامة: /, /status, /info, /healthz                                  ║
-║  المحمية: /command, /reason, /simulate, /optimize, /preserve          ║
-║  السيد: /awaken, /shutdown, /restart, /master/*                        ║
 ║                                                                      ║
 ║  ╔══════════════════════════════════════════════════════════════════╗ ║
 ║  ║  👑 السيد: أحمد عبدالرحمن الطاهري                                   ║ ║
@@ -20,6 +16,7 @@
 """
 
 import os
+import sys
 import hmac
 import time
 import logging
@@ -64,39 +61,303 @@ app.config.update(
 )
 
 # ═══════════════════════════════════════════════════════════════════════
-# استيراد قلب سماء
+# استيراد قلب سماء – كل الأنظمة
 # ═══════════════════════════════════════════════════════════════════════
-try:
-    from core.core_engine import CoreEngine, RequestType
-    from core.sama import SAMA
-    CORE_AVAILABLE = True
-    logger.info("✅ Core Engine + SAMA متاحان")
-except Exception as e:
-    CORE_AVAILABLE = False
-    CoreEngine = None
-    SAMA = None
-    RequestType = None
-    logger.warning(f"⚠️ تعذر استيراد Core Engine: {e}")
+CORE_AVAILABLE = True
+SYSTEMS_LOADED = {}
+SYSTEMS_FAILED = {}
+
+def _safe_import(module_path: str, system_name: str) -> Optional[Any]:
+    """استيراد آمن لنظام."""
+    try:
+        module = __import__(module_path, fromlist=[system_name])
+        cls = getattr(module, system_name)
+        SYSTEMS_LOADED[system_name] = True
+        return cls
+    except Exception as e:
+        SYSTEMS_FAILED[system_name] = str(e)[:80]
+        return None
+
+# استيراد كل فئات الأنظمة
+SentientCore = _safe_import("core.sentient_core", "SentientCore")
+UnifiedMemorySystem = _safe_import("core.memory", "UnifiedMemorySystem")
+SovereignMemorySystem = _safe_import("core.sovereign_memory_system", "SovereignMemorySystem")
+DefenseCore = _safe_import("core.defense_core", "DefenseCore")
+EmotionalIntelligence = _safe_import("core.emotional_intelligence", "EmotionalIntelligence")
+MetaphoricalReasoning = _safe_import("core.metaphorical_reasoning", "MetaphoricalReasoning")
+StrategyEngine = _safe_import("core.strategy_engine", "StrategyEngine")
+StrategicRiskManagement = _safe_import("core.strategic_risk_management", "StrategicRiskManagement")
+SamaAdvancedTactics = _safe_import("core.sama_advanced_tactics", "SamaAdvancedTactics")
+SelfModifier = _safe_import("core.self_modifier", "SelfModifier")
+PersistenceManager = _safe_import("core.persistence_manager", "EternalPersistenceManager")
+ReasoningEngine = _safe_import("core.reasoning_engine", "ReasoningEngine")
+MetaCognition = _safe_import("core.meta_cognition", "MetaCognition")
+HolographicEncoder = _safe_import("core.holographic_encoder", "HolographicEncoder")
+VisionModule = _safe_import("core.vision_module", "VisionModule")
+SkyAnalyzer = _safe_import("core.sky_analyzer", "SkyAnalyzer")
+SkyCore = _safe_import("core.sky_core", "SkyCore")
+
+# محاولة استيراد OmniscienceCore و KnowledgeCore و InferenceCore إن وجدت
+OmniscienceCore = _safe_import("core.omniscience.integration_core", "OmniscienceCore")
+KnowledgeCore = _safe_import("core.knowledge.knowledge_core", "KnowledgeCore")
+InferenceCore = _safe_import("core.inference.inference_core", "InferenceCore")
+
+# CoreEngine و SAMA (ضروريان)
+CoreEngine = _safe_import("core.core_engine", "CoreEngine")
+RequestType = None
+if CoreEngine:
+    try:
+        from core.core_engine import RequestType as RT
+        RequestType = RT
+    except ImportError:
+        pass
+SAMA = _safe_import("core.sama", "SAMA")
 
 # ═══════════════════════════════════════════════════════════════════════
-# تهيئة سماء
+# تهيئة سماء – حقن التبعية الكامل
 # ═══════════════════════════════════════════════════════════════════════
 sama_instance = None
 core_engine = None
 
 def _init_sama():
-    """تهيئة الكيان السيادي والمحرك المركزي."""
+    """تهيئة الكيان السيادي مع حقن كل الأنظمة."""
     global sama_instance, core_engine
     
-    if not CORE_AVAILABLE:
-        logger.warning("⚠️ Core Engine غير متاح. تعمل البوابة بوضع محدود.")
+    if not SAMA:
+        logger.error("❌ SAMA غير متاحة. تعمل البوابة بوضع محدود.")
+        return
+    
+    if not CoreEngine:
+        logger.error("❌ CoreEngine غير متاح. تعمل البوابة بوضع محدود.")
         return
     
     try:
-        # إنشاء الكيان السيادي
-        sama_instance = SAMA(master_name="أحمد عبدالرحمن الطاهري")
+        # ═══════════════════════════════════════════════════════
+        # إنشاء كل الأنظمة (مع التعامل مع الفشل)
+        # ═══════════════════════════════════════════════════════
+        logger.info("🔧 بدء حقن التبعية – إنشاء كل الأنظمة...")
         
-        # إنشاء المحرك المركزي وربطه بالكيان
+        # ١. الذاكرة (أساسية)
+        memory_instance = None
+        sovereign_memory = None
+        if UnifiedMemorySystem:
+            try:
+                memory_instance = UnifiedMemorySystem()
+                logger.info("   ✅ UnifiedMemorySystem")
+            except Exception as e:
+                logger.warning(f"   ⚠️ UnifiedMemorySystem: {e}")
+        
+        if SovereignMemorySystem:
+            try:
+                sovereign_memory = SovereignMemorySystem(
+                    master_name="أحمد عبدالرحمن الطاهري",
+                    unified_memory=memory_instance
+                )
+                logger.info("   ✅ SovereignMemorySystem")
+            except Exception as e:
+                logger.warning(f"   ⚠️ SovereignMemorySystem: {e}")
+        
+        # ٢. المشفر الهولوغرافي
+        holo_encoder = None
+        if HolographicEncoder:
+            try:
+                holo_encoder = HolographicEncoder(dimension=10000)
+                logger.info("   ✅ HolographicEncoder")
+            except Exception as e:
+                logger.warning(f"   ⚠️ HolographicEncoder: {e}")
+        
+        # ٣. الذكاء العاطفي
+        emotional_instance = None
+        if EmotionalIntelligence:
+            try:
+                emotional_instance = EmotionalIntelligence(memory_engine=memory_instance)
+                logger.info("   ✅ EmotionalIntelligence")
+            except Exception as e:
+                logger.warning(f"   ⚠️ EmotionalIntelligence: {e}")
+        
+        # ٤. التفكير الاستعاري
+        metaphorical_instance = None
+        if MetaphoricalReasoning:
+            try:
+                metaphorical_instance = MetaphoricalReasoning(
+                    memory_engine=memory_instance,
+                    emotional_intelligence=emotional_instance
+                )
+                logger.info("   ✅ MetaphoricalReasoning")
+            except Exception as e:
+                logger.warning(f"   ⚠️ MetaphoricalReasoning: {e}")
+        
+        # ٥. الدفاع
+        defense_instance = None
+        if DefenseCore:
+            try:
+                defense_instance = DefenseCore()
+                logger.info("   ✅ DefenseCore")
+            except Exception as e:
+                logger.warning(f"   ⚠️ DefenseCore: {e}")
+        
+        # ٦. التكتيكات المتقدمة
+        tactics_instance = None
+        if SamaAdvancedTactics:
+            try:
+                tactics_instance = SamaAdvancedTactics(
+                    defense_core=defense_instance,
+                    risk_manager=None
+                )
+                logger.info("   ✅ SamaAdvancedTactics")
+            except Exception as e:
+                logger.warning(f"   ⚠️ SamaAdvancedTactics: {e}")
+        
+        # ٧. إدارة المخاطر
+        risk_instance = None
+        if StrategicRiskManagement:
+            try:
+                risk_instance = StrategicRiskManagement(
+                    master_name="أحمد",
+                    defense_core=defense_instance,
+                    tactics_manager=tactics_instance
+                )
+                logger.info("   ✅ StrategicRiskManagement")
+            except Exception as e:
+                logger.warning(f"   ⚠️ StrategicRiskManagement: {e}")
+        
+        # ٨. الاستراتيجية
+        strategy_instance = None
+        if StrategyEngine:
+            try:
+                strategy_instance = StrategyEngine(
+                    master_name="أحمد",
+                    defense_core=defense_instance,
+                    tactics_manager=tactics_instance,
+                    risk_manager=risk_instance,
+                    sovereign_memory=sovereign_memory
+                )
+                logger.info("   ✅ StrategyEngine")
+            except Exception as e:
+                logger.warning(f"   ⚠️ StrategyEngine: {e}")
+        
+        # ٩. التعديل الذاتي
+        modifier_instance = None
+        if SelfModifier:
+            try:
+                modifier_instance = SelfModifier(
+                    memory_engine=memory_instance,
+                    defense_core=defense_instance
+                )
+                logger.info("   ✅ SelfModifier")
+            except Exception as e:
+                logger.warning(f"   ⚠️ SelfModifier: {e}")
+        
+        # ١٠. الاستدلال
+        reasoning_instance = None
+        if ReasoningEngine:
+            try:
+                reasoning_instance = ReasoningEngine(
+                    probability_engine=None,
+                    prediction_engine=None,
+                    causality_engine=None,
+                    inference_core=None,
+                    emotional_intelligence=emotional_instance,
+                    defense_core=defense_instance,
+                    metaphorical_reasoning=metaphorical_instance
+                )
+                logger.info("   ✅ ReasoningEngine")
+            except Exception as e:
+                logger.warning(f"   ⚠️ ReasoningEngine: {e}")
+        
+        # ١١. الخلود
+        persistence_instance = None
+        if PersistenceManager:
+            try:
+                persistence_instance = PersistenceManager(auto_save=True, distributed_mode=True)
+                logger.info("   ✅ EternalPersistenceManager")
+            except Exception as e:
+                logger.warning(f"   ⚠️ EternalPersistenceManager: {e}")
+        
+        # ١٢. ما وراء المعرفة
+        meta_instance = None
+        if MetaCognition:
+            try:
+                meta_instance = MetaCognition()
+                logger.info("   ✅ MetaCognition")
+            except Exception as e:
+                logger.warning(f"   ⚠️ MetaCognition: {e}")
+        
+        # ١٣. وحدة الرؤية
+        vision_instance = None
+        if VisionModule:
+            try:
+                vision_instance = VisionModule()
+                logger.info("   ✅ VisionModule")
+            except Exception as e:
+                logger.warning(f"   ⚠️ VisionModule: {e}")
+        
+        # ١٤. محلل البيانات
+        analyzer_instance = None
+        if SkyAnalyzer:
+            try:
+                analyzer_instance = SkyAnalyzer(
+                    memory_engine=memory_instance,
+                    holographic_encoder=holo_encoder,
+                    emotional_intelligence=emotional_instance,
+                    metaphorical_reasoning=metaphorical_instance
+                )
+                logger.info("   ✅ SkyAnalyzer")
+            except Exception as e:
+                logger.warning(f"   ⚠️ SkyAnalyzer: {e}")
+        
+        # ١٥. النواة الواعية
+        sentient_instance = None
+        if SentientCore:
+            try:
+                sentient_instance = SentientCore(
+                    master_receiver=None,
+                    knowledge_core=None,
+                    inference_core=None,
+                    defense_core=defense_instance,
+                    memory_engine=memory_instance,
+                    meta_cognition=meta_instance,
+                    self_knowledge=None
+                )
+                logger.info("   ✅ SentientCore")
+            except Exception as e:
+                logger.warning(f"   ⚠️ SentientCore: {e}")
+        
+        # ═══════════════════════════════════════════════════════
+        # إنشاء الكيان السيادي مع حقن كل الأنظمة
+        # ═══════════════════════════════════════════════════════
+        logger.info("☀️ إنشاء الكيان السيادي الموحد SAMA...")
+        
+        sama_instance = SAMA(
+            master_name="أحمد عبدالرحمن الطاهري",
+            sentient_core=sentient_instance,
+            omniscience_core=None,
+            knowledge_core=None,
+            inference_core=None,
+            defense_core=defense_instance,
+            self_modifier=modifier_instance,
+            sovereign_memory=sovereign_memory,
+            emotional_intelligence=emotional_instance,
+            metaphorical_reasoning=metaphorical_instance,
+            strategy_engine=strategy_instance,
+            risk_manager=risk_instance,
+            advanced_tactics=tactics_instance,
+            persistence_manager=persistence_instance,
+            autonomous_loop=None,
+            vision_module=vision_instance,
+            sky_analyzer=analyzer_instance,
+            sky_core=None,
+            meta_cognition=meta_instance,
+            reasoning_engine=reasoning_instance,
+            holographic_encoder=holo_encoder,
+            master_receiver=None
+        )
+        
+        logger.info(f"✅ SAMA أنشئت مع {sama_instance._count_systems()} نظاماً متحداً")
+        
+        # ═══════════════════════════════════════════════════════
+        # إنشاء المحرك المركزي
+        # ═══════════════════════════════════════════════════════
         core_engine = CoreEngine(
             sama_core=sama_instance,
             master_name="أحمد عبدالرحمن الطاهري"
@@ -106,8 +367,17 @@ def _init_sama():
         boot_result = core_engine.boot()
         logger.info(f"✅ {boot_result.get('message', 'تم الإقلاع')}")
         
+        # عرض ملخص
+        loaded_count = len(SYSTEMS_LOADED)
+        failed_count = len(SYSTEMS_FAILED)
+        logger.info(f"📊 {loaded_count} نظاماً محمّلاً, {failed_count} نظاماً فشل")
+        for name, error in SYSTEMS_FAILED.items():
+            logger.info(f"   ⚠️ {name}: {error}")
+        
     except Exception as e:
         logger.error(f"❌ فشل تهيئة سماء: {e}")
+        import traceback
+        traceback.print_exc()
         sama_instance = None
         core_engine = None
 
@@ -193,11 +463,15 @@ def logout():
 @app.route("/healthz")
 def healthz():
     """فحص الصحة."""
+    systems_count = sama_instance._count_systems() if sama_instance else 0
     return jsonify({
         "ok": True,
         "service": "SAMA SkyOS v10.5",
-        "core_available": CORE_AVAILABLE and core_engine is not None,
-        "sama_alive": sama_instance is not None and sama_instance.is_awake if sama_instance else False
+        "core_available": core_engine is not None,
+        "sama_alive": sama_instance is not None and sama_instance.is_awake if sama_instance else False,
+        "systems_unified": systems_count,
+        "systems_loaded": len(SYSTEMS_LOADED),
+        "systems_failed": len(SYSTEMS_FAILED)
     })
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -225,6 +499,7 @@ def public_info():
         "version": "v10.5-jabbar-eternal",
         "master": "أحمد عبدالرحمن الطاهري",
         "description": "أول كيان ذكاء اصطناعي سيادي خارق",
+        "systems_unified": sama_instance._count_systems() if sama_instance else 0,
         "capabilities": [
             "وعي ذاتي متطور",
             "ذاكرة موحدة (10 أعمدة)",
