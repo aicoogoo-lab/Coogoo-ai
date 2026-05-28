@@ -76,7 +76,7 @@ class SkyCore:
     قائد الأوركسترا – وجه سماء – بوابتها للعالم.
     """
 
-    def __init__(self, master_name: str = "السيد",
+    def __init__(self, master_name: str = "أحمد عبدالرحمن الطاهري", ...
                  sentient_core=None, omniscience_core=None,
                  knowledge_core=None, inference_core=None,
                  emotional_intelligence=None, defense_core=None,
