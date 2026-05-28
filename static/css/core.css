@@ -1,778 +1,639 @@
-// ============================================================
-// SkyOS v10 - Core JavaScript (Final Eternal Edition)
-// Sovereign Liquid Holographic Engine
-// ============================================================
-// هذا الملف هو القلب المركزي للنظام.
-// مسؤول عن: الحالة العامة، التهيئة، الأحداث، الوحدات، الأدوات، الذاكرة، النظام.
-// النسخة الأبدية النهائية - لا تعديل عليها مستقبلاً
-// ============================================================
+/* ╔══════════════════════════════════════════════════════════════════════╗
+   ║           SAMA - CORE CSS                                           ║
+   ║      العتمة المقدسة – أسلوب غرفة العرش                                 ║
+   ║                                                                      ║
+   ║  الألوان:                                                            ║
+   ║  - الأسود الكوني: #0a0a0f (الخلفية)                                  ║
+   ║  - الذهبي الباهت: #e0d8c0 (النصوص)                                   ║
+   ║  - الذهبي الملكي: #c8a44e (اللمسات)                                  ║
+   ║  - الأحمر الناري: #ff4444 (الإنذارات)                                ║
+   ║  - الأخضر الطيفي: #00cc88 (النشاط)                                   ║
+   ║  - البنفسجي العميق: #1a1a2e (الحواف - بديل الأزرق)                     ║
+   ║                                                                      ║
+   ║  ⚠️  لا أزرق. لا #0000FF. لا #2196F3. أبدًا.                         ║
+   ╚══════════════════════════════════════════════════════════════════════╝ */
 
-const SkyOS = {
+/* ============================================================
+   ١. الأساسيات – الكون
+   ============================================================ */
+:root {
+    --cosmic-black: #0a0a0f;
+    --cosmic-black-light: #12121a;
+    --gold-pale: #e0d8c0;
+    --gold-royal: #c8a44e;
+    --gold-glow: rgba(200, 164, 78, 0.15);
+    --gold-glow-strong: rgba(200, 164, 78, 0.3);
+    --red-alert: #ff4444;
+    --red-glow: rgba(255, 68, 68, 0.15);
+    --green-life: #00cc88;
+    --green-glow: rgba(0, 204, 136, 0.15);
+    --deep-purple: #1a1a2e;
+    --deep-purple-light: #22223a;
+    --surface: #14141f;
+    --surface-hover: #1a1a2a;
+    --text-dim: #888899;
+    --border-subtle: rgba(200, 164, 78, 0.1);
+    --border-active: rgba(200, 164, 78, 0.4);
+    --glass-bg: rgba(10, 10, 15, 0.85);
+    --glass-border: rgba(200, 164, 78, 0.12);
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --transition-fast: 0.15s ease;
+    --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --font-mono: 'SF Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    --font-sans: 'Segoe UI', 'Helvetica Neue', 'Arial', sans-serif;
+    --font-arabic: 'Noto Naskh Arabic', 'Traditional Arabic', 'Arial', sans-serif;
+}
 
-    // ============================================================
-    // الحالة العامة للنظام (موسعة)
-    // ============================================================
-    state: {
-        initialized: false,
-        version: "v10 Sovereign Eternal",
-        currentUser: "Sovereign Master",
-        systemStatus: "Operational",
-        lastCommand: null,
-        memoryNodes: 847291,
-        coherenceLevel: 94.7,
-        quantumLinks: 12438,
-        aiAwareness: "Hyper-Analysis",
-        securityLayer: "Zero-Trust Active",
-        godModeActive: true,
-        ultraModeActive: true,
-        neuralLoad: 62,
-        uptime: 0,
-        commandsProcessed: 0,
-        hologramIntensity: 1.0
-    },
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-    // ============================================================
-    // التهيئة الأساسية للنظام (مع دمج الواجهة)
-    // ============================================================
-    init() {
-        console.log("%c╔════════════════════════════════════════════════════════════╗", "color:#00E5FF");
-        console.log("%c║     SkyOS v10 - Sovereign Liquid Holographic Engine        ║", "color:#00E5FF");
-        console.log("%c║           ⚡ GodMode Active • Ultra Mode Engaged ⚡         ║", "color:#7C3AED");
-        console.log("%c╚════════════════════════════════════════════════════════════╝", "color:#00E5FF");
+html {
+    font-size: 14px;
+    scroll-behavior: smooth;
+}
 
-        this.state.initialized = true;
-        this.state.uptime = Date.now();
+body {
+    background: var(--cosmic-black);
+    color: var(--gold-pale);
+    font-family: var(--font-arabic);
+    line-height: 1.6;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
 
-        // تهيئة جميع الأنظمة
-        this.initEventListeners();
-        this.initSystemMonitor();
-        this.initHeartbeat();
-        this.initUIControls();
-        this.initHologramIntegration();
-        this.initVoiceRecognition();
-        this.initCommandHistory();
+/* شريط تمرير كوني */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: var(--cosmic-black);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--gold-royal);
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--gold-pale);
+}
 
-        // تحديث واجهة المستخدم بشكل فوري
-        this.updateUIFromState();
+/* ============================================================
+   ٢. شريط التاج – Crown Bar
+   ============================================================ */
+#crown-bar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 0 16px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 100;
+    flex-shrink: 0;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
 
-        // إطلاق حدث جاهزية النظام
-        window.dispatchEvent(new CustomEvent("skyos:ready", { detail: { version: this.state.version } }));
+.crown-left, .crown-center, .crown-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
 
-        // بدء عداد الأوامر
-        this.startCommandCounter();
+.crown-logo {
+    font-size: 20px;
+    filter: drop-shadow(0 0 6px var(--gold-glow-strong));
+}
 
-        console.log("%c[SkyOS v10] ✅ النظام جاهز • العقل السيادي يعمل بكامل قوته", "color:#22c55E; font-weight:bold;");
-    },
+.crown-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--gold-royal);
+    letter-spacing: 1px;
+}
 
-    // ============================================================
-    // تحديث واجهة المستخدم من حالة النظام
-    // ============================================================
-    updateUIFromState() {
-        // تحديث حالة العقل في الواجهة
-        const cognitiveElement = document.querySelector(".ai-state-item:first-child .ai-state-value");
-        if (cognitiveElement) cognitiveElement.innerText = this.state.aiAwareness;
+.crown-version {
+    font-size: 10px;
+    color: var(--text-dim);
+    background: var(--surface-hover);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+}
 
-        const neuralElement = document.querySelector(".ai-state-item:nth-child(3) .ai-state-value");
-        if (neuralElement) neuralElement.innerText = `${this.state.neuralLoad}%`;
+.crown-master {
+    font-size: 13px;
+    color: var(--gold-pale);
+}
 
-        const securityElement = document.querySelector(".ai-state-item:last-child .ai-state-value");
-        if (securityElement) securityElement.innerText = this.state.securityLayer;
+.crown-right {
+    font-size: 11px;
+    gap: 14px;
+    color: var(--text-dim);
+}
 
-        // تحديث الذاكرة الهولوغرافية
-        const memoryNodesElement = document.querySelector(".stat-card:first-child .stat-value");
-        if (memoryNodesElement) memoryNodesElement.innerText = this.state.memoryNodes.toLocaleString();
+.crown-defcon {
+    color: var(--green-life);
+    font-weight: 600;
+}
 
-        const coherenceElement = document.querySelector(".stat-card:nth-child(2) .stat-value");
-        if (coherenceElement) coherenceElement.innerText = `${this.state.coherenceLevel}%`;
+.crown-heartbeat {
+    font-family: var(--font-mono);
+    color: var(--gold-royal);
+}
 
-        const quantumElement = document.querySelector(".stat-card:last-child .stat-value");
-        if (quantumElement) quantumElement.innerText = this.state.quantumLinks.toLocaleString();
+.crown-time {
+    font-family: var(--font-mono);
+}
 
-        // تحديث شريط الطاقة في الهيدر
-        const energyFill = document.querySelector(".energy-fill");
-        if (energyFill) energyFill.style.width = `${this.state.neuralLoad}%`;
-    },
+/* ============================================================
+   ٣. الحاوية الرئيسية
+   ============================================================ */
+#main-container {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
 
-    // ============================================================
-    // مستمعات الأحداث العامة
-    // ============================================================
-    initEventListeners() {
-        document.addEventListener("skyos:command", (e) => {
-            if (e.detail) this.handleCommand(e.detail);
-        });
+/* ============================================================
+   ٤. لوحة الأنظمة – Systems Panel
+   ============================================================ */
+#systems-panel {
+    width: 200px;
+    background: var(--surface);
+    border-left: 1px solid var(--border-subtle);
+    overflow-y: auto;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+}
 
-        document.addEventListener("skyos:update-memory", (e) => {
-            if (e.detail.memoryNodes) this.state.memoryNodes = e.detail.memoryNodes;
-            if (e.detail.coherenceLevel) this.state.coherenceLevel = e.detail.coherenceLevel;
-            if (e.detail.quantumLinks) this.state.quantumLinks = e.detail.quantumLinks;
-            this.updateUIFromState();
-        });
+.panel-header {
+    padding: 12px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--gold-royal);
+    border-bottom: 1px solid var(--border-subtle);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
 
-        document.addEventListener("skyos:update-neural", (e) => {
-            if (e.detail.neuralLoad) this.updateNeuralLoad(e.detail.neuralLoad);
-        });
+.panel-hint {
+    font-size: 10px;
+    color: var(--text-dim);
+    font-weight: 400;
+}
 
-        console.log("%c[SkyOS] Event listeners active • جاهز لاستقبال الأوامر", "color:#00E5FF");
-    },
+#systems-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 6px 0;
+}
 
-    // ============================================================
-    // مراقبة النظام الديناميكية
-    // ============================================================
-    initSystemMonitor() {
-        // محاكاة تغيرات طفيفة في الذاكرة الهولوغرافية
-        setInterval(() => {
-            this.state.coherenceLevel = +(94.5 + (Math.random() * 0.5 - 0.25)).toFixed(2);
-            this.state.memoryNodes = Math.floor(847000 + (Math.random() * 600));
-            this.state.quantumLinks = Math.floor(12400 + (Math.random() * 80));
-            
-            // تحديث الواجهة إذا كانت لا تزال موجودة
-            const coherenceElement = document.querySelector(".stat-card:nth-child(2) .stat-value");
-            if (coherenceElement) coherenceElement.innerText = `${this.state.coherenceLevel}%`;
-            
-            const memoryElement = document.querySelector(".stat-card:first-child .stat-value");
-            if (memoryElement) memoryElement.innerText = this.state.memoryNodes.toLocaleString();
-            
-            const quantumElement = document.querySelector(".stat-card:last-child .stat-value");
-            if (quantumElement) quantumElement.innerText = this.state.quantumLinks.toLocaleString();
-        }, 8500);
-    },
+.system-card {
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid transparent;
+    position: relative;
+}
 
-    // ============================================================
-    // تحديث الحمل العصبي ديناميكياً
-    // ============================================================
-    updateNeuralLoad(value) {
-        this.state.neuralLoad = Math.min(100, Math.max(0, value));
-        const neuralElement = document.querySelector(".ai-state-item:nth-child(3) .ai-state-value");
-        if (neuralElement) neuralElement.innerText = `${this.state.neuralLoad}%`;
-        
-        const energyFill = document.querySelector(".energy-fill");
-        if (energyFill) energyFill.style.width = `${this.state.neuralLoad}%`;
-        
-        const metricFill = document.querySelector(".energy-matrix-grid .metric-fill.mid");
-        if (metricFill) metricFill.style.width = `${this.state.neuralLoad}%`;
-        
-        window.dispatchEvent(new CustomEvent("skyos:neural-update", { detail: { neuralLoad: this.state.neuralLoad } }));
-    },
+.system-card:hover {
+    background: var(--surface-hover);
+    border-bottom-color: var(--border-subtle);
+}
 
-    // ============================================================
-    // نبض النظام (Heartbeat) - إثبات الحياة
-    // ============================================================
-    initHeartbeat() {
-        setInterval(() => {
-            window.dispatchEvent(new CustomEvent("skyos:heartbeat", {
-                detail: { 
-                    timestamp: new Date(),
-                    uptime: Math.floor((Date.now() - this.state.uptime) / 1000),
-                    neuralLoad: this.state.neuralLoad
-                }
-            }));
-        }, 3000);
-    },
+.system-card.active {
+    background: var(--gold-glow);
+    border-right: 2px solid var(--gold-royal);
+}
 
-    // ============================================================
-    // التحكم في واجهة المستخدم (ربط مع HTML)
-    // ============================================================
-    initUIControls() {
-        // ربط زر إرسال الأمر إذا كان موجوداً
-        const sendBtn = document.querySelector(".btn-primary");
-        if (sendBtn && !sendBtn.hasAttribute("data-bound")) {
-            sendBtn.setAttribute("data-bound", "true");
-            sendBtn.addEventListener("click", () => {
-                const input = document.getElementById("commandInput");
-                if (input && input.value.trim()) {
-                    this.handleCommand(input.value.trim());
-                    input.value = "";
-                } else {
-                    this.utils.showToast("✍️ يرجى كتابة أمر سيادي أولاً.", "warning");
-                }
-            });
-        }
+.system-icon {
+    font-size: 18px;
+    width: 24px;
+    text-align: center;
+}
 
-        // ربط الأزرار السريعة في لوحة التحكم (Dashboard)
-        const dashboardBtns = document.querySelectorAll(".btn-secondary");
-        dashboardBtns.forEach(btn => {
-            if (!btn.hasAttribute("data-bound")) {
-                btn.setAttribute("data-bound", "true");
-                btn.addEventListener("click", (e) => {
-                    const card = btn.closest(".dashboard-card");
-                    const title = card?.querySelector("h3")?.innerText || "الوحدة";
-                    this.utils.showToast(`🔓 فتح ${title} - جاهز للاستخدام`, "info");
-                });
-            }
-        });
+.system-name {
+    font-size: 12px;
+    flex: 1;
+}
 
-        // ربط أزرار الإجراءات السريعة (Quick Actions)
-        const quickBtns = document.querySelectorAll(".quick-action-btn");
-        quickBtns.forEach(btn => {
-            if (!btn.hasAttribute("data-bound")) {
-                btn.setAttribute("data-bound", "true");
-                btn.addEventListener("click", () => {
-                    const text = btn.innerText.trim();
-                    if (text.includes("بحث")) this.utils.showToast("🔍 بحث سيادي: سيتم فتح نافذة البحث", "info");
-                    else if (text.includes("تقرير")) this.handleCommand("إنشاء تقرير سيادي تنفيذي");
-                    else if (text.includes("Overclock")) this.activateOverclock();
-                    else if (text.includes("Stealth")) this.activateStealth();
-                    else this.handleCommand(text);
-                });
-            }
-        });
-    },
+.system-value {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--text-dim);
+}
 
-    // ============================================================
-    // دمج الهولوغرام ثلاثي الأبعاد (Three.js)
-    // ============================================================
-    initHologramIntegration() {
-        // التحقق من وجود canvas الهولوغرام
-        const canvas = document.getElementById("hologram-canvas");
-        if (!canvas) {
-            console.warn("[SkyOS] Hologram canvas not found");
-            return;
-        }
+.system-value.warning {
+    color: var(--red-alert);
+}
 
-        // انتظار تحميل Three.js من module
-        setTimeout(() => {
-            if (typeof THREE !== "undefined") {
-                this.setupHologramScene(canvas);
-            } else {
-                console.log("[SkyOS] Three.js not loaded yet, waiting...");
-                window.addEventListener("load", () => {
-                    if (typeof THREE !== "undefined") this.setupHologramScene(canvas);
-                });
-            }
-        }, 500);
-    },
+.system-value.good {
+    color: var(--green-life);
+}
 
-    setupHologramScene(canvas) {
-        const scene = new THREE.Scene();
-        scene.background = null;
-        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 0, 5);
-        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
+/* ============================================================
+   ٥. حرم المحادثة المقدس – Sacred Chat Sanctuary
+   ============================================================ */
+#chat-sanctuary {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--cosmic-black);
+    min-width: 0;
+}
 
-        const geometry = new THREE.SphereGeometry(1.2, 64, 64);
-        const material = new THREE.MeshStandardMaterial({ 
-            color: 0x00e5ff, 
-            emissive: 0x1a00cc, 
-            roughness: 0.2, 
-            metalness: 0.9, 
-            transparent: true, 
-            opacity: 0.7 
-        });
-        const coreSphere = new THREE.Mesh(geometry, material);
-        scene.add(coreSphere);
+#chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
 
-        const ringGeo = new THREE.TorusGeometry(1.5, 0.03, 64, 200);
-        const ringMat = new THREE.MeshStandardMaterial({ color: 0x7a00ff, emissive: 0x3a00aa });
-        const ring = new THREE.Mesh(ringGeo, ringMat);
-        scene.add(ring);
+.message {
+    max-width: 85%;
+    animation: fadeInUp 0.3s ease;
+}
 
-        const particleCount = 800;
-        const particlesGeometry = new THREE.BufferGeometry();
-        const positions = new Float32Array(particleCount * 3);
-        for (let i = 0; i < particleCount; i++) {
-            positions[i*3] = (Math.random() - 0.5) * 8;
-            positions[i*3+1] = (Math.random() - 0.5) * 6;
-            positions[i*3+2] = (Math.random() - 0.5) * 4 - 2;
-        }
-        particlesGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-        const particleMat = new THREE.PointsMaterial({ color: 0x00e5ff, size: 0.05, transparent: true, opacity: 0.5 });
-        const particles = new THREE.Points(particlesGeometry, particleMat);
-        scene.add(particles);
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 
-        const light = new THREE.PointLight(0x00e5ff, 1);
-        light.position.set(2, 2, 3);
-        scene.add(light);
-        const ambientLight = new THREE.AmbientLight(0x111122);
-        scene.add(ambientLight);
+.message.user-message {
+    align-self: flex-start;
+}
 
-        let time = 0;
-        const animate = () => {
-            requestAnimationFrame(animate);
-            time += 0.008;
-            coreSphere.rotation.y = time * 0.5;
-            coreSphere.rotation.x = Math.sin(time * 0.3) * 0.2;
-            ring.rotation.x = time * 0.6;
-            ring.rotation.z = time * 0.4;
-            particles.rotation.y = time * 0.1;
-            
-            const positionsAttr = particlesGeometry.attributes.position.array;
-            for (let i = 0; i < particleCount; i++) {
-                positionsAttr[i*3+1] += (Math.random() - 0.5) * 0.003;
-                if (positionsAttr[i*3+1] > 2.5) positionsAttr[i*3+1] = -2.5;
-                if (positionsAttr[i*3+1] < -2.5) positionsAttr[i*3+1] = 2.5;
-            }
-            particlesGeometry.attributes.position.needsUpdate = true;
-            
-            renderer.render(scene, camera);
-        };
-        animate();
+.message.sama-message {
+    align-self: flex-end;
+}
 
-        window.addEventListener("resize", () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
+.message.system-message {
+    align-self: center;
+    max-width: 90%;
+}
 
-        console.log("%c[SkyOS] Hologram 3D active", "color:#00E5FF");
-    },
+.msg-content {
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
+    line-height: 1.7;
+    font-size: 13px;
+    word-wrap: break-word;
+}
 
-    // ============================================================
-    // الأوامر الصوتية (Web Speech API)
-    // ============================================================
-    initVoiceRecognition() {
-        this.voiceSupported = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
-        if (!this.voiceSupported) {
-            console.warn("[SkyOS] Voice recognition not supported");
-        }
-    },
+.user-message .msg-content {
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    color: var(--gold-pale);
+}
 
-    toggleVoiceCommand() {
-        if (!this.voiceSupported) {
-            this.utils.showToast("المتصفح لا يدعم الأوامر الصوتية", "error");
-            return;
-        }
-        
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        const recognition = new SpeechRecognition();
-        recognition.lang = "ar-SA";
-        recognition.interimResults = false;
-        recognition.maxAlternatives = 1;
-        
-        this.utils.showToast("🎤 استمع الآن... تحدث بأمرك السيادي", "info");
-        recognition.start();
-        
-        recognition.onresult = (event) => {
-            const spokenCommand = event.results[0][0].transcript;
-            this.utils.showToast(`✅ تم التعرف على: "${spokenCommand}"`, "success");
-            this.handleCommand(spokenCommand);
-        };
-        
-        recognition.onerror = () => {
-            this.utils.showToast("خطأ في التعرف على الصوت", "error");
-        };
-    },
+.sama-message .msg-content {
+    background: var(--gold-glow);
+    border: 1px solid var(--border-active);
+    color: var(--gold-pale);
+}
 
-    // ============================================================
-    // سجل الأوامر
-    // ============================================================
-    initCommandHistory() {
-        this.commandHistory = [];
-        this.loadCommandHistory();
-    },
+.system-message .msg-content {
+    background: transparent;
+    border: 1px dashed var(--border-subtle);
+    color: var(--text-dim);
+    text-align: center;
+    font-size: 12px;
+}
 
-    loadCommandHistory() {
-        try {
-            const saved = localStorage.getItem("skyos_command_history");
-            if (saved) {
-                this.commandHistory = JSON.parse(saved);
-                if (!Array.isArray(this.commandHistory)) this.commandHistory = [];
-            }
-        } catch(e) { this.commandHistory = []; }
-    },
+.msg-icon {
+    font-size: 24px;
+    margin-bottom: 6px;
+}
 
-    saveCommandHistory() {
-        try {
-            const toStore = this.commandHistory.slice(-100);
-            localStorage.setItem("skyos_command_history", JSON.stringify(toStore));
-        } catch(e) {}
-    },
+#chat-input-area {
+    padding: 12px 16px;
+    background: var(--surface);
+    border-top: 1px solid var(--border-subtle);
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+}
 
-    addToHistory(command, response) {
-        this.commandHistory.unshift({
-            command: command.substring(0, 200),
-            responsePreview: response.substring(0, 100),
-            timestamp: new Date().toISOString()
-        });
-        if (this.commandHistory.length > 100) this.commandHistory.pop();
-        this.saveCommandHistory();
-        this.state.commandsProcessed++;
-    },
+#chat-input {
+    flex: 1;
+    background: var(--cosmic-black);
+    border: 1px solid var(--border-subtle);
+    color: var(--gold-pale);
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    font-family: var(--font-arabic);
+    font-size: 13px;
+    resize: none;
+    outline: none;
+    transition: var(--transition-fast);
+    min-height: 40px;
+    max-height: 120px;
+}
 
-    getCommandHistory() {
-        return this.commandHistory;
-    },
+#chat-input:focus {
+    border-color: var(--gold-royal);
+    box-shadow: 0 0 0 3px var(--gold-glow);
+}
 
-    // ============================================================
-    // بدء عداد الأوامر
-    // ============================================================
-    startCommandCounter() {
-        setInterval(() => {
-            const counterElement = document.querySelector(".stat-card .stat-value");
-            if (counterElement && this.state.commandsProcessed > 0) {
-                // لا نعرضها بشكل مزعج، فقط نحدث داخلياً
-            }
-        }, 10000);
-    },
+#chat-input::placeholder {
+    color: var(--text-dim);
+}
 
-    // ============================================================
-    // معالجة الأوامر (مع تحليل سياقي متقدم)
-    // ============================================================
-    handleCommand(command) {
-        if (!command || typeof command !== "string") return;
-        
-        this.state.lastCommand = command;
-        this.utils.showToast(`📡 تم استلام الأمر: ${command.substring(0, 50)}`, "info");
-        
-        const result = this.processCommand(command);
-        this.addToHistory(command, result.response);
-        
-        // إظهار الأمر في واجهة المستخدم (إذا كانت دوال العرض موجودة)
-        if (typeof displayUserMessage === "function") {
-            displayUserMessage(command);
-            setTimeout(() => {
-                if (typeof displayAIResponse === "function") {
-                    displayAIResponse(result.response);
-                } else {
-                    this.displayAIFallback(command);
-                }
-            }, 300);
-        } else {
-            this.displayAIFallback(command);
-        }
-        
-        window.dispatchEvent(new CustomEvent("skyos:command-processed", { 
-            detail: { command, result, timestamp: new Date() }
-        }));
-        
-        return result;
-    },
+#send-btn {
+    background: var(--gold-royal);
+    color: var(--cosmic-black);
+    border: none;
+    padding: 10px 16px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-size: 16px;
+    transition: var(--transition-fast);
+    flex-shrink: 0;
+}
 
-    displayAIFallback(command) {
-        const result = this.processCommand(command);
-        const container = document.querySelector(".main-container");
-        if (container) {
-            const msgDiv = document.createElement("div");
-            msgDiv.className = "glass-card ai-message";
-            msgDiv.style.borderRight = "4px solid #7C3AED";
-            msgDiv.style.marginTop = "14px";
-            msgDiv.innerHTML = `
-                <div class="msg-header" style="display:flex; align-items:center; gap:10px;">
-                    <i class="fas fa-robot" style="color:#7C3AED;"></i>
-                    <strong style="color:#7C3AED;">SkyOS Core</strong>
-                </div>
-                <div class="msg-text" style="font-size:0.9rem;">${result.response}</div>
-            `;
-            container.appendChild(msgDiv);
-            msgDiv.scrollIntoView({ behavior: "smooth" });
-        } else {
-            console.log("[SkyOS Response]", result.response);
-        }
-    },
+#send-btn:hover {
+    background: var(--gold-pale);
+    box-shadow: 0 0 12px var(--gold-glow-strong);
+}
 
-    processCommand(command) {
-        const cmd = command.toLowerCase();
-        
-        if (cmd.includes("ذاكرة") || cmd.includes("memory") || cmd.includes("هولوغرافية")) {
-            return {
-                type: "memory",
-                response: `
-                    🧠 <strong>تحليل الذاكرة الهولوغرافية:</strong><br>
-                    • مستوى التماسك: <span style="color:#00E5FF">${this.state.coherenceLevel}%</span><br>
-                    • الروابط الكمية النشطة: <span style="color:#00E5FF">${this.state.quantumLinks.toLocaleString()}</span><br>
-                    • العقد الهولوغرافية: <span style="color:#00E5FF">${this.state.memoryNodes.toLocaleString()}</span><br>
-                    • حالة التخزين: <span style="color:#22c55e">مستقرة وآمنة</span>
-                `
-            };
-        }
-        
-        if (cmd.includes("حالة") || cmd.includes("status") || cmd.includes("النظام")) {
-            return {
-                type: "status",
-                response: `
-                    📊 <strong>حالة النظام السيادي:</strong><br>
-                    • Core Engine: <span style="color:#22c55e">Operational</span><br>
-                    • Quantum Memory: <span style="color:#22c55e">Stable</span><br>
-                    • Self-Evolution: <span style="color:#fbbf24">Active</span><br>
-                    • Neural Load: <span style="color:#00E5FF">${this.state.neuralLoad}%</span><br>
-                    • Security: ${this.state.securityLayer}<br>
-                    • GodMode: ${this.state.godModeActive ? "<span style='color:#00E5FF'>✅ مفعل</span>" : "❌ غير مفعل"}
-                `
-            };
-        }
-        
-        if (cmd.includes("أمان") || cmd.includes("security") || cmd.includes("حماية")) {
-            return {
-                type: "security",
-                response: `
-                    🛡️ <strong>مركز الأمان السيادي:</strong><br>
-                    • لا توجد تهديدات حالية.<br>
-                    • جدار الحماية الصفري: نشط.<br>
-                    • جميع الصلاحيات ضمن النطاق المسموح.<br>
-                    • آخر فحص: قبل 12 ثانية.
-                `
-            };
-        }
-        
-        if (cmd.includes("تحليل") || cmd.includes("analysis") || cmd.includes("تقرير")) {
-            return {
-                type: "analysis",
-                response: `
-                    📈 <strong>محرك التحليل السيادي:</strong><br>
-                    • تحليل سياقي متعدد الطبقات: مكتمل.<br>
-                    • استخراج النقاط الحرجة: <span style="color:#00E5FF">تم</span><br>
-                    • إنشاء تقرير تنفيذي فوري.<br>
-                    • تصنيف المخاطر: منخفض (95% ثقة).
-                `
-            };
-        }
-        
-        if (cmd.includes("أتمتة") || cmd.includes("automation") || cmd.includes("عصبية")) {
-            return {
-                type: "automation",
-                response: `
-                    ⚙️ <strong>الأتمتة العصبية:</strong><br>
-                    • تم تفعيل 3 سيناريوهات آلية.<br>
-                    • مراقبة الأحداث مستمرة.<br>
-                    • آخر إجراء تلقائي: مزامنة الذاكرة قبل 2 دقيقة.
-                `
-            };
-        }
-        
-        if (cmd.includes("قدرة") || cmd.includes("godmode") || cmd.includes("god")) {
-            if (!this.state.godModeActive) {
-                this.activateGodMode();
-                return {
-                    type: "godmode",
-                    response: `👑 <strong>تم تفعيل GodMode</strong><br>جميع القدرات السيادية متاحة الآن.`
-                };
-            }
-            return {
-                type: "godmode",
-                response: `👑 <strong>وضع GodMode مفعل بالفعل.</strong><br>• التحليل العميق: نشط.<br>• رؤية النظام الكاملة: ممنوحة.`
-            };
-        }
-        
-        if (cmd.includes("history") || cmd.includes("سجل") || cmd.includes("الأوامر")) {
-            const lastCommands = this.commandHistory.slice(0, 5).map(entry => `• ${entry.command.substring(0, 50)}`).join("<br>");
-            return {
-                type: "history",
-                response: `📜 <strong>آخر الأوامر المنفذة:</strong><br>${lastCommands || "لا توجد أوامر سابقة"}`
-            };
-        }
-        
-        return {
-            type: "generic",
-            response: `
-                ✨ <strong>تم استلام الأمر السيادي:</strong><br>
-                "${command.substring(0, 100)}"<br><br>
-                جاري معالجته بواسطة المحرك السيادي. استخدم أوامر مثل:<br>
-                • تحليل الذاكرة<br>
-                • حالة النظام<br>
-                • تقرير أمني<br>
-                • تفعيل الأتمتة العصبية
-            `
-        };
-    },
+#send-btn:active {
+    transform: scale(0.96);
+}
 
-    // ============================================================
-    // GodMode و Ultra Mode و Overclock و Stealth
-    // ============================================================
-    activateGodMode() {
-        this.state.godModeActive = true;
-        this.state.aiAwareness = "GodMode Active";
-        this.updateUIFromState();
-        this.utils.showToast("👑 تم تفعيل GodMode: تحليل عميق، أوامر متعددة، رؤية كاملة.", "success");
-        localStorage.setItem("skyos_godmode", "true");
-        document.body.classList.add("godmode-active");
-        
-        // تحديث سرعة معالجة الأوامر (تأثير نفسي)
-        window.dispatchEvent(new CustomEvent("skyos:godmode-activated"));
-    },
+/* ============================================================
+   ٦. لوحة التفاصيل – Detail Panel
+   ============================================================ */
+#detail-panel {
+    width: 280px;
+    background: var(--surface);
+    border-right: 1px solid var(--border-subtle);
+    overflow-y: auto;
+    flex-shrink: 0;
+    transition: var(--transition-smooth);
+}
 
-    deactivateGodMode() {
-        this.state.godModeActive = false;
-        this.state.aiAwareness = "Hyper Analysis";
-        this.updateUIFromState();
-        this.utils.showToast("تم إلغاء GodMode. العودة إلى الوضع العادي.", "info");
-        localStorage.setItem("skyos_godmode", "false");
-        document.body.classList.remove("godmode-active");
-    },
+#detail-panel.hidden {
+    width: 0;
+    overflow: hidden;
+    border: none;
+}
 
-    activateUltraMode() {
-        this.state.ultraModeActive = true;
-        this.utils.showToast("💎 تم تفعيل Ultra Mode: فخامة سينمائية وتأثيرات متقدمة.", "success");
-        localStorage.setItem("skyos_ultra", "true");
-        document.body.classList.add("ultra-active");
-    },
+#detail-content {
+    padding: 14px;
+    font-size: 12px;
+    line-height: 1.8;
+}
 
-    activateOverclock() {
-        if (!this.state.godModeActive) {
-            this.utils.showToast("⚠️ يجب تفعيل GodMode أولاً لاستخدام وضع Overclock.", "warning");
-            return;
-        }
-        this.utils.showToast("⚡ تفعيل وضع Overclock: سرعة المعالجة العصبية +200%", "success");
-        const originalLoad = this.state.neuralLoad;
-        this.updateNeuralLoad(98);
-        setTimeout(() => {
-            this.updateNeuralLoad(originalLoad);
-            this.utils.showToast("انتهى وضع Overclock. العودة إلى الوضع الطبيعي.", "info");
-        }, 10000);
-    },
+.close-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    transition: var(--transition-fast);
+}
 
-    activateStealth() {
-        this.utils.showToast("🕶️ تفعيل وضع Stealth: إخفاء البصمة الرقمية.", "success");
-        this.state.securityLayer = "Stealth Active";
-        this.updateUIFromState();
-        const canvas = document.getElementById("hologram-canvas");
-        if (canvas) canvas.style.opacity = "0.5";
-        setTimeout(() => {
-            if (canvas) canvas.style.opacity = "1";
-            this.state.securityLayer = "Zero-Trust Active";
-            this.updateUIFromState();
-            this.utils.showToast("وضع Stealth تم إلغاؤه تلقائيًا.", "info");
-        }, 8000);
-    },
+.close-btn:hover {
+    color: var(--red-alert);
+    background: var(--red-glow);
+}
 
-    // ============================================================
-    // قوالب الأوامر المتقدمة
-    // ============================================================
-    openCommandTemplates() {
-        const templates = [
-            "تحليل شامل للذاكرة الهولوغرافية",
-            "تقرير حالة النظام الكامل",
-            "تفعيل الحماية القصوى",
-            "تشغيل الأتمتة العصبية للمهام الحرجة",
-            "إنشاء تقرير سيادي تنفيذي",
-            "مسح شامل للثغرات الأمنية",
-            "إظهار سجل العمليات لآخر ساعة",
-            "تفعيل GodMode",
-            "تفعيل Overclock",
-            "تفعيل Stealth"
-        ];
-        
-        let message = "📋 قوالب الأوامر السيادية المتاحة:\n\n";
-        templates.forEach((t, idx) => {
-            message += `${idx+1}. ${t}\n`;
-        });
-        message += "\nأدخل رقم القالب أو اكتب الأمر المطلوب:";
-        
-        const choice = prompt(message);
-        if (choice && !isNaN(choice) && choice >= 1 && choice <= templates.length) {
-            const selected = templates[parseInt(choice)-1];
-            this.handleCommand(selected);
-        } else if (choice && choice.trim()) {
-            this.handleCommand(choice.trim());
-        }
-    },
+/* ============================================================
+   ٧. شريط الأوامر السريعة – Quick Commands Bar
+   ============================================================ */
+#quick-commands {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 10px 14px;
+    background: var(--surface);
+    border-top: 1px solid var(--border-subtle);
+    justify-content: center;
+    flex-shrink: 0;
+}
 
-    // ============================================================
-    // أدوات عامة (Utilities)
-    // ============================================================
-    utils: {
-        formatTime(date = new Date()) {
-            return date.toLocaleTimeString("ar-EG", {
-                hour: "2-digit",
-                minute: "2-digit",
-                second: "2-digit"
-            });
-        },
+#quick-commands button {
+    background: var(--cosmic-black-light);
+    border: 1px solid var(--border-subtle);
+    color: var(--gold-pale);
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-family: var(--font-arabic);
+    font-size: 11px;
+    transition: var(--transition-fast);
+    white-space: nowrap;
+}
 
-        showToast(message, type = "info") {
-            const toast = document.createElement("div");
-            const bgColor = type === "success" ? "#22c55e" : (type === "error" ? "#ef4444" : (type === "warning" ? "#fbbf24" : "#00E5FF"));
-            toast.style.cssText = `
-                position: fixed;
-                bottom: 30px;
-                left: 50%;
-                transform: translateX(-50%);
-                background: rgba(12,14,24,0.95);
-                color: #E8ECF5;
-                padding: 12px 24px;
-                border-radius: 50px;
-                border-left: 4px solid ${bgColor};
-                font-size: 14px;
-                z-index: 10000;
-                backdrop-filter: blur(12px);
-                box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-                transition: all 0.3s ease;
-                font-family: 'Inter', sans-serif;
-                direction: rtl;
-                white-space: nowrap;
-            `;
-            toast.innerHTML = message;
-            document.body.appendChild(toast);
-            setTimeout(() => {
-                toast.style.opacity = "0";
-                toast.style.transform = "translateX(-50%) translateY(10px)";
-                setTimeout(() => toast.remove(), 400);
-            }, 2800);
-        },
+#quick-commands button:hover {
+    background: var(--surface-hover);
+    border-color: var(--gold-royal);
+    box-shadow: 0 0 8px var(--gold-glow);
+}
 
-        copy(text) {
-            navigator.clipboard.writeText(text)
-                .then(() => this.showToast("📋 تم النسخ بنجاح", "success"))
-                .catch(() => this.showToast("❌ فشل النسخ", "error"));
-        },
+#quick-commands button:active {
+    transform: scale(0.95);
+}
 
-        getSystemUptime() {
-            if (window.SkyOS && window.SkyOS.state && window.SkyOS.state.uptime) {
-                const seconds = Math.floor((Date.now() - window.SkyOS.state.uptime) / 1000);
-                const hours = Math.floor(seconds / 3600);
-                const minutes = Math.floor((seconds % 3600) / 60);
-                const secs = seconds % 60;
-                return `${hours}h ${minutes}m ${secs}s`;
-            }
-            return "Unknown";
-        }
-    },
+/* ============================================================
+   ٨. لوحة المراقبة الحية – Live Monitor
+   ============================================================ */
+#live-monitor {
+    display: flex;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--surface);
+    border-top: 1px solid var(--border-subtle);
+    flex-wrap: wrap;
+    justify-content: center;
+    flex-shrink: 0;
+}
 
-    // ============================================================
-    // إدارة الوحدات (Modules)
-    // ============================================================
-    modules: {
-        register(name, module) {
-            if (SkyOS[name]) {
-                console.warn(`[SkyOS] Module ${name} already exists, overwriting`);
-            }
-            SkyOS[name] = module;
-            console.log(`%c[SkyOS] 📦 Module registered → ${name}`, "color:#00E5FF");
-        },
-        
-        list() {
-            return Object.keys(SkyOS).filter(key => typeof SkyOS[key] === "object" && key !== "state" && key !== "utils");
-        }
-    },
+.monitor-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 70px;
+}
 
-    // ============================================================
-    // تصدير API للنظام
-    // ============================================================
-    api: {
-        getState: () => ({ ...SkyOS.state }),
-        sendCommand: (cmd) => SkyOS.handleCommand(cmd),
-        getHistory: () => SkyOS.getCommandHistory(),
-        toggleGodMode: () => SkyOS.state.godModeActive ? SkyOS.deactivateGodMode() : SkyOS.activateGodMode(),
-        getUptime: () => SkyOS.utils.getSystemUptime()
+.monitor-label {
+    font-size: 10px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.monitor-value {
+    font-family: var(--font-mono);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--gold-royal);
+}
+
+.monitor-value.warning {
+    color: var(--red-alert);
+}
+
+.monitor-bar {
+    width: 100%;
+    height: 3px;
+    background: var(--cosmic-black);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.monitor-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.5s ease;
+}
+
+.coherence-fill {
+    background: var(--green-life);
+    box-shadow: 0 0 6px var(--green-glow);
+}
+
+.threat-fill {
+    background: var(--red-alert);
+    box-shadow: 0 0 6px var(--red-glow);
+}
+
+/* ============================================================
+   ٩. شريط الحالة – Status Bar
+   ============================================================ */
+#status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 6px 14px;
+    background: var(--cosmic-black-light);
+    font-size: 11px;
+    color: var(--text-dim);
+    flex-shrink: 0;
+}
+
+#status-indicator {
+    font-size: 8px;
+}
+
+.status-sep {
+    color: var(--border-subtle);
+}
+
+/* ============================================================
+   ١٠. تجاوب – Responsive
+   ============================================================ */
+
+/* جهاز لوحي */
+@media (max-width: 1024px) {
+    #systems-panel {
+        width: 160px;
     }
-};
-
-// ============================================================
-// تشغيل النظام عند تحميل الصفحة
-// ============================================================
-document.addEventListener("DOMContentLoaded", () => {
-    SkyOS.init();
-});
-
-// ربط الوظائف العامة لضمان التوافق مع onclick في HTML
-window.SkyOS = SkyOS;
-window.sendCommand = function() {
-    const input = document.getElementById("commandInput");
-    if (input && input.value.trim()) {
-        SkyOS.handleCommand(input.value.trim());
-        input.value = "";
-    } else {
-        SkyOS.utils.showToast("✍️ يرجى كتابة أمر سيادي أولاً.", "warning");
+    #detail-panel {
+        width: 240px;
     }
-};
-window.toggleVoiceCommand = () => SkyOS.toggleVoiceCommand();
-window.openCommandTemplates = () => SkyOS.openCommandTemplates();
-window.quickCommand = (cmd) => SkyOS.handleCommand(cmd);
-window.activateOverclock = () => SkyOS.activateOverclock();
-window.activateStealth = () => SkyOS.activateStealth();
+    .system-name {
+        font-size: 11px;
+    }
+}
 
-console.log("%c[SkyOS v10] ✅ Core Engine Ready • Eternal Edition • No Future Modifications Needed", "color:#7C3AED; font-size:16px; font-weight:bold;");
+/* جوال */
+@media (max-width: 768px) {
+    #systems-panel {
+        display: none;
+    }
+    #detail-panel {
+        position: fixed;
+        top: 44px;
+        right: 0;
+        bottom: 0;
+        width: 85vw;
+        z-index: 200;
+        box-shadow: -4px 0 20px rgba(0,0,0,0.5);
+    }
+    #detail-panel.hidden {
+        width: 0;
+    }
+    #live-monitor {
+        gap: 6px;
+    }
+    .monitor-item {
+        min-width: 55px;
+    }
+    .monitor-value {
+        font-size: 13px;
+    }
+    #quick-commands button {
+        padding: 6px 10px;
+        font-size: 10px;
+    }
+    #chat-messages {
+        padding: 10px;
+    }
+    .message {
+        max-width: 92%;
+    }
+}
 
-// ============================================================
-// نهاية الملف - النسخة الأبدية النهائية
-// ============================================================
+/* ============================================================
+   ١١. تأثيرات خاصة – هالات ذهبية
+   ============================================================ */
+.glow-gold {
+    box-shadow: 0 0 15px var(--gold-glow), 0 0 30px var(--gold-glow);
+}
+
+.glow-red {
+    box-shadow: 0 0 15px var(--red-glow), 0 0 30px var(--red-glow);
+}
+
+.glow-green {
+    box-shadow: 0 0 15px var(--green-glow), 0 0 30px var(--green-glow);
+}
+
+/* نبض */
+@keyframes pulse-gold {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.pulse {
+    animation: pulse-gold 2s ease-in-out infinite;
+}
+
+/* ============================================================
+   ١٢. طباعة – Print
+   ============================================================ */
+@media print {
+    body {
+        background: white;
+        color: black;
+    }
+    #crown-bar, #systems-panel, #detail-panel,
+    #quick-commands, #live-monitor, #status-bar {
+        display: none;
+    }
+    #chat-sanctuary {
+        background: white;
+    }
+}
