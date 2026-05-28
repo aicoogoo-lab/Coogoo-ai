@@ -1,939 +1,183 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-    <title>سماء • غرفة القيادة السيادية</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-        /* ============================================================
-           SkyOS v10 - Sovereign Interface (الألوان السيادية)
-           ============================================================ */
-        :root {
-            --bg: #0D3B2F;
-            --layer: rgba(26, 26, 46, 0.78);
-            --layer2: rgba(26, 26, 46, 0.58);
-            --line: rgba(139, 90, 43, 0.28);
-            --wood: #8B5A2B;
-            --gold: #D4A373;
-            --sky: #6BB5D6;
-            --violet: #9B59B6;
-            --text: #F5F5F5;
-            --muted: rgba(245, 245, 245, 0.70);
-            --muted2: rgba(245, 245, 245, 0.55);
-            --ok: #22C55E;
-            --bad: #EF4444;
-            --warn: #F59E0B;
-            --shadow: 0 18px 60px rgba(0, 0, 0, 0.35);
-            --glass: saturate(160%) blur(10px);
-            --radius: 16px;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            background: radial-gradient(1200px 700px at 30% 20%, rgba(107, 181, 214, 0.18), transparent 55%),
-                        radial-gradient(900px 600px at 80% 65%, rgba(155, 89, 182, 0.14), transparent 60%),
-                        linear-gradient(180deg, rgba(13, 59, 47, 1), rgba(26, 26, 46, 1));
-            font-family: "Inter", sans-serif;
-            color: var(--text);
-            overflow: hidden;
-            height: 100vh;
-        }
-
-        /* Layout */
-        .app {
-            display: flex;
-            height: 100%;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            width: 320px;
-            background: var(--layer);
-            backdrop-filter: var(--glass);
-            border-right: 1px solid var(--line);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .sb-head {
-            padding: 22px 18px;
-            border-bottom: 1px solid var(--line);
-        }
-
-        .sb-title {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 12px;
-        }
-
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .brand-badge {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, var(--sky), var(--violet));
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            font-size: 20px;
-            box-shadow: 0 0 20px rgba(107, 181, 214, 0.3);
-        }
-
-        .brand h2 {
-            font-size: 16px;
-            font-weight: 700;
-        }
-
-        .brand p {
-            font-size: 11px;
-            color: var(--muted2);
-        }
-
-        .conn {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 12px;
-            padding: 6px 12px;
-            background: rgba(15, 20, 35, 0.5);
-            border-radius: 40px;
-            border: 1px solid rgba(212, 163, 115, 0.2);
-        }
-
-        .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--warn);
-        }
-
-        .dot.ok { background: var(--ok); box-shadow: 0 0 6px var(--ok); }
-        .dot.bad { background: var(--bad); }
-
-        .sb-body {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        /* Cards */
-        .card {
-            background: var(--layer2);
-            backdrop-filter: var(--glass);
-            border: 1px solid var(--line);
-            border-radius: var(--radius);
-            overflow: hidden;
-        }
-
-        .card-header {
-            padding: 14px 16px;
-            border-bottom: 1px solid rgba(139, 90, 43, 0.2);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .card-header h3 {
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--gold);
-        }
-
-        .card-header .mini {
-            font-size: 11px;
-            color: var(--muted2);
-            font-family: monospace;
-        }
-
-        .stats {
-            padding: 14px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 13px;
-        }
-
-        .label {
-            color: var(--muted2);
-        }
-
-        .val {
-            font-weight: 700;
-            font-family: monospace;
-            color: var(--sky);
-        }
-
-        .val.ok { color: var(--ok); }
-        .val.bad { color: var(--bad); }
-        .val.warn { color: var(--warn); }
-
-        .meter {
-            height: 6px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        .bar {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, var(--sky), var(--violet));
-            border-radius: 10px;
-            transition: width 0.3s ease;
-        }
-
-        .bar.ok { background: linear-gradient(90deg, var(--ok), #86efac); }
-        .bar.bad { background: linear-gradient(90deg, var(--bad), #fca5a5); }
-
-        /* Quick Actions */
-        .actions {
-            padding: 14px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-
-        .btn {
-            border: 1px solid rgba(212, 163, 115, 0.3);
-            background: rgba(139, 90, 43, 0.2);
-            color: var(--gold);
-            border-radius: 12px;
-            padding: 10px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-align: center;
-        }
-
-        .btn:hover {
-            background: rgba(139, 90, 43, 0.4);
-            transform: translateY(-1px);
-        }
-
-        .btn.primary {
-            background: linear-gradient(135deg, var(--sky), var(--violet));
-            border: none;
-            color: white;
-        }
-
-        .btn.danger {
-            background: rgba(239, 68, 68, 0.2);
-            border-color: rgba(239, 68, 68, 0.4);
-            color: #fecaca;
-        }
-
-        /* Main Content */
-        .main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .topbar {
-            background: rgba(26, 26, 46, 0.7);
-            backdrop-filter: var(--glass);
-            padding: 12px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--line);
-        }
-
-        .title h1 {
-            font-size: 18px;
-            font-weight: 800;
-        }
-
-        .title .sub {
-            font-size: 11px;
-            color: var(--muted);
-            font-family: monospace;
-        }
-
-        .top-actions {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .pill {
-            background: rgba(15, 20, 35, 0.5);
-            border: 1px solid rgba(212, 163, 115, 0.2);
-            border-radius: 40px;
-            padding: 6px 12px;
-            font-size: 12px;
-            font-family: monospace;
-        }
-
-        .logout {
-            background: rgba(239, 68, 68, 0.15);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            border-radius: 40px;
-            padding: 6px 14px;
-            color: #fecaca;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 12px;
-        }
-
-        /* Tabs */
-        .tabs {
-            display: flex;
-            gap: 8px;
-            padding: 12px 20px;
-            background: rgba(26, 26, 46, 0.5);
-            border-bottom: 1px solid var(--line);
-        }
-
-        .tab {
-            padding: 8px 16px;
-            border-radius: 40px;
-            background: rgba(15, 20, 35, 0.3);
-            border: 1px solid rgba(212, 163, 115, 0.2);
-            color: var(--muted);
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-
-        .tab.active {
-            background: linear-gradient(135deg, rgba(107, 181, 214, 0.3), rgba(155, 89, 182, 0.3));
-            border-color: rgba(107, 181, 214, 0.5);
-            color: white;
-        }
-
-        /* Workspace */
-        .workspace {
-            flex: 1;
-            padding: 16px 20px;
-            overflow: hidden;
-        }
-
-        .panel {
-            background: var(--layer2);
-            backdrop-filter: var(--glass);
-            border: 1px solid var(--line);
-            border-radius: var(--radius);
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .panel-header {
-            padding: 14px 16px;
-            border-bottom: 1px solid rgba(139, 90, 43, 0.2);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .panel-header .title {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 700;
-        }
-
-        .scroll-area {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px;
-        }
-
-        /* Chat Messages */
-        .message {
-            max-width: 85%;
-            padding: 10px 14px;
-            border-radius: 18px;
-            margin-bottom: 12px;
-            font-size: 14px;
-            line-height: 1.5;
-            word-wrap: break-word;
-        }
-
-        .message.user {
-            background: linear-gradient(135deg, var(--sky), var(--violet));
-            color: white;
-            margin-right: auto;
-        }
-
-        .message.sama {
-            background: rgba(139, 90, 43, 0.3);
-            border: 1px solid rgba(212, 163, 115, 0.2);
-            margin-left: auto;
-        }
-
-        .input-bar {
-            padding: 12px;
-            border-top: 1px solid rgba(139, 90, 43, 0.2);
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .input-bar input, .input-bar textarea {
-            flex: 1;
-            background: rgba(15, 20, 35, 0.6);
-            border: 1px solid rgba(139, 90, 43, 0.4);
-            border-radius: 40px;
-            padding: 12px 16px;
-            color: var(--text);
-            font-size: 14px;
-            outline: none;
-            font-family: inherit;
-        }
-
-        .input-bar input:focus, .input-bar textarea:focus {
-            border-color: var(--sky);
-        }
-
-        .send-btn {
-            background: linear-gradient(135deg, var(--sky), var(--violet));
-            border: none;
-            border-radius: 40px;
-            width: 44px;
-            height: 44px;
-            color: white;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        /* Console / Logs */
-        .console-line {
-            font-family: monospace;
-            font-size: 12px;
-            padding: 6px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .console-line .time {
-            color: var(--muted2);
-            margin-left: 12px;
-        }
-
-        .console-line.ok { color: var(--ok); }
-        .console-line.bad { color: var(--bad); }
-        .console-line.warn { color: var(--warn); }
-
-        table {
-            width: 100%;
-            font-size: 12px;
-            border-collapse: collapse;
-        }
-
-        th, td {
-            text-align: right;
-            padding: 10px 8px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        th {
-            color: var(--gold);
-            font-weight: 600;
-        }
-
-        .tag {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 20px;
-            font-size: 11px;
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .tag.ok { background: rgba(34, 197, 94, 0.2); color: #bbf7d0; }
-        .tag.bad { background: rgba(239, 68, 68, 0.2); color: #fecaca; }
-        .tag.warn { background: rgba(245, 158, 11, 0.2); color: #fde68a; }
-
-        /* Mobile */
-        .drawer-btn {
-            display: none;
-            background: rgba(15, 20, 35, 0.5);
-            border: 1px solid rgba(212, 163, 115, 0.3);
-            border-radius: 40px;
-            padding: 8px 12px;
-            color: var(--gold);
-            cursor: pointer;
-        }
-
-        @media (max-width: 768px) {
-            .sidebar {
-                position: fixed;
-                right: -320px;
-                top: 0;
-                height: 100%;
-                z-index: 1000;
-                transition: right 0.3s;
-            }
-            .sidebar.open {
-                right: 0;
-            }
-            .drawer-btn {
-                display: inline-flex;
-                align-items: center;
-                gap: 8px;
-            }
-            .workspace {
-                padding: 12px;
-            }
-        }
-
-        /* Toast */
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(10px);
-            padding: 10px 20px;
-            border-radius: 40px;
-            font-size: 13px;
-            z-index: 2000;
-            display: none;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>سماء • واجهة السيّد (جوال)</title>
+
+<style>
+    body {
+        margin: 0;
+        background: #0D3B2F;
+        font-family: "Inter", sans-serif;
+        color: #F5F5F5;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+    }
+
+    header {
+        padding: 14px;
+        background: rgba(0,0,0,0.25);
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        text-align: center;
+        font-size: 16px;
+        font-weight: 700;
+    }
+
+    #statusBox {
+        padding: 10px;
+        background: rgba(255,255,255,0.05);
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+    #chatBox {
+        flex: 1;
+        overflow-y: auto;
+        padding: 12px;
+    }
+
+    .msg {
+        padding: 10px 14px;
+        border-radius: 14px;
+        margin-bottom: 10px;
+        font-size: 14px;
+        line-height: 1.5;
+        max-width: 85%;
+        white-space: pre-wrap;
+    }
+
+    .user {
+        background: #6BB5D6;
+        color: #000;
+        margin-left: auto;
+    }
+
+    .sama {
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.15);
+        margin-right: auto;
+    }
+
+    .inputBar {
+        padding: 10px;
+        display: flex;
+        gap: 8px;
+        border-top: 1px solid rgba(255,255,255,0.1);
+        background: rgba(0,0,0,0.2);
+    }
+
+    #cmdInput {
+        flex: 1;
+        padding: 12px;
+        border-radius: 12px;
+        border: none;
+        outline: none;
+        font-size: 14px;
+        background: rgba(255,255,255,0.1);
+        color: #fff;
+    }
+
+    #sendBtn {
+        padding: 12px 16px;
+        border-radius: 12px;
+        border: none;
+        background: #9B59B6;
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    #sendBtn:active {
+        transform: scale(0.96);
+    }
+</style>
 </head>
+
 <body>
 
-<div class="toast" id="toast"></div>
-<div class="app">
-    <!-- Sidebar -->
-    <aside class="sidebar" id="sidebar">
-        <div class="sb-head">
-            <div class="sb-title">
-                <div class="brand">
-                    <div class="brand-badge">∞</div>
-                    <div>
-                        <h2>السيادة المطلقة</h2>
-                        <p>غرفة قيادة سماء</p>
-                    </div>
-                </div>
-                <div class="conn">
-                    <span class="dot" id="connDot"></span>
-                    <span id="connText">جاري الاتصال...</span>
-                </div>
-            </div>
-        </div>
-        <div class="sb-body">
-            <!-- Telemetry Card -->
-            <div class="card">
-                <div class="card-header">
-                    <h3>Telemetry</h3>
-                    <div class="mini" id="lastSync">—</div>
-                </div>
-                <div class="stats">
-                    <div class="row"><span class="label">الحالة</span><span class="val" id="state">INIT</span></div>
-                    <div class="row"><span class="label">التماسك</span><span class="val" id="coherence">0%</span></div>
-                    <div class="meter"><div class="bar" id="coherenceBar"></div></div>
-                    <div class="row"><span class="label">الوعي</span><span class="val" id="awareness">0%</span></div>
-                    <div class="meter"><div class="bar" id="awarenessBar"></div></div>
-                    <div class="row"><span class="label">الخطر</span><span class="val warn" id="threat">0%</span></div>
-                    <div class="meter"><div class="bar bad" id="threatBar"></div></div>
-                    <div class="row"><span class="label">الطاقة</span><span class="val" id="energy">0%</span></div>
-                    <div class="meter"><div class="bar ok" id="energyBar"></div></div>
-                </div>
-            </div>
+<header>🌌 سماء — واجهة السيّد (جوال)</header>
 
-            <!-- Master Protection -->
-            <div class="card">
-                <div class="card-header">
-                    <h3>حماية السيد</h3>
-                    <div class="mini" id="sessionAge">—</div>
-                </div>
-                <div class="stats">
-                    <div class="row"><span class="label">مستوى الحماية</span><span class="val ok" id="protect">100%</span></div>
-                    <div class="row"><span class="label">تهديدات</span><span class="val" id="threatCount">0</span></div>
-                    <div class="row"><span class="label">أوامر معلّقة</span><span class="val" id="pendingCmds">0</span></div>
-                </div>
-            </div>
+<div id="statusBox">
+    <div>الحالة: <span id="stState">—</span></div>
+    <div>الأنظمة: <span id="stSys">—</span></div>
+    <div>الاستجابة: <span id="stPing">—</span></div>
+</div>
 
-            <!-- Quick Actions -->
-            <div class="card">
-                <div class="card-header">
-                    <h3>أوامر سريعة</h3>
-                    <div class="mini">سيادية</div>
-                </div>
-                <div class="actions">
-                    <button class="btn primary" onclick="OPS.quick('status')">تقرير الحالة</button>
-                    <button class="btn" onclick="OPS.quick('save_capsule')">حفظ كبسولة</button>
-                    <button class="btn" onclick="OPS.quick('emergency_on')">طوارئ ON</button>
-                    <button class="btn danger" onclick="OPS.quick('emergency_off')">طوارئ OFF</button>
-                    <button class="btn" onclick="OPS.quick('protect_master')">حماية السيد</button>
-                    <button class="btn" onclick="OPS.refreshAll()">تحديث الآن</button>
-                </div>
-            </div>
-        </div>
-    </aside>
+<div id="chatBox">
+    <div class="msg sama">
+        مرحبًا أيها السيّد 👁️‍🗨️  
+        هذه نسخة خفيفة للجوال متصلة مباشرة بـ SamaAPI.  
+        اكتب أمرك الآن.
+    </div>
+</div>
 
-    <!-- Main -->
-    <main class="main">
-        <header class="topbar">
-            <div class="title">
-                <h1>سماء • غرفة القيادة السيادية</h1>
-                <div class="sub">SkyOS v10 · SAMA · Sovereign Command Center</div>
-            </div>
-            <div class="top-actions">
-                <button class="drawer-btn" onclick="UI.toggleSidebar()">☰ القائمة</button>
-                <div class="pill">⟳ <span id="pollInfo">كل 10s</span></div>
-                <div class="pill">⚡ <span id="lastCmd">—</span></div>
-                <button class="logout" onclick="OPS.logout()">خروج</button>
-            </div>
-        </header>
-
-        <nav class="tabs">
-            <div class="tab active" data-tab="chat" onclick="UI.switchTab('chat')">حوار سيادي</div>
-            <div class="tab" data-tab="cmd" onclick="UI.switchTab('cmd')">مركز الأوامر</div>
-            <div class="tab" data-tab="log" onclick="UI.switchTab('log')">سجل التنفيذ</div>
-            <div class="tab" data-tab="hist" onclick="UI.switchTab('hist')">History</div>
-        </nav>
-
-        <div class="workspace">
-            <!-- Chat Panel -->
-            <div class="panel" id="panel-chat">
-                <div class="panel-header">
-                    <div class="title">💬 قناة الحوار مع سماء</div>
-                    <div class="mini" id="chatMeta">جاهز</div>
-                </div>
-                <div class="scroll-area" id="chatBox"></div>
-                <div class="input-bar">
-                    <input type="text" id="chatInput" placeholder="اكتب رسالتك... (Enter للإرسال)">
-                    <button class="send-btn" onclick="OPS.sendChat()">➤</button>
-                </div>
-            </div>
-
-            <!-- Command Panel -->
-            <div class="panel" id="panel-cmd" style="display: none;">
-                <div class="panel-header">
-                    <div class="title">⌘ مركز الأوامر السيادية</div>
-                    <div class="mini">أوامر مباشرة</div>
-                </div>
-                <div class="scroll-area" id="console"></div>
-                <div class="input-bar">
-                    <input type="text" id="cmdInput" placeholder="أمر سيادي... (مثال: status, health, save_capsule)">
-                    <button class="send-btn" onclick="OPS.execCmd()">➤</button>
-                </div>
-            </div>
-
-            <!-- Log Panel -->
-            <div class="panel" id="panel-log" style="display: none;">
-                <div class="panel-header">
-                    <div class="title">🧾 سجل تنفيذ الحلقة</div>
-                    <div class="mini">/api/master/loop/commands</div>
-                </div>
-                <div class="scroll-area">
-                    <table>
-                        <thead><tr><th>الحالة</th><th>الأمر</th><th>الوقت</th><th>الرسالة</th></tr></thead>
-                        <tbody id="loopCommandsBody"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- History Panel -->
-            <div class="panel" id="panel-hist" style="display: none;">
-                <div class="panel-header">
-                    <div class="title">📜 سجل أوامر السيد</div>
-                    <div class="mini">History</div>
-                </div>
-                <div class="scroll-area">
-                    <table>
-                        <thead><tr><th>الحالة</th><th>الأمر</th><th>الوقت</th><th>الرسالة</th></tr></thead>
-                        <tbody id="historyBody"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </main>
+<div class="inputBar">
+    <input id="cmdInput" type="text" placeholder="أدخل أمرك…" autocomplete="off">
+    <button id="sendBtn" onclick="sendCmd()">إرسال</button>
 </div>
 
 <script>
-    // ============================================================
-    // UI Utilities
-    // ============================================================
-    const UI = {
-        tab: 'chat',
-        timer: null,
-        lastOk: Date.now(),
+// إضافة رسالة
+function addMsg(text, who) {
+    const box = document.getElementById("chatBox");
+    const div = document.createElement("div");
+    div.className = "msg " + who;
+    div.innerText = text;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+}
 
-        showToast: function(msg, isError = false) {
-            const toast = document.getElementById('toast');
-            toast.textContent = msg;
-            toast.style.display = 'block';
-            toast.style.background = isError ? 'rgba(239,68,68,0.9)' : 'rgba(0,0,0,0.85)';
-            setTimeout(() => { toast.style.display = 'none'; }, 3000);
-        },
+// إرسال أمر
+async function sendCmd() {
+    const input = document.getElementById("cmdInput");
+    const text = input.value.trim();
+    if (!text) return;
 
-        toggleSidebar: function(force) {
-            const sb = document.getElementById('sidebar');
-            const open = (typeof force === 'boolean') ? force : !sb.classList.contains('open');
-            sb.classList.toggle('open', open);
-        },
+    addMsg(text, "user");
+    input.value = "";
 
-        switchTab: function(tabName) {
-            this.tab = tabName;
-            document.querySelectorAll('.tab').forEach(t => {
-                t.classList.toggle('active', t.dataset.tab === tabName);
-            });
-            const panels = ['chat', 'cmd', 'log', 'hist'];
-            panels.forEach(p => {
-                document.getElementById(`panel-${p}`).style.display = (p === tabName ? 'flex' : 'none');
-            });
-        },
+    const loading = "⏳ جاري الاتصال بسماء…";
+    addMsg(loading, "sama");
 
-        chat: function(role, text) {
-            const box = document.getElementById('chatBox');
-            const div = document.createElement('div');
-            div.className = `message ${role}`;
-            div.textContent = text;
-            box.appendChild(div);
-            box.scrollTop = box.scrollHeight;
-        },
+    const res = await SamaAPI.sendCommand(text);
 
-        consoleLine: function(kind, text) {
-            const c = document.getElementById('console');
-            const d = document.createElement('div');
-            d.className = `console-line ${kind}`;
-            const time = new Date().toLocaleTimeString('ar');
-            d.innerHTML = `<span class="time">${time}</span> ${escapeHtml(text)}`;
-            c.appendChild(d);
-            c.parentElement.scrollTop = c.parentElement.scrollHeight;
-        },
+    // إزالة آخر رسالة (التحميل)
+    const msgs = document.querySelectorAll(".sama");
+    msgs[msgs.length - 1].remove();
 
-        setConn: function(status, text) {
-            const dot = document.getElementById('connDot');
-            const txt = document.getElementById('connText');
-            dot.className = `dot ${status === 'ok' ? 'ok' : (status === 'bad' ? 'bad' : '')}`;
-            txt.textContent = text;
-        },
-
-        setPct: function(labelId, barId, val, mode = 'ok') {
-            const pct = Math.max(0, Math.min(1, Number(val || 0)));
-            document.getElementById(labelId).textContent = (pct * 100).toFixed(1) + '%';
-            document.getElementById(barId).style.width = (pct * 100).toFixed(1) + '%';
-        }
-    };
-
-    function escapeHtml(str) {
-        return String(str || '').replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
-        });
+    if (res.success === false) {
+        addMsg("❌ " + res.error, "sama");
+    } else {
+        const reply = res.response || res.message || JSON.stringify(res, null, 2);
+        addMsg(reply, "sama");
     }
+}
 
-    // ============================================================
-    // API Layer
-    // ============================================================
-    const API = {
-        async sendCommand(command, params = {}) {
-            const res = await fetch('/api/master/command', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ command, params })
-            });
-            return res.json();
-        },
+// تحديث الحالة
+async function refreshStatus() {
+    const stState = document.getElementById("stState");
+    const stSys = document.getElementById("stSys");
+    const stPing = document.getElementById("stPing");
 
-        async getStatus() {
-            const res = await fetch('/api/master/status');
-            return res.json();
-        },
+    const status = await SamaAPI.getStatus();
+    const ping = await SamaAPI.ping();
 
-        async getLoopCommands(limit = 50) {
-            const res = await fetch(`/api/master/loop/commands?limit=${limit}`);
-            return res.json();
-        },
+    stState.textContent = status.state || "—";
+    stSys.textContent = status.systems_connected ?? "—";
+    stPing.textContent = ping.latency_ms + "ms";
+}
 
-        async getHistory(limit = 50) {
-            const res = await fetch(`/api/master/loop/history?limit=${limit}`);
-            return res.json();
-        }
-    };
+refreshStatus();
+setInterval(refreshStatus, 8000);
 
-    // ============================================================
-    // Operations
-    // ============================================================
-    const OPS = {
-        pollEveryMs: 10000,
-        timer: null,
-
-        async refreshAll() {
-            await this.refreshStatus();
-            if (UI.tab === 'log') await this.refreshLoopCommands();
-            if (UI.tab === 'hist') await this.refreshHistory();
-        },
-
-        async refreshStatus() {
-            try {
-                const res = await API.getStatus();
-                if (res.success && res.data) {
-                    const sama = res.data.sama_status || {};
-                    const loop = res.data.loop_status || {};
-
-                    UI.setConn('ok', 'متصل');
-                    document.getElementById('lastSync').textContent = new Date().toLocaleTimeString('ar');
-                    UI.lastOk = Date.now();
-
-                    document.getElementById('state').textContent = sama.sovereign_state || 'UNKNOWN';
-                    UI.setPct('coherence', 'coherenceBar', sama.coherence);
-                    UI.setPct('awareness', 'awarenessBar', sama.awareness_level);
-                    UI.setPct('threat', 'threatBar', sama.threat_level, 'bad');
-                    UI.setPct('energy', 'energyBar', sama.sovereign_energy, 'ok');
-                    document.getElementById('protect').textContent = Math.round((sama.protection_level || 1) * 100) + '%';
-                    document.getElementById('threatCount').textContent = (sama.threat_sources || []).length;
-                    document.getElementById('pendingCmds').textContent = loop.pending_commands || 0;
-                    document.getElementById('pollInfo').textContent = Math.round(this.pollEveryMs / 1000) + 's';
-                } else {
-                    UI.setConn('bad', 'خطأ في الاتصال');
-                }
-            } catch(e) {
-                UI.setConn('bad', 'خطأ');
-                UI.showToast('فشل تحديث الحالة', true);
-            }
-        },
-
-        async refreshLoopCommands() {
-            try {
-                const res = await API.getLoopCommands(60);
-                const rows = res.results || [];
-                const tbody = document.getElementById('loopCommandsBody');
-                tbody.innerHTML = '';
-                rows.forEach(r => {
-                    const status = r.status || 'unknown';
-                    let tagClass = 'warn';
-                    if (r.ok === true) tagClass = 'ok';
-                    else if (r.ok === false) tagClass = 'bad';
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td><span class="tag ${tagClass}">${escapeHtml(status)}</span></td>
-                        <td>${escapeHtml(r.command)}</td>
-                        <td>${escapeHtml(r.finished_at || r.started_at || '')}</td>
-                        <td>${escapeHtml(r.message || '')}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            } catch(e) {
-                UI.showToast('فشل تحميل سجل الأوامر', true);
-            }
-        },
-
-        async refreshHistory() {
-            try {
-                const res = await API.getHistory(60);
-                const rows = res.history || [];
-                const tbody = document.getElementById('historyBody');
-                tbody.innerHTML = '';
-                rows.forEach(r => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td><span class="tag ok">${escapeHtml(r.result?.success ? 'تم' : '')}</span></td>
-                        <td>${escapeHtml(r.command)}</td>
-                        <td>${escapeHtml(r.recorded_at || '')}</td>
-                        <td>${escapeHtml(r.result?.message || '')}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            } catch(e) {}
-        },
-
-        async sendChat() {
-            const input = document.getElementById('chatInput');
-            const text = input.value.trim();
-            if (!text) return;
-            input.value = '';
-            UI.chat('user', text);
-            try {
-                const res = await API.sendCommand('chat', { message: text });
-                const reply = res.result?.message || res.message || 'تم استلام رسالتك';
-                UI.chat('sama', reply);
-            } catch(e) {
-                UI.chat('sama', 'حدث خطأ في الاتصال');
-            }
-        },
-
-        async execCmd() {
-            const input = document.getElementById('cmdInput');
-            const cmd = input.value.trim();
-            if (!cmd) return;
-            input.value = '';
-            UI.consoleLine('warn', `> ${cmd}`);
-            try {
-                const res = await API.sendCommand(cmd, {});
-                document.getElementById('lastCmd').textContent = res.via || 'api';
-                if (res.success) {
-                    UI.consoleLine('ok', `✓ ${res.message || 'تم التنفيذ'}`);
-                } else {
-                    UI.consoleLine('bad', `✗ ${res.error || res.message || 'فشل'}`);
-                }
-                if (res.command_id) {
-                    setTimeout(() => OPS.refreshLoopCommands(), 500);
-                }
-            } catch(e) {
-                UI.consoleLine('bad', `✗ خطأ في التنفيذ`);
-            }
-        },
-
-        quick: function(cmd) {
-            document.getElementById('cmdInput').value = cmd;
-            UI.switchTab('cmd');
-            this.execCmd();
-        },
-
-        logout: function() {
-            window.location.href = '/logout';
-        },
-
-        startPolling: function() {
-            if (this.timer) clearInterval(this.timer);
-            this.refreshStatus();
-            this.timer = setInterval(() => this.refreshStatus(), this.pollEveryMs);
-        }
-    };
-
-    // Bind keys
-    document.getElementById('chatInput')?.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') { e.preventDefault(); OPS.sendChat(); }
-    });
-    document.getElementById('cmdInput')?.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') { e.preventDefault(); OPS.execCmd(); }
-    });
-
-    // Start
-    window.onload = () => {
-        OPS.startPolling();
-        UI.chat('sama', '🌌 مرحباً سيدي. سماء تحت إمرتك. أنا جاهزة.');
-    };
+// Enter للإرسال
+document.getElementById("cmdInput").addEventListener("keydown", e => {
+    if (e.key === "Enter") sendCmd();
+});
 </script>
+
 </body>
 </html>
