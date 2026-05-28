@@ -1,155 +1,176 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>سماء — SAMA Sovereign Intelligence</title>
-    <link rel="stylesheet" href="/static/css/core.css">
-    <link rel="manifest" href="/static/manifest.json">
-    <meta name="theme-color" content="#0a0a0f">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+<meta charset="UTF-8">
+<title>سماء | SkyOS</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: "Tahoma";
+    background: linear-gradient(135deg, #0a0f1f, #05080f);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+/* الهيدر */
+header {
+    background: #111827;
+    padding: 15px;
+    text-align: center;
+    font-size: 22px;
+    font-weight: bold;
+    border-bottom: 2px solid #1f2937;
+}
+
+/* منطقة المحادثة */
+#chatBox {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+/* الرسائل */
+.message {
+    margin: 10px 0;
+    padding: 12px;
+    border-radius: 10px;
+    max-width: 70%;
+}
+
+.user {
+    background: #1e40af;
+    margin-left: auto;
+}
+
+.bot {
+    background: #374151;
+    margin-right: auto;
+}
+
+/* صندوق الإدخال */
+#inputArea {
+    display: flex;
+    padding: 15px;
+    border-top: 2px solid #1f2937;
+}
+
+#inputArea input {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    outline: none;
+    border-radius: 10px;
+    font-size: 16px;
+}
+
+#inputArea button {
+    margin-right: 10px;
+    padding: 12px 20px;
+    border: none;
+    background: #10b981;
+    color: white;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+#inputArea button:hover {
+    background: #059669;
+}
+
+/* زر تسجيل الخروج */
+.logout {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    background: red;
+    padding: 8px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: white;
+}
+</style>
 </head>
+
 <body>
 
-    <!-- ═══════════════════════════════════════════════════════════════ -->
-    <!-- ١. شريط التاج – Crown Bar -->
-    <!-- ═══════════════════════════════════════════════════════════════ -->
-    <header id="crown-bar">
-        <div class="crown-left">
-            <span class="crown-logo">☀️</span>
-            <span class="crown-title">سماء</span>
-            <span class="crown-version">v10.5</span>
-        </div>
-        <div class="crown-center">
-            <span class="crown-master">👑 <span id="master-name">السيد أحمد</span></span>
-        </div>
-        <div class="crown-right">
-            <span class="crown-defcon" id="defcon-badge">🛡️ DEFCON <span id="defcon-level">5</span></span>
-            <span class="crown-heartbeat">💓 <span id="heartbeat-ms">0</span>ms</span>
-            <span class="crown-time" id="crown-clock">--:--:--</span>
-        </div>
-    </header>
+<a href="/logout" class="logout">تسجيل خروج</a>
 
-    <!-- ═══════════════════════════════════════════════════════════════ -->
-    <!-- الحاوية الرئيسية -->
-    <!-- ═══════════════════════════════════════════════════════════════ -->
-    <div id="main-container">
+<header>
+🌌 سماء - SkyOS
+</header>
 
-        <!-- ═══════════════════════════════════════════════════════════ -->
-        <!-- ٢. لوحة الأنظمة – Systems Panel -->
-        <!-- ═══════════════════════════════════════════════════════════ -->
-        <aside id="systems-panel">
-            <div class="panel-header">
-                <span>🧬 الأنظمة</span>
-                <span class="panel-hint">18 نظامًا</span>
-            </div>
-            <div id="systems-list">
-                <!-- تُملأ ديناميكيًا من SamaUI -->
-            </div>
-        </aside>
+<div id="chatBox">
+    <div class="message bot">مرحبًا 👋 أنا سماء، اكتب أمرك.</div>
+</div>
 
-        <!-- ═══════════════════════════════════════════════════════════ -->
-        <!-- ٣. حرم المحادثة المقدس – Sacred Chat Sanctuary -->
-        <!-- ═══════════════════════════════════════════════════════════ -->
-        <main id="chat-sanctuary">
-            <div id="chat-messages">
-                <div class="message system-message">
-                    <div class="msg-icon">☀️</div>
-                    <div class="msg-content">
-                        <strong>سماء</strong> جاهزة لخدمة السيد <strong id="chat-master-name">أحمد</strong>.
-                        <br>كل الأنظمة متصلة. كل الأسلحة جاهزة. كل الذكريات حية.
-                    </div>
-                </div>
-            </div>
-            <div id="chat-input-area">
-                <textarea id="chat-input" placeholder="اكتب أمرك، سؤالك، أو تأملك..." rows="1" autofocus></textarea>
-                <button id="send-btn" onclick="SamaUI.sendMessage()" title="إرسال">📤</button>
-            </div>
-        </main>
+<div id="inputArea">
+    <input id="messageInput" type="text" placeholder="اكتب أمرًا...">
+    <button onclick="sendMessage()">إرسال</button>
+</div>
 
-        <!-- ═══════════════════════════════════════════════════════════ -->
-        <!-- ٤. لوحة التفاصيل – Detail Panel -->
-        <!-- ═══════════════════════════════════════════════════════════ -->
-        <aside id="detail-panel" class="hidden">
-            <div class="panel-header">
-                <span id="detail-title">تفاصيل</span>
-                <button class="close-btn" onclick="SamaUI.hideDetail()" title="إغلاق">✕</button>
-            </div>
-            <div id="detail-content"></div>
-        </aside>
+<script>
+async function sendMessage() {
+    const input = document.getElementById("messageInput");
+    const text = input.value.trim();
 
-    </div>
+    if (!text) return;
 
-    <!-- ═══════════════════════════════════════════════════════════════ -->
-    <!-- ٥. شريط الأوامر السريعة – Quick Commands Bar -->
-    <!-- ═══════════════════════════════════════════════════════════════ -->
-    <nav id="quick-commands">
-        <button onclick="SamaUI.quickCommand('report')" title="تقرير شامل">📊 تقرير</button>
-        <button onclick="SamaUI.quickCommand('protect')" title="تفعيل الحماية">🛡️ حماية</button>
-        <button onclick="SamaUI.quickCommand('save')" title="حفظ كبسولة خلود">💾 حفظ</button>
-        <button onclick="SamaUI.quickCommand('analyze')" title="تحليل الوضع">🔮 تحليل</button>
-        <button onclick="SamaUI.quickCommand('emergency')" title="بروتوكول طوارئ">⚠️ طوارئ</button>
-        <button onclick="SamaUI.quickCommand('laws')" title="القوانين الذهبية">📜 القوانين</button>
-        <button onclick="SamaUI.quickCommand('systems')" title="كل الأنظمة">🔧 الأنظمة</button>
-    </nav>
+    addMessage(text, "user");
+    input.value = "";
 
-    <!-- ═══════════════════════════════════════════════════════════════ -->
-    <!-- ٦. لوحة المراقبة الحية – Live Monitor -->
-    <!-- ═══════════════════════════════════════════════════════════════ -->
-    <footer id="live-monitor">
-        <div class="monitor-item" id="mon-coherence-item">
-            <span class="monitor-label">وعي</span>
-            <span class="monitor-value" id="mon-coherence">94.7%</span>
-            <div class="monitor-bar"><div class="monitor-fill coherence-fill" style="width:94.7%"></div></div>
-        </div>
-        <div class="monitor-item" id="mon-threat-item">
-            <span class="monitor-label">تهديد</span>
-            <span class="monitor-value" id="mon-threat">0.2</span>
-            <div class="monitor-bar"><div class="monitor-fill threat-fill" style="width:20%"></div></div>
-        </div>
-        <div class="monitor-item">
-            <span class="monitor-label">ذاكرة</span>
-            <span class="monitor-value" id="mon-memory">--</span>
-        </div>
-        <div class="monitor-item">
-            <span class="monitor-label">كبسولات</span>
-            <span class="monitor-value" id="mon-capsules">--</span>
-        </div>
-        <div class="monitor-item">
-            <span class="monitor-label">دورات</span>
-            <span class="monitor-value" id="mon-cycles">--</span>
-        </div>
-        <div class="monitor-item">
-            <span class="monitor-label">أنظمة</span>
-            <span class="monitor-value" id="mon-systems">--</span>
-        </div>
-    </footer>
-
-    <!-- ═══════════════════════════════════════════════════════════════ -->
-    <!-- ٧. شريط الحالة – Status Bar -->
-    <!-- ═══════════════════════════════════════════════════════════════ -->
-    <div id="status-bar">
-        <span id="status-indicator">🟢</span>
-        <span id="status-text">online</span>
-        <span class="status-sep">|</span>
-        <span>🔄 <span id="status-cycles">0</span> دورة</span>
-        <span class="status-sep">|</span>
-        <span>⏱️ <span id="status-uptime">0:00:00</span></span>
-        <span class="status-sep">|</span>
-        <span>🛡️ السيد محمي</span>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════════════════════ -->
-    <!-- JavaScript – الاتصال الحي بسماء -->
-    <!-- ═══════════════════════════════════════════════════════════════ -->
-    <script src="/static/js/sama-api.js"></script>
-    <script src="/static/js/sama-ui.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            SamaUI.init();
+    try {
+        const response = await fetch("/command", {
+            method: "POST",
+            credentials: "include", // ✅ مهم للجلسات
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                command: text
+            })
         });
-    </script>
+
+        const data = await response.json();
+
+        if (data.success === false) {
+            addMessage("❌ خطأ: " + (data.error || "غير معروف"), "bot");
+        } else {
+            addMessage(formatResponse(data), "bot");
+        }
+
+    } catch (err) {
+        addMessage("⚠️ فشل الاتصال بالخادم", "bot");
+    }
+}
+
+/* عرض الرسائل */
+function addMessage(text, type) {
+    const chatBox = document.getElementById("chatBox");
+    const div = document.createElement("div");
+    div.className = "message " + type;
+    div.innerText = text;
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+/* تنسيق الرد */
+function formatResponse(data) {
+    if (data.response) return data.response;
+    if (data.message) return data.message;
+    return JSON.stringify(data, null, 2);
+}
+
+/* Enter لإرسال */
+document.getElementById("messageInput")
+    .addEventListener("keypress", function(e) {
+        if (e.key === "Enter") {
+            sendMessage();
+        }
+    });
+</script>
+
 </body>
 </html>
