@@ -89,26 +89,62 @@
             الكيان السيادي الخارق<br>
             لا يدخل هذه البوابة إلا السيد
         </div>
-        <form method="POST" action="/login" id="login-form">
-            <input type="password" name="password" id="master-key" class="login-input" placeholder="مفتاح السيد" autofocus>
-            <button type="submit" class="login-btn">دخول</button>
-        </form>
+        <input type="password" id="master-key" class="login-input" placeholder="مفتاح السيد" autofocus>
+        <button class="login-btn" onclick="authenticate()">دخول</button>
         <div class="login-error" id="login-error"></div>
     </div>
 
     <script>
-        // عرض الخطأ إذا وجد في الـ URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const error = urlParams.get('error');
-        if (error) {
-            document.getElementById('login-error').textContent = decodeURIComponent(error);
+        async function authenticate() {
+            const key = document.getElementById('master-key').value;
+            const errorEl = document.getElementById('login-error');
+            
+            if (!key) {
+                errorEl.textContent = 'أدخل مفتاح السيد';
+                return;
+            }
+
+            errorEl.textContent = '⏳ جاري التحقق...';
+            
+            try {
+                // تغيير المسار من /awaken إلى /login
+                const formData = new FormData();
+                formData.append('password', key);
+                
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.redirected) {
+                    // تم التحويل بنجاح إلى الصفحة الرئيسية
+                    window.location.href = response.url;
+                } else if (response.status === 200) {
+                    // حفظ المفتاح
+                    sessionStorage.setItem('master_key', key);
+                    window.location.href = '/';
+                } else if (response.status === 401) {
+                    errorEl.textContent = '❌ مفتاح غير صحيح. هذه البوابة للسيد فقط.';
+                } else if (response.status === 429) {
+                    errorEl.textContent = '⏳ محاولات كثيرة. انتظر قليلاً.';
+                } else {
+                    const text = await response.text();
+                    if (text.includes('محاولات كثيرة')) {
+                        errorEl.textContent = '⏳ محاولات كثيرة. انتظر قليلاً.';
+                    } else if (text.includes('غير صحيح')) {
+                        errorEl.textContent = '❌ مفتاح غير صحيح. هذه البوابة للسيد فقط.';
+                    } else {
+                        errorEl.textContent = '❌ فشل الدخول. حاول مرة أخرى.';
+                    }
+                }
+            } catch (e) {
+                errorEl.textContent = '⚠️ لا يمكن الاتصال بسماء. تأكد أن الخادم يعمل.';
+            }
         }
-        
+
         // إرسال بـ Enter
         document.getElementById('master-key').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                document.getElementById('login-form').submit();
-            }
+            if (e.key === 'Enter') authenticate();
         });
     </script>
 </body>
