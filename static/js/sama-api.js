@@ -144,7 +144,8 @@ const SamaAPI = (() => {
         }
         return request('/command', {
             method: 'POST',
-            body: body
+            body: body,
+            isMaster: true           // ← تمت الإضافة
         });
     }
 
@@ -213,7 +214,8 @@ const SamaAPI = (() => {
     async function reason(evidence) {
         return request('/reason', {
             method: 'POST',
-            body: evidence
+            body: evidence,
+            isMaster: true           // ← تمت الإضافة
         });
     }
 
@@ -225,7 +227,8 @@ const SamaAPI = (() => {
     async function analyzeImage(imagePath) {
         return request('/analyze-image', {
             method: 'POST',
-            body: { image_path: imagePath }
+            body: { image_path: imagePath },
+            isMaster: true           // ← تمت الإضافة
         });
     }
 
@@ -237,7 +240,8 @@ const SamaAPI = (() => {
     async function analyzeUrl(url) {
         return request('/analyze-url', {
             method: 'POST',
-            body: { url: url }
+            body: { url: url },
+            isMaster: true           // ← تمت الإضافة
         });
     }
 
