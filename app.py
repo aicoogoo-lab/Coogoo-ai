@@ -57,7 +57,6 @@ app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "sama-sovereign-secret-change-in-production")
 
 # ✅ ProxyFix: خلي Flask يثق في X-Forwarded-* على Railway
-# وإلا ممكن يحصل لخبطة في scheme/redirect/cookies خلف البروكسي
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
 
@@ -76,7 +75,6 @@ if SOVEREIGN_KEY == "MASTER_SOVEREIGN_KEY_ULTIMATE":
 # ═══════════════════════════════════════════════════════════════════════
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
-    # بما إن رابط Railway عندك HTTPS، نخليها True
     SESSION_COOKIE_SECURE=(os.getenv("COOKIE_SECURE", "1") == "1"),
     SESSION_COOKIE_SAMESITE=os.getenv("COOKIE_SAMESITE", "Strict"),
     PERMANENT_SESSION_LIFETIME=timedelta(minutes=int(os.getenv("SESSION_MINUTES", "45"))),
@@ -440,8 +438,6 @@ def require_master(f):
 @app.route("/")
 def index():
     """الصفحة الرئيسية – غرفة العرش."""
-    if not session.get("is_master"):
-        return redirect(url_for("login_page"))
     return render_template("index.html")
 
 
@@ -504,7 +500,6 @@ def logout():
 
 
 # ✅ مسار طوارئ لفك القفل (Header فقط)
-# استخدم: X-Master-Key: SOVEREIGN_KEY
 @app.route("/api/master/unlock", methods=["POST"])
 def api_master_unlock():
     if not _has_valid_master_header():
