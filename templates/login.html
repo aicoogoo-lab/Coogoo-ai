@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>الدخول — سماء</title>
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
             background: #0a0a0f;
             display: flex;
@@ -14,6 +16,7 @@
             height: 100vh;
             font-family: 'Segoe UI', 'Arial', sans-serif;
         }
+
         .login-container {
             background: #14141f;
             border: 1px solid rgba(200, 164, 78, 0.15);
@@ -23,7 +26,9 @@
             max-width: 90vw;
             text-align: center;
         }
+
         .login-logo { font-size: 60px; margin-bottom: 16px; }
+
         .login-title {
             color: #c8a44e;
             font-size: 24px;
@@ -31,12 +36,14 @@
             margin-bottom: 8px;
             letter-spacing: 1px;
         }
+
         .login-subtitle {
             color: #888899;
             font-size: 13px;
             margin-bottom: 32px;
             line-height: 1.6;
         }
+
         .login-input {
             width: 100%;
             background: #0a0a0f;
@@ -50,10 +57,12 @@
             outline: none;
             transition: 0.3s;
         }
+
         .login-input:focus {
             border-color: #c8a44e;
             box-shadow: 0 0 0 3px rgba(200, 164, 78, 0.1);
         }
+
         .login-btn {
             width: 100%;
             background: #c8a44e;
@@ -66,10 +75,12 @@
             cursor: pointer;
             transition: 0.3s;
         }
+
         .login-btn:hover {
             background: #e0d8c0;
             box-shadow: 0 0 20px rgba(200, 164, 78, 0.3);
         }
+
         .login-error {
             color: #ff4444;
             font-size: 12px;
@@ -78,19 +89,46 @@
         }
     </style>
 </head>
+
 <body>
-    <div class="login-container">
-        <div class="login-logo">☀️</div>
-        <div class="login-title">سماء</div>
-        <div class="login-subtitle">
-            الكيان السيادي الخارق<br>
-            لا يدخل هذه البوابة إلا السيد
-        </div>
-        <form method="POST" action="/login">
-            <input type="password" name="password" class="login-input" placeholder="مفتاح السيد" autofocus>
-            <button type="submit" class="login-btn">دخول</button>
-        </form>
-        <div class="login-error" id="login-error"></div>
+
+<div class="login-container">
+
+    <div class="login-logo">☀️</div>
+    <div class="login-title">سماء</div>
+
+    <div class="login-subtitle">
+        الكيان السيادي الخارق<br>
+        لا يدخل هذه البوابة إلا السيد
     </div>
+
+    <!-- ✅ الفورم -->
+    <form method="POST" action="/login" autocomplete="off">
+
+        <!-- ✅ مهم: required + autocomplete -->
+        <input 
+            type="password"
+            name="password"
+            class="login-input"
+            placeholder="مفتاح السيد"
+            required
+            minlength="1"
+            autocomplete="current-password"
+            autofocus
+        >
+
+        <button type="submit" class="login-btn">دخول</button>
+
+    </form>
+
+    <!-- ✅ عرض الخطأ من Flask -->
+    <div class="login-error">
+        {% if error %}
+            {{ error }}
+        {% endif %}
+    </div>
+
+</div>
+
 </body>
 </html>
