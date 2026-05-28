@@ -13,6 +13,11 @@
 ║  ║  🔐 المفتاح: SOVEREIGN_KEY (في متغيرات Railway)                     ║ ║
 ║  ╚══════════════════════════════════════════════════════════════════╝ ║
 ╚══════════════════════════════════════════════════════════════════════╝
+
+ملاحظات تشغيل مهمة على Railway:
+- استخدم Gunicorn بــ workers=1 لأن النظام Stateful وفيه loops/threads داخلية.
+  مثال Start Command:
+  gunicorn app:app --workers 1 --threads 1 --timeout 120
 """
 
 import os
@@ -29,8 +34,12 @@ from flask import (
     redirect, url_for, session, send_from_directory
 )
 
+# ✅ مهم على Railway (Reverse Proxy)
+from werkzeug.middleware.proxy_fix import ProxyFix
+
+
 # ═══════════════════════════════════════════════════════════════════════
-# إعدادات
+# إعدادات Logging
 # ═══════════════════════════════════════════════════════════════════════
 logger = logging.getLogger("SamaGateway")
 logging.basicConfig(
@@ -38,8 +47,19 @@ logging.basicConfig(
     format="%(asctime)s | %(levelname)s | %(name)s | %(message)s"
 )
 
+
+# ═══════════════════════════════════════════════════════════════════════
+# Flask App
+# ═══════════════════════════════════════════════════════════════════════
 app = Flask(__name__)
+
+# ✅ مهم: لازم Secret Key ثابت (من Railway Variables) حتى لا تضيع الجلسات
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "sama-sovereign-secret-change-in-production")
+
+# ✅ ProxyFix: خلي Flask يثق في X-Forwarded-* على Railway
+# وإلا ممكن يحصل لخبطة في scheme/redirect/cookies خلف البروكسي
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+
 
 # ═══════════════════════════════════════════════════════════════════════
 # 👑 مفتاح السيد – SOVEREIGN_KEY
@@ -48,17 +68,20 @@ SOVEREIGN_KEY = os.getenv("SOVEREIGN_KEY", "MASTER_SOVEREIGN_KEY_ULTIMATE")
 MASTER_AUTH_HEADER = "X-Master-Key"
 
 if SOVEREIGN_KEY == "MASTER_SOVEREIGN_KEY_ULTIMATE":
-    logger.warning("⚠️ SOVEREIGN_KEY لم يُعيَّن في متغيرات البيئة. استخدم القيمة الافتراضية.")
+    logger.warning("⚠️ SOVEREIGN_KEY لم يُعيَّن في متغيرات البيئة. استخدم القيمة الافتراضية (خطر!).")
+
 
 # ═══════════════════════════════════════════════════════════════════════
 # إعدادات الجلسات
 # ═══════════════════════════════════════════════════════════════════════
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
+    # بما إن رابط Railway عندك HTTPS، نخليها True
     SESSION_COOKIE_SECURE=(os.getenv("COOKIE_SECURE", "1") == "1"),
     SESSION_COOKIE_SAMESITE=os.getenv("COOKIE_SAMESITE", "Strict"),
     PERMANENT_SESSION_LIFETIME=timedelta(minutes=int(os.getenv("SESSION_MINUTES", "45"))),
 )
+
 
 # ═══════════════════════════════════════════════════════════════════════
 # استيراد قلب سماء – كل الأنظمة
@@ -75,8 +98,9 @@ def _safe_import(module_path: str, system_name: str) -> Optional[Any]:
         SYSTEMS_LOADED[system_name] = True
         return cls
     except Exception as e:
-        SYSTEMS_FAILED[system_name] = str(e)[:80]
+        SYSTEMS_FAILED[system_name] = str(e)[:160]
         return None
+
 
 # استيراد كل فئات الأنظمة
 SentientCore = _safe_import("core.sentient_core", "SentientCore")
@@ -97,12 +121,10 @@ VisionModule = _safe_import("core.vision_module", "VisionModule")
 SkyAnalyzer = _safe_import("core.sky_analyzer", "SkyAnalyzer")
 SkyCore = _safe_import("core.sky_core", "SkyCore")
 
-# محاولة استيراد OmniscienceCore و KnowledgeCore و InferenceCore إن وجدت
 OmniscienceCore = _safe_import("core.omniscience.integration_core", "OmniscienceCore")
 KnowledgeCore = _safe_import("core.knowledge.knowledge_core", "KnowledgeCore")
 InferenceCore = _safe_import("core.inference.inference_core", "InferenceCore")
 
-# CoreEngine و SAMA (ضروريان)
 CoreEngine = _safe_import("core.core_engine", "CoreEngine")
 RequestType = None
 if CoreEngine:
@@ -111,7 +133,9 @@ if CoreEngine:
         RequestType = RT
     except ImportError:
         pass
+
 SAMA = _safe_import("core.sama", "SAMA")
+
 
 # ═══════════════════════════════════════════════════════════════════════
 # تهيئة سماء – حقن التبعية الكامل
@@ -122,31 +146,29 @@ core_engine = None
 def _init_sama():
     """تهيئة الكيان السيادي مع حقن كل الأنظمة."""
     global sama_instance, core_engine
-    
+
     if not SAMA:
         logger.error("❌ SAMA غير متاحة. تعمل البوابة بوضع محدود.")
         return
-    
+
     if not CoreEngine:
         logger.error("❌ CoreEngine غير متاح. تعمل البوابة بوضع محدود.")
         return
-    
+
     try:
-        # ═══════════════════════════════════════════════════════
-        # إنشاء كل الأنظمة (مع التعامل مع الفشل)
-        # ═══════════════════════════════════════════════════════
         logger.info("🔧 بدء حقن التبعية – إنشاء كل الأنظمة...")
-        
-        # ١. الذاكرة (أساسية)
+
+        # ١. الذاكرة
         memory_instance = None
         sovereign_memory = None
+
         if UnifiedMemorySystem:
             try:
                 memory_instance = UnifiedMemorySystem()
                 logger.info("   ✅ UnifiedMemorySystem")
             except Exception as e:
                 logger.warning(f"   ⚠️ UnifiedMemorySystem: {e}")
-        
+
         if SovereignMemorySystem:
             try:
                 sovereign_memory = SovereignMemorySystem(
@@ -156,7 +178,7 @@ def _init_sama():
                 logger.info("   ✅ SovereignMemorySystem")
             except Exception as e:
                 logger.warning(f"   ⚠️ SovereignMemorySystem: {e}")
-        
+
         # ٢. المشفر الهولوغرافي
         holo_encoder = None
         if HolographicEncoder:
@@ -165,7 +187,7 @@ def _init_sama():
                 logger.info("   ✅ HolographicEncoder")
             except Exception as e:
                 logger.warning(f"   ⚠️ HolographicEncoder: {e}")
-        
+
         # ٣. الذكاء العاطفي
         emotional_instance = None
         if EmotionalIntelligence:
@@ -174,7 +196,7 @@ def _init_sama():
                 logger.info("   ✅ EmotionalIntelligence")
             except Exception as e:
                 logger.warning(f"   ⚠️ EmotionalIntelligence: {e}")
-        
+
         # ٤. التفكير الاستعاري
         metaphorical_instance = None
         if MetaphoricalReasoning:
@@ -186,7 +208,7 @@ def _init_sama():
                 logger.info("   ✅ MetaphoricalReasoning")
             except Exception as e:
                 logger.warning(f"   ⚠️ MetaphoricalReasoning: {e}")
-        
+
         # ٥. الدفاع
         defense_instance = None
         if DefenseCore:
@@ -195,7 +217,7 @@ def _init_sama():
                 logger.info("   ✅ DefenseCore")
             except Exception as e:
                 logger.warning(f"   ⚠️ DefenseCore: {e}")
-        
+
         # ٦. التكتيكات المتقدمة
         tactics_instance = None
         if SamaAdvancedTactics:
@@ -207,7 +229,7 @@ def _init_sama():
                 logger.info("   ✅ SamaAdvancedTactics")
             except Exception as e:
                 logger.warning(f"   ⚠️ SamaAdvancedTactics: {e}")
-        
+
         # ٧. إدارة المخاطر
         risk_instance = None
         if StrategicRiskManagement:
@@ -220,7 +242,7 @@ def _init_sama():
                 logger.info("   ✅ StrategicRiskManagement")
             except Exception as e:
                 logger.warning(f"   ⚠️ StrategicRiskManagement: {e}")
-        
+
         # ٨. الاستراتيجية
         strategy_instance = None
         if StrategyEngine:
@@ -235,7 +257,7 @@ def _init_sama():
                 logger.info("   ✅ StrategyEngine")
             except Exception as e:
                 logger.warning(f"   ⚠️ StrategyEngine: {e}")
-        
+
         # ٩. التعديل الذاتي
         modifier_instance = None
         if SelfModifier:
@@ -247,7 +269,7 @@ def _init_sama():
                 logger.info("   ✅ SelfModifier")
             except Exception as e:
                 logger.warning(f"   ⚠️ SelfModifier: {e}")
-        
+
         # ١٠. الاستدلال
         reasoning_instance = None
         if ReasoningEngine:
@@ -264,7 +286,7 @@ def _init_sama():
                 logger.info("   ✅ ReasoningEngine")
             except Exception as e:
                 logger.warning(f"   ⚠️ ReasoningEngine: {e}")
-        
+
         # ١١. الخلود
         persistence_instance = None
         if PersistenceManager:
@@ -273,7 +295,7 @@ def _init_sama():
                 logger.info("   ✅ EternalPersistenceManager")
             except Exception as e:
                 logger.warning(f"   ⚠️ EternalPersistenceManager: {e}")
-        
+
         # ١٢. ما وراء المعرفة
         meta_instance = None
         if MetaCognition:
@@ -282,7 +304,7 @@ def _init_sama():
                 logger.info("   ✅ MetaCognition")
             except Exception as e:
                 logger.warning(f"   ⚠️ MetaCognition: {e}")
-        
+
         # ١٣. وحدة الرؤية
         vision_instance = None
         if VisionModule:
@@ -291,7 +313,7 @@ def _init_sama():
                 logger.info("   ✅ VisionModule")
             except Exception as e:
                 logger.warning(f"   ⚠️ VisionModule: {e}")
-        
+
         # ١٤. محلل البيانات
         analyzer_instance = None
         if SkyAnalyzer:
@@ -305,7 +327,7 @@ def _init_sama():
                 logger.info("   ✅ SkyAnalyzer")
             except Exception as e:
                 logger.warning(f"   ⚠️ SkyAnalyzer: {e}")
-        
+
         # ١٥. النواة الواعية
         sentient_instance = None
         if SentientCore:
@@ -322,12 +344,12 @@ def _init_sama():
                 logger.info("   ✅ SentientCore")
             except Exception as e:
                 logger.warning(f"   ⚠️ SentientCore: {e}")
-        
+
         # ═══════════════════════════════════════════════════════
-        # إنشاء الكيان السيادي مع حقن كل الأنظمة
+        # إنشاء SAMA
         # ═══════════════════════════════════════════════════════
         logger.info("☀️ إنشاء الكيان السيادي الموحد SAMA...")
-        
+
         sama_instance = SAMA(
             master_name="أحمد عبدالرحمن الطاهري",
             sentient_core=sentient_instance,
@@ -352,28 +374,26 @@ def _init_sama():
             holographic_encoder=holo_encoder,
             master_receiver=None
         )
-        
+
         logger.info(f"✅ SAMA أنشئت مع {sama_instance._count_systems()} نظاماً متحداً")
-        
+
         # ═══════════════════════════════════════════════════════
-        # إنشاء المحرك المركزي
+        # إنشاء CoreEngine
         # ═══════════════════════════════════════════════════════
         core_engine = CoreEngine(
             sama_core=sama_instance,
             master_name="أحمد عبدالرحمن الطاهري"
         )
-        
-        # إقلاع
+
         boot_result = core_engine.boot()
         logger.info(f"✅ {boot_result.get('message', 'تم الإقلاع')}")
-        
-        # عرض ملخص
+
         loaded_count = len(SYSTEMS_LOADED)
         failed_count = len(SYSTEMS_FAILED)
         logger.info(f"📊 {loaded_count} نظاماً محمّلاً, {failed_count} نظاماً فشل")
         for name, error in SYSTEMS_FAILED.items():
             logger.info(f"   ⚠️ {name}: {error}")
-        
+
     except Exception as e:
         logger.error(f"❌ فشل تهيئة سماء: {e}")
         import traceback
@@ -381,7 +401,9 @@ def _init_sama():
         sama_instance = None
         core_engine = None
 
+
 _init_sama()
+
 
 # ═══════════════════════════════════════════════════════════════════════
 # دوال المصادقة
@@ -390,7 +412,8 @@ _init_sama()
 def _has_valid_master_header() -> bool:
     """التحقق من مفتاح السيد في رأس الطلب."""
     auth_key = request.headers.get(MASTER_AUTH_HEADER, "")
-    return bool(auth_key) and hmac.compare_digest(auth_key, SOVEREIGN_KEY)
+    key = (SOVEREIGN_KEY or "").strip()
+    return bool(auth_key) and bool(key) and hmac.compare_digest(auth_key, key)
 
 def require_master(f):
     """
@@ -409,6 +432,7 @@ def require_master(f):
         return redirect(url_for("login_page"))
     return decorated
 
+
 # ═══════════════════════════════════════════════════════════════════════
 # المسارات العامة
 # ═══════════════════════════════════════════════════════════════════════
@@ -420,45 +444,74 @@ def index():
         return redirect(url_for("login_page"))
     return render_template("index.html")
 
+
 @app.route("/login", methods=["GET", "POST"])
 def login_page():
-    """بوابة الدخول المقدسة."""
+    """بوابة الدخول (نسخة مستقرة مع Anti-Whitespace + قفل مفهوم)."""
     if request.method == "POST":
-        password = request.form.get("password", "")
-        
+        # ✅ إصلاح قاتل: شيل أي مسافات/أسطر مخفية
+        password = (request.form.get("password") or "").strip()
+        key = (SOVEREIGN_KEY or "").strip()
+
+        if not key or key == "MASTER_SOVEREIGN_KEY_ULTIMATE":
+            logger.error("SOVEREIGN_KEY غير مضبوط/افتراضي. لازم يتحدد في Railway Variables.")
+            return render_template("login.html", error="خطأ إعداد: SOVEREIGN_KEY غير مضبوط."), 500
+
         # حماية من المحاولات المتكررة
         attempts = int(session.get("login_attempts", 0))
         locked_until = session.get("locked_until")
-        
+
         if locked_until:
             try:
-                if datetime.now() < datetime.fromisoformat(locked_until):
-                    return render_template("login.html", error="محاولات كثيرة. حاول لاحقًا."), 429
+                until = datetime.fromisoformat(locked_until)
+                if datetime.now() < until:
+                    return render_template(
+                        "login.html",
+                        error="البوابة مغلقة مؤقتًا بسبب محاولات كثيرة. افتح /logout لتصفير الجلسة."
+                    ), 429
             except Exception:
                 session.pop("locked_until", None)
-        
-        if hmac.compare_digest(password, SOVEREIGN_KEY):
+
+        if hmac.compare_digest(password, key):
+            # ✅ Reset كامل للجلسة ثم تفعيل السيد
+            session.clear()
             session["is_master"] = True
             session["login_at"] = datetime.now().isoformat()
-            session.pop("login_attempts", None)
-            session.pop("locked_until", None)
+            session.permanent = True  # ✅ خلي PERMANENT_SESSION_LIFETIME يشتغل
             return redirect(url_for("index"))
-        
+
         attempts += 1
         session["login_attempts"] = attempts
+        remaining = max(0, 7 - attempts)
+
         if attempts >= 7:
             session["locked_until"] = (datetime.now() + timedelta(minutes=10)).isoformat()
-            return render_template("login.html", error="تم قفل البوابة مؤقتًا."), 429
-        
-        return render_template("login.html", error="مفتاح غير صحيح."), 401
-    
+            return render_template(
+                "login.html",
+                error="تم قفل البوابة مؤقتًا (10 دقائق). افتح /logout لتصفير الجلسة."
+            ), 429
+
+        return render_template("login.html", error=f"مفتاح غير صحيح. متبقي {remaining} محاولة."), 401
+
     return render_template("login.html")
+
 
 @app.route("/logout")
 def logout():
-    """خروج."""
+    """خروج / تصفير كامل للجلسة (مهم جدًا لفك القفل فورًا)."""
     session.clear()
     return redirect(url_for("login_page"))
+
+
+# ✅ مسار طوارئ لفك القفل (Header فقط)
+# استخدم: X-Master-Key: SOVEREIGN_KEY
+@app.route("/api/master/unlock", methods=["POST"])
+def api_master_unlock():
+    if not _has_valid_master_header():
+        return jsonify({"success": False, "error": "غير مصرح"}), 401
+    session.clear()
+    return jsonify({"success": True, "message": "تم تصفير الجلسة/فك القفل."})
+
 
 @app.route("/healthz")
 def healthz():
@@ -474,9 +527,6 @@ def healthz():
         "systems_failed": len(SYSTEMS_FAILED)
     })
 
-# ═══════════════════════════════════════════════════════════════════════
-# المسارات العامة للمعلومات (بدون مصادقة)
-# ═══════════════════════════════════════════════════════════════════════
 
 @app.route("/status", methods=["GET"])
 def public_status():
@@ -489,6 +539,7 @@ def public_status():
             "uptime_seconds": status.get("uptime_seconds", 0)
         })
     return jsonify({"state": "limited", "message": "سماء في وضع محدود"})
+
 
 @app.route("/info", methods=["GET"])
 def public_info():
@@ -514,6 +565,7 @@ def public_info():
         ]
     })
 
+
 # ═══════════════════════════════════════════════════════════════════════
 # المسارات المحمية (تتطلب مفتاح السيد)
 # ═══════════════════════════════════════════════════════════════════════
@@ -524,15 +576,15 @@ def handle_command():
     """استقبال أمر أو سؤال وتوجيهه إلى سماء."""
     if not core_engine:
         return jsonify({"success": False, "error": "المحرك المركزي غير متاح"}), 500
-    
+
     payload = request.get_json(silent=True) or {}
     command = (payload.get("command") or payload.get("text") or "").strip()
     session_id = payload.get("session_id")
     context = payload.get("context", {})
-    
+
     if not command:
         return jsonify({"success": False, "error": "أمر فارغ"}), 400
-    
+
     try:
         result = core_engine.process_request(
             RequestType.QUERY if RequestType else None,
@@ -545,19 +597,20 @@ def handle_command():
         logger.error(f"خطأ في معالجة الأمر: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
+
 @app.route("/reason", methods=["POST"])
 @require_master
 def handle_reason():
     """استدلال بايزي مباشر."""
     if not core_engine:
         return jsonify({"success": False, "error": "المحرك المركزي غير متاح"}), 500
-    
+
     payload = request.get_json(silent=True) or {}
     text = (payload.get("text") or payload.get("command") or "").strip()
-    
+
     if not text:
         return jsonify({"success": False, "error": "نص فارغ"}), 400
-    
+
     try:
         result = core_engine.process_request(
             RequestType.ANALYSIS if RequestType else None,
@@ -566,6 +619,7 @@ def handle_reason():
         return jsonify(result)
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
 
 @app.route("/simulate", methods=["POST"])
 @require_master
@@ -582,6 +636,7 @@ def handle_simulate():
             return jsonify({"success": False, "error": str(e)}), 500
     return jsonify({"success": False, "error": "محرك المحاكاة غير متاح"}), 500
 
+
 @app.route("/optimize", methods=["POST"])
 @require_master
 def handle_optimize():
@@ -589,6 +644,7 @@ def handle_optimize():
     if core_engine:
         return jsonify({"success": True, "message": "التحسين يعمل في الخلفية بشكل مستمر."})
     return jsonify({"success": False, "error": "غير متاح"}), 500
+
 
 @app.route("/preserve", methods=["POST"])
 @require_master
@@ -602,6 +658,7 @@ def handle_preserve():
         except Exception as e:
             return jsonify({"success": False, "error": str(e)}), 500
     return jsonify({"success": False, "error": "غير متاح"}), 500
+
 
 # ═══════════════════════════════════════════════════════════════════════
 # مسارات السيد الخاصة
@@ -619,25 +676,27 @@ def master_full_status():
             return jsonify({"success": False, "error": str(e)}), 500
     return jsonify({"success": False, "error": "سماء غير متاحة"}), 500
 
+
 @app.route("/master/command", methods=["POST"])
 @require_master
 def master_direct_command():
     """أمر مباشر من السيد."""
     if not sama_instance:
         return jsonify({"success": False, "error": "سماء غير متاحة"}), 500
-    
+
     payload = request.get_json(silent=True) or {}
     command = (payload.get("command") or "").strip()
     params = payload.get("params", {})
-    
+
     if not command:
         return jsonify({"success": False, "error": "أمر فارغ"}), 400
-    
+
     try:
         result = sama_instance.master_command(command, params)
         return jsonify({"success": True, "result": result})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
 
 @app.route("/awaken", methods=["POST"])
 @require_master
@@ -651,6 +710,7 @@ def awaken():
             return jsonify({"status": "error", "error": str(e)}), 500
     return jsonify({"status": "error", "error": "سماء غير متاحة"}), 500
 
+
 @app.route("/shutdown", methods=["POST"])
 @require_master
 def shutdown():
@@ -662,6 +722,7 @@ def shutdown():
         except Exception as e:
             return jsonify({"status": "error", "error": str(e)}), 500
     return jsonify({"status": "error", "error": "سماء غير متاحة"}), 500
+
 
 @app.route("/restart", methods=["POST"])
 @require_master
@@ -675,6 +736,7 @@ def restart():
             return jsonify({"status": "error", "error": str(e)}), 500
     return jsonify({"status": "error", "error": "سماء غير متاحة"}), 500
 
+
 @app.route("/master/protect", methods=["POST"])
 @require_master
 def master_protect():
@@ -687,11 +749,13 @@ def master_protect():
             return jsonify({"success": False, "error": str(e)}), 500
     return jsonify({"success": False, "error": "سماء غير متاحة"}), 500
 
+
 @app.route("/master/logs", methods=["GET"])
 @require_master
 def master_logs():
     """سجل أوامر السيد."""
     return jsonify({"success": True, "message": "السجل متاح في ذاكرة سماء."})
+
 
 @app.route("/master/emergency/activate", methods=["POST"])
 @require_master
@@ -708,11 +772,13 @@ def emergency_activate():
             return jsonify({"success": False, "error": str(e)}), 500
     return jsonify({"success": False, "error": "غير متاح"}), 500
 
+
 @app.route("/master/emergency/deactivate", methods=["POST"])
 @require_master
 def emergency_deactivate():
     """إلغاء حالة الطوارئ."""
     return jsonify({"success": True, "message": "تم إلغاء حالة الطوارئ."})
+
 
 # ═══════════════════════════════════════════════════════════════════════
 # تحليل الصور والروابط
@@ -733,6 +799,7 @@ def analyze_image():
                 return jsonify({"success": False, "error": str(e)}), 500
     return jsonify({"success": False, "error": "وحدة الرؤية غير متاحة"}), 500
 
+
 @app.route("/analyze-url", methods=["POST"])
 @require_master
 def analyze_url():
@@ -748,6 +815,7 @@ def analyze_url():
                 return jsonify({"success": False, "error": str(e)}), 500
     return jsonify({"success": False, "error": "المحلل غير متاح"}), 500
 
+
 # ═══════════════════════════════════════════════════════════════════════
 # الملفات الثابتة
 # ═══════════════════════════════════════════════════════════════════════
@@ -756,6 +824,7 @@ def analyze_url():
 def static_files(filename):
     """تقديم الملفات الثابتة."""
     return send_from_directory("static", filename)
+
 
 # ═══════════════════════════════════════════════════════════════════════
 # معالجات الأخطاء
@@ -769,13 +838,13 @@ def not_found(e):
 def server_error(e):
     return jsonify({"error": "خطأ داخلي في الخادم"}), 500
 
-# ═══════════════════════════════════════════════════════════════════════
-# التشغيل
-# ═══════════════════════════════════════════════════════════════════════
 
+# ═══════════════════════════════════════════════════════════════════════
+# التشغيل (محلي فقط)
+# ═══════════════════════════════════════════════════════════════════════
 if __name__ == "__main__":
     port = int(os.getenv("PORT", "5000"))
     logger.info(f"🌌 Sama API Gateway (Sovereign Edition) تُقلع على المنفذ {port}...")
-    logger.info(f"👑 السيد: أحمد عبدالرحمن الطاهري")
+    logger.info("👑 السيد: أحمد عبدالرحمن الطاهري")
     logger.info(f"🔐 مفتاح السيادة: {'مُعيَّن' if SOVEREIGN_KEY != 'MASTER_SOVEREIGN_KEY_ULTIMATE' else 'افتراضي (يجب تغييره!)'}")
     app.run(host="0.0.0.0", port=port, debug=False, threaded=True)
