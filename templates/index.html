@@ -15,7 +15,6 @@ body {
     height: 100vh;
 }
 
-/* الهيدر */
 header {
     background: #111827;
     padding: 15px;
@@ -25,19 +24,18 @@ header {
     border-bottom: 2px solid #1f2937;
 }
 
-/* منطقة المحادثة */
 #chatBox {
     flex: 1;
     padding: 20px;
     overflow-y: auto;
 }
 
-/* الرسائل */
 .message {
     margin: 10px 0;
     padding: 12px;
     border-radius: 10px;
     max-width: 70%;
+    white-space: pre-wrap;
 }
 
 .user {
@@ -50,7 +48,6 @@ header {
     margin-right: auto;
 }
 
-/* صندوق الإدخال */
 #inputArea {
     display: flex;
     padding: 15px;
@@ -60,27 +57,27 @@ header {
 #inputArea input {
     flex: 1;
     padding: 12px;
+    border-radius: 10px;
     border: none;
     outline: none;
-    border-radius: 10px;
     font-size: 16px;
 }
 
 #inputArea button {
     margin-right: 10px;
     padding: 12px 20px;
-    border: none;
     background: #10b981;
+    border: none;
     color: white;
     border-radius: 10px;
     cursor: pointer;
 }
 
-#inputArea button:hover {
-    background: #059669;
+#inputArea button:disabled {
+    background: gray;
+    cursor: not-allowed;
 }
 
-/* زر تسجيل الخروج */
 .logout {
     position: absolute;
     top: 15px;
@@ -98,9 +95,7 @@ header {
 
 <a href="/logout" class="logout">تسجيل خروج</a>
 
-<header>
-🌌 سماء - SkyOS
-</header>
+<header>🌌 سماء - SkyOS</header>
 
 <div id="chatBox">
     <div class="message bot">مرحبًا 👋 أنا سماء، اكتب أمرك.</div>
@@ -108,68 +103,106 @@ header {
 
 <div id="inputArea">
     <input id="messageInput" type="text" placeholder="اكتب أمرًا...">
-    <button onclick="sendMessage()">إرسال</button>
+    <button id="sendBtn" onclick="sendMessage()">إرسال</button>
 </div>
 
 <script>
-async function sendMessage() {
-    const input = document.getElementById("messageInput");
-    const text = input.value.trim();
+const input = document.getElementById("messageInput");
+const btn = document.getElementById("sendBtn");
 
+async function sendMessage() {
+    const text = input.value.trim();
     if (!text) return;
 
     addMessage(text, "user");
     input.value = "";
 
+    btn.disabled = true;
+
+    // رسالة تحميل
+    const loadingId = addMessage("⏳ جاري المعالجة...", "bot");
+
     try {
-        const response = await fetch("/command", {
+        const response = await fetch("/api/command", {
             method: "POST",
-            credentials: "include", // ✅ مهم للجلسات
+            credentials: "include", // مهم للجلسة
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Accept": "application/json" // ✅ مهم لحل JSON.parse
             },
-            body: JSON.stringify({
-                command: text
-            })
+            body: JSON.stringify({ command: text })
         });
+
+        // ✅ تحقق قبل JSON
+        const contentType = response.headers.get("content-type");
+
+        if (!response.ok) {
+            const txt = await response.text();
+            throw new Error("Server Error: " + txt);
+        }
+
+        if (!contentType || !contentType.includes("application/json")) {
+            const txt = await response.text();
+            throw new Error("لم يتم إرجاع JSON:\n" + txt.slice(0, 200));
+        }
 
         const data = await response.json();
 
+        removeMessage(loadingId);
+
         if (data.success === false) {
-            addMessage("❌ خطأ: " + (data.error || "غير معروف"), "bot");
+            addMessage("❌ " + (data.error || "خطأ غير معروف"), "bot");
         } else {
             addMessage(formatResponse(data), "bot");
         }
 
     } catch (err) {
-        addMessage("⚠️ فشل الاتصال بالخادم", "bot");
+        removeMessage(loadingId);
+        addMessage("⚠️ خطأ في الاتصال:\n" + err.message, "bot");
     }
+
+    btn.disabled = false;
 }
 
-/* عرض الرسائل */
+/* إضافة رسالة */
 function addMessage(text, type) {
     const chatBox = document.getElementById("chatBox");
     const div = document.createElement("div");
+
     div.className = "message " + type;
     div.innerText = text;
+
+    const id = Date.now();
+    div.dataset.id = id;
+
     chatBox.appendChild(div);
     chatBox.scrollTop = chatBox.scrollHeight;
+
+    return id;
+}
+
+/* حذف رسالة (للتحميل) */
+function removeMessage(id) {
+    const el = document.querySelector(`[data-id='${id}']`);
+    if (el) el.remove();
 }
 
 /* تنسيق الرد */
 function formatResponse(data) {
+    if (typeof data === "string") return data;
+
     if (data.response) return data.response;
     if (data.message) return data.message;
+
     return JSON.stringify(data, null, 2);
 }
 
-/* Enter لإرسال */
-document.getElementById("messageInput")
-    .addEventListener("keypress", function(e) {
-        if (e.key === "Enter") {
-            sendMessage();
-        }
-    });
+/* Enter للإرسال */
+input.addEventListener("keypress", function(e) {
+    if (e.key === "Enter") {
+        sendMessage();
+    }
+});
 </script>
 
 </body>
