@@ -1,12 +1,17 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>الدخول — سماء</title>
 
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
         body {
             background: #0a0a0f;
@@ -25,9 +30,18 @@
             width: 380px;
             max-width: 90vw;
             text-align: center;
+            animation: fadeIn 0.4s ease;
         }
 
-        .login-logo { font-size: 60px; margin-bottom: 16px; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+
+        .login-logo {
+            font-size: 60px;
+            margin-bottom: 16px;
+        }
 
         .login-title {
             color: #c8a44e;
@@ -83,9 +97,16 @@
 
         .login-error {
             color: #ff4444;
-            font-size: 12px;
-            margin-top: 12px;
-            min-height: 18px;
+            font-size: 13px;
+            margin-top: 14px;
+            min-height: 20px;
+        }
+
+        .helper {
+            color: #777;
+            font-size: 11px;
+            margin-top: 10px;
+            opacity: 0.7;
         }
     </style>
 </head>
@@ -95,6 +116,7 @@
 <div class="login-container">
 
     <div class="login-logo">☀️</div>
+
     <div class="login-title">سماء</div>
 
     <div class="login-subtitle">
@@ -103,32 +125,53 @@
     </div>
 
     <!-- ✅ الفورم -->
-    <form method="POST" action="/login" autocomplete="off">
+    <form method="POST" action="/login" autocomplete="off" onsubmit="return handleSubmit()">
 
-        <!-- ✅ مهم: required + autocomplete -->
         <input 
             type="password"
             name="password"
+            id="password"
             class="login-input"
             placeholder="مفتاح السيد"
             required
-            minlength="1"
             autocomplete="current-password"
             autofocus
         >
 
-        <button type="submit" class="login-btn">دخول</button>
+        <button type="submit" class="login-btn" id="loginBtn">
+            دخول
+        </button>
 
     </form>
 
-    <!-- ✅ عرض الخطأ من Flask -->
+    <!-- ✅ عرض الأخطاء من Flask -->
     <div class="login-error">
         {% if error %}
             {{ error }}
         {% endif %}
     </div>
 
+    <div class="helper">
+        إذا تم القفل: افتح /logout لإعادة المحاولة
+    </div>
+
 </div>
+
+<script>
+function handleSubmit() {
+
+    let input = document.getElementById("password");
+
+    // ✅ إزالة المسافات (أهم إصلاح)
+    input.value = input.value.trim();
+
+    let btn = document.getElementById("loginBtn");
+    btn.innerText = "جارٍ التحقق...";
+    btn.disabled = true;
+
+    return true;
+}
+</script>
 
 </body>
 </html>
